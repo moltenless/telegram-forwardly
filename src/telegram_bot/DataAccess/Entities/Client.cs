@@ -8,6 +8,7 @@ namespace TelegramForwardly.DataAccess.Entities
     {
         [Column("user_id", TypeName = "bigint")]
         [Key]
+        [Required]
         public long UserId { get; set; }
 
         [Column("current_state_id", TypeName = "int")]
@@ -51,7 +52,7 @@ namespace TelegramForwardly.DataAccess.Entities
         [Column("topic_grouping_type_id", TypeName = "int")]
         [ForeignKey(nameof(TopicGroupingType))]
         public int? TopicGroupingTypeId { get; set; }
-        public virtual TopicGroupingType TopicGroupingType { get; set; }
+        public virtual TopicGroupingType? TopicGroupingType { get; set; }
 
         [Column("forwardly_enabled", TypeName = "bit")]
         public bool? ForwardlyEnabled { get; set; }
