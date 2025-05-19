@@ -1,11 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TelegramForwardly.DataAccess.Entities
 {
@@ -19,7 +13,7 @@ namespace TelegramForwardly.DataAccess.Entities
         [Column("current_state_id", TypeName = "int")]
         [ForeignKey(nameof(CurrentState))]
         public int? CurrentStateId { get; set; }
-        public virtual ClientCurrentState CurrentState { get; set; }
+        public virtual ClientCurrentState? CurrentState { get; set; }
 
         [Column("api_id", TypeName = "varchar(20)")]
         public string? ApiId { get; set; }
