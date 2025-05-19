@@ -13,5 +13,7 @@ namespace TelegramForwardly.DataAccess.Entities
         [Column("value", TypeName = "varchar(64)")]
         [Required]
         public string Value { get; set; } = null!;
+
+        public ICollection<Client> Clients { get; set; } = new HashSet<Client>();
     }
 }

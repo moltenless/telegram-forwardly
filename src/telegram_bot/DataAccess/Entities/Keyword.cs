@@ -14,7 +14,7 @@ namespace TelegramForwardly.DataAccess.Entities
         [ForeignKey(nameof(Client))]
         [Required]
         public long UserId { get; set; }
-        public virtual Client Client { get; set; } = null!;
+        public Client Client { get; set; } = null!;
 
         [Column("value", TypeName = "nvarchar(128)")]
         [Required]

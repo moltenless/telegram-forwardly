@@ -14,7 +14,7 @@ namespace TelegramForwardly.DataAccess.Entities
         [Column("current_state_id", TypeName = "int")]
         [ForeignKey(nameof(CurrentState))]
         public int? CurrentStateId { get; set; }
-        public virtual ClientCurrentState? CurrentState { get; set; }
+        public ClientCurrentState? CurrentState { get; set; }
 
         [Column("api_id", TypeName = "varchar(20)")]
         public string? ApiId { get; set; }
@@ -52,12 +52,16 @@ namespace TelegramForwardly.DataAccess.Entities
         [Column("topic_grouping_type_id", TypeName = "int")]
         [ForeignKey(nameof(TopicGroupingType))]
         public int? TopicGroupingTypeId { get; set; }
-        public virtual TopicGroupingType? TopicGroupingType { get; set; }
+        public TopicGroupingType? TopicGroupingType { get; set; }
 
         [Column("forwardly_enabled", TypeName = "bit")]
         public bool? ForwardlyEnabled { get; set; }
 
         [Column("all_chats_filtering_enabled", TypeName = "bit")]
-        public bool? AllChatsFilteringEnabled { get; set; } 
+        public bool? AllChatsFilteringEnabled { get; set; }
+
+
+        public ICollection<Keyword> Keywords { get; set; } = new HashSet<Keyword>();
+        public ICollection<Chat> Chats { get; set; } = new HashSet<Chat>();
     }
 }
