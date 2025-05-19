@@ -3,14 +3,14 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TelegramForwardly.DataAccess.Entities
 {
-    [Table("client_current_states")]
-    internal class ClientCurrentState
+    [Table("topic_grouping_types")]
+    internal class TopicGroupingType
     {
         [Column("id", TypeName = "int")]
         [Key]
         public int Id { get; set; }
 
-        [Column("value", TypeName = "varchar(124)")]
+        [Column("value", TypeName = "varchar(64)")]
         [Required]
         public string Value { get; set; } = null!;
     }
