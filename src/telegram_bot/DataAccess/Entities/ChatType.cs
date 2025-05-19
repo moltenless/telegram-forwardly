@@ -3,20 +3,14 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TelegramForwardly.DataAccess.Entities
 {
-    [Table("keywords")]
-    internal class Keyword
+    [Table("chat_types")]
+    internal class ChatType
     {
         [Column("id", TypeName = "int")]
         [Key]
         public int Id { get; set; }
 
-        [Column("user_id", TypeName = "bigint")]
-        [ForeignKey(nameof(Client))]
-        [Required]
-        public long UserId { get; set; }
-        public virtual Client Client { get; set; } = null!;
-
-        [Column("value", TypeName = "nvarchar(128)")]
+        [Column("value", TypeName = "varchar(64)")]
         [Required]
         public string Value { get; set; } = null!;
     }
