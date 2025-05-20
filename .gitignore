@@ -1,5 +1,6 @@
 project_description.docx
 .env
+certs/
 aspnetapp.pfx
 storage/
 
