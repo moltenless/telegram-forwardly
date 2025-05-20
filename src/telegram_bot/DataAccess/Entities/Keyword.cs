@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace TelegramForwardly.DataAccess.Entities
 {
     [Table("keywords")]
-    internal class Keyword
+    public class Keyword
     {
         [Column("id", TypeName = "int")]
         [Key]

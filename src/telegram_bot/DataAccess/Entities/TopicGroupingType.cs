@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace TelegramForwardly.DataAccess.Entities
 {
     [Table("topic_grouping_types")]
-    internal class TopicGroupingType
+    public class TopicGroupingType
     {
         [Column("id", TypeName = "int")]
         [Key]

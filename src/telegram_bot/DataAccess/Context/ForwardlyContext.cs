@@ -3,7 +3,7 @@ using TelegramForwardly.DataAccess.Entities;
 
 namespace TelegramForwardly.DataAccess.Context
 {
-    internal class ForwardlyContext : DbContext
+    public class ForwardlyContext : DbContext
     {
         private readonly string connectionString;
 

@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace TelegramForwardly.DataAccess.Entities
 {
     [Table("clients")]
-    internal class Client
+    public class Client
     {
         [Column("user_id", TypeName = "bigint")]
         [Key]

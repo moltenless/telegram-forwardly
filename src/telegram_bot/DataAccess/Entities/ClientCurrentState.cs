@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace TelegramForwardly.DataAccess.Entities
 {
     [Table("client_current_states")]
-    internal class ClientCurrentState
+    public class ClientCurrentState
     {
         [Column("id", TypeName = "int")]
         [Key]
