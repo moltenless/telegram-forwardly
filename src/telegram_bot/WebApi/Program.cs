@@ -28,6 +28,13 @@ app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var context = services.GetRequiredService<ForwardlyContext>();
+    await context.Database.MigrateAsync();
+}
+
 app.MapControllers();
 
-app.Run();
+await app.RunAsync();
