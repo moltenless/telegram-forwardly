@@ -12,6 +12,11 @@ namespace TelegramForwardly.DataAccess.Context
         public DbSet<TopicGroupingType> TopicGroupingTypes { get; set; }
         public DbSet<ChatType> ChatTypes { get; set; }
 
+        public ForwardlyContext(DbContextOptions<ForwardlyContext> options) : base(options)
+        {
+
+        }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseSqlServer();
