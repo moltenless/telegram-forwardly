@@ -14,10 +14,8 @@ namespace TelegramForwardly.DataAccess.Context
         public DbSet<TopicGroupingType> TopicGroupingTypes { get; set; }
         public DbSet<ChatType> ChatTypes { get; set; }
 
-        public ForwardlyContext(string connectionString)
-        {
-            this.connectionString = connectionString;
-        }
+        public ForwardlyContext(string connectionString) 
+            => this.connectionString = connectionString;
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
