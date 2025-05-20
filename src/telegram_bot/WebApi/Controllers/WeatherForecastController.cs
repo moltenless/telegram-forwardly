@@ -1,4 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
+using TelegramForwardly.DataAccess.Context;
+using TelegramForwardly.DataAccess.Entities;
 
 namespace TelegramForwardly.WebApi.Controllers
 {
@@ -6,28 +9,27 @@ namespace TelegramForwardly.WebApi.Controllers
     [Route("[controller]")]
     public class WeatherForecastController : ControllerBase
     {
-        private static readonly string[] Summaries = new[]
-        {
-            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-        };
-
         private readonly ILogger<WeatherForecastController> _logger;
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger)
+        private ForwardlyContext context;
+
+        public WeatherForecastController(ILogger<WeatherForecastController> logger, ForwardlyContext forwardlyContext)
         {
             _logger = logger;
+            context = forwardlyContext;
         }
 
         [HttpGet(Name = "GetWeatherForecast")]
-        public IEnumerable<WeatherForecast> Get()
+        public WeatherForecast Get()
         {
-            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
+            TopicGroupingType type = new TopicGroupingType { Value = "Test" };
+            context.TopicGroupingTypes.Add(type);
+            string message = "added";
+            context.SaveChanges();
+            return new WeatherForecast
             {
-                Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                TemperatureC = Random.Shared.Next(-20, 55),
-                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-            })
-            .ToArray();
+                Message = message
+            };
         }
     }
 }
