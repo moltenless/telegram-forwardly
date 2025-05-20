@@ -1,9 +1,14 @@
-using TelegramForwardly.
+using Microsoft.EntityFrameworkCore;
+using TelegramForwardly.DataAccess.Context;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddDbContext<ForwardlyContext>
+builder.Services.AddDbContext<ForwardlyContext>(options =>
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection")
+    )
+);
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

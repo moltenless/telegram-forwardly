@@ -9,6 +9,7 @@ namespace TelegramForwardly.DataAccess.Entities
         [Column("user_id", TypeName = "bigint")]
         [Key]
         [Required]
+        [DatabaseGenerated(DatabaseGeneratedOption.None)]
         public long UserId { get; set; }
 
         [Column("current_state_id", TypeName = "int")]
