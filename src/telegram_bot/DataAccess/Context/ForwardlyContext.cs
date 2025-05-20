@@ -11,10 +11,5 @@ namespace TelegramForwardly.DataAccess.Context
         public DbSet<ClientCurrentState> ClientCurrentStates { get; set; }
         public DbSet<TopicGroupingType> TopicGroupingTypes { get; set; }
         public DbSet<ChatType> ChatTypes { get; set; }
-
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            optionsBuilder.UseSqlServer(connectionString);
-        }
     }
 }
