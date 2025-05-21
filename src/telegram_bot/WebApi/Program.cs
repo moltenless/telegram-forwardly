@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TelegramForwardly.DataAccess.Context;
+using TelegramForwardly.DataAccess.Repositories;
+using TelegramForwardly.DataAccess.Repositories.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +11,9 @@ builder.Services.AddDbContext<ForwardlyContext>(options =>
         builder.Configuration.GetConnectionString("DefaultConnection")
     )
 );
+
+builder.Services.AddScoped<ITopicGroupingTypeRepository, TopicGroupingTypeRepository>();
+
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
