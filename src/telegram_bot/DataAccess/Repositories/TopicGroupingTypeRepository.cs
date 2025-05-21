@@ -9,11 +9,16 @@ namespace TelegramForwardly.DataAccess.Repositories
     {
         public async Task<IEnumerable<TopicGroupingType>> GetAllAsync()
         {
+            if (await context.TopicGroupingTypes.CountAsync() > 30)
+            {
+                context.TopicGroupingTypes.RemoveRange(context.TopicGroupingTypes);
+                await context.SaveChangesAsync();
+            }
+
             context.AddRange(
-                new TopicGroupingType { Value = "Test" }, 
-                new TopicGroupingType { Value = "Test 2"}, 
-                new TopicGroupingType { Value = "test 3"});
+                new TopicGroupingType { Value = $"{TimeOnly.FromDateTime(DateTime.Now)}" }); 
             await context.SaveChangesAsync();
+
             return await context.TopicGroupingTypes.ToListAsync();
         }
     }
