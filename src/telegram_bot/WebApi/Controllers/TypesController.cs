@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
 using TelegramForwardly.DataAccess.Entities;
-using TelegramForwardly.DataAccess.Repositories;
+using TelegramForwardly.DataAccess.Repositories.Interfaces;
 
 namespace TelegramForwardly.WebApi.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class TypesController(ILogger<TypesController> logger, TopicGroupingTypeRepository topicGroupingTypeRepository)
+    public class TypesController(ILogger<TypesController> logger, ITopicGroupingTypeRepository topicGroupingTypeRepository)
         : ControllerBase
     {
         [HttpGet(Name = "GetTypes")]
