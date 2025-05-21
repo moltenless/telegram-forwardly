@@ -5,7 +5,6 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>cca9134c-d18e-407d-a952-032616767384</UserSecretsId>
-    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <RootNamespace>TelegramForwardly.WebApi</RootNamespace>
   </PropertyGroup>
 
