@@ -19,9 +19,10 @@ builder.Services.AddDbContext<ForwardlyContext>(options =>
 
 builder.Services.AddScoped<ITopicGroupingTypeRepository, TopicGroupingTypeRepository>();
 
-
 builder.Services.AddControllers();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
