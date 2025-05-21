@@ -11,7 +11,7 @@ services:
             - ASPNETCORE_URLS=https://+:8081;http://+:8080
             - ASPNETCORE_Kestrel__Certificates__Default__Password=${LOCAL_CERT_PASSWORD}
             - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
-            - ConnectionStrings__DefaultConnection=Server=db;Database=TelegramForwardly;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;
+            - ConnectionStrings__DefaultConnection=Server=db,1433;Database=TelegramForwardly;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;
         volumes:
             - ./certs:/https/
         ports:
