@@ -3,19 +3,14 @@ using TelegramForwardly.DataAccess.Entities;
 
 namespace TelegramForwardly.DataAccess.Context
 {
-    public class ForwardlyContext : DbContext
+    public class ForwardlyContext(DbContextOptions<ForwardlyContext> options) : DbContext(options)
     {
-        public DbSet<Client> Clients { get; set; }
-        public DbSet<Keyword> Keywords { get; set; }
-        public DbSet<Chat> Chats { get; set; }
-        public DbSet<ClientCurrentState> ClientCurrentStates { get; set; }
-        public DbSet<TopicGroupingType> TopicGroupingTypes { get; set; }
-        public DbSet<ChatType> ChatTypes { get; set; }
-
-        public ForwardlyContext(DbContextOptions<ForwardlyContext> options) : base(options)
-        {
-
-        }
+        internal DbSet<Client> Clients { get; set; }
+        internal DbSet<Keyword> Keywords { get; set; }
+        internal DbSet<Chat> Chats { get; set; }
+        internal DbSet<ClientCurrentState> ClientCurrentStates { get; set; }
+        internal DbSet<TopicGroupingType> TopicGroupingTypes { get; set; }
+        internal DbSet<ChatType> ChatTypes { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
