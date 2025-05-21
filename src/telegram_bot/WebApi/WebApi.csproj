@@ -7,8 +7,6 @@
     <UserSecretsId>cca9134c-d18e-407d-a952-032616767384</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <RootNamespace>TelegramForwardly.WebApi</RootNamespace>
-    <DockerfileContext>..\..\..</DockerfileContext>
-    <DockerComposeProjectPath>..\vs_docker_compose\docker-compose.dcproj</DockerComposeProjectPath>
   </PropertyGroup>
 
   <ItemGroup>
