@@ -1,7 +1,10 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using TelegramForwardly.DataAccess.Context;
 using TelegramForwardly.DataAccess.Repositories;
 using TelegramForwardly.DataAccess.Repositories.Interfaces;
+using TelegramForwardly.WebApi.Models.Dtos;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +20,8 @@ builder.Services.AddDbContext<ForwardlyContext>(options =>
 );
 
 builder.Services.AddScoped<IClientCurrentStatesRepository, ClientCurrentStatesRepository>();
+
+builder.Services.Configure<ClientCurrentStatesOptions>(builder.Configuration.GetSection("ClientCurrentStates"));
 
 builder.Services.AddControllers();
 
@@ -43,6 +48,11 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     var context = services.GetRequiredService<ForwardlyContext>();
     await context.Database.MigrateAsync();
+
+    var statesRepository = services.GetRequiredService<IClientCurrentStatesRepository>();
+    var initialStates = services.GetRequiredService<IOptions<ClientCurrentStatesOptions>>().Value;
+    await statesRepository.EnsureStatesPresentAsync
+        (initialStates.States, removeOthers: initialStates.RemoveOthers);
 }
 
 app.MapControllers();
