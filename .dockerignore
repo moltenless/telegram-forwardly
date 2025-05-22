@@ -1,5 +1,6 @@
-project_description.docx
-.env.local
+**/project_description.docx
+**/certs
+**/aspnetapp.pfx
 **/.classpath
 **/.dockerignore
 **/.env

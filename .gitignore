@@ -1,6 +1,7 @@
 project_description.docx
-.env.local
 .env
+certs/
+aspnetapp.pfx
 storage/
 
 ## Ignore Visual Studio temporary files, build results, and
