@@ -1,6 +1,7 @@
 **/project_description.docx
 **/certs
 **/aspnetapp.pfx
+**/print_all_tables.sh
 **/.classpath
 **/.dockerignore
 **/.env

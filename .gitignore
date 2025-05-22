@@ -1,5 +1,6 @@
 project_description.docx
 .env
+print_all_tables.sh
 certs/
 aspnetapp.pfx
 storage/
