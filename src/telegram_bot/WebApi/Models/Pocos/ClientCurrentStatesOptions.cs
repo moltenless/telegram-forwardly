@@ -1,4 +1,4 @@
-﻿namespace TelegramForwardly.WebApi.Models.Dtos
+﻿namespace TelegramForwardly.WebApi.Models.Pocos
 {
     public class ClientCurrentStatesOptions
     {
