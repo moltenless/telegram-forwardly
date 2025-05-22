@@ -10,6 +10,8 @@ namespace TelegramForwardly.DataAccess.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            // Drop foreign keys first to avoid constraint violations when renaming columns.
+
             migrationBuilder.DropForeignKey(
                 name: "FK_chats_chat_types_type_id",
                 table: "chats");
@@ -25,6 +27,26 @@ namespace TelegramForwardly.DataAccess.Migrations
             migrationBuilder.DropForeignKey(
                 name: "FK_keywords_clients_user_id",
                 table: "keywords");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_clients_client_current_states_current_state_id",
+                table: "clients");
+
+            ///Primary key constraints are dropped before renaming columns.
+
+            migrationBuilder.DropPrimaryKey(
+                name: "PK_keywords",
+                table: "keywords");
+
+            migrationBuilder.DropPrimaryKey(
+                name: "PK_client_current_states",
+                table: "client_current_states");
+
+            migrationBuilder.DropPrimaryKey(
+                name: "PK_chats",
+                table: "chats");
+
+            // Drop the tables and indexes that are no longer needed.
 
             migrationBuilder.DropTable(
                 name: "chat_types");
@@ -138,6 +160,33 @@ namespace TelegramForwardly.DataAccess.Migrations
                 table: "chats",
                 column: "telegram_user_id");
 
+            // Add the primary key constraints back after renaming columns.
+
+            migrationBuilder.AddPrimaryKey(
+                name: "PK_keywords",
+                table: "keywords",
+                column: "id");
+
+            migrationBuilder.AddPrimaryKey(
+                name: "PK_client_current_states",
+                table: "client_current_states",
+                column: "id");
+
+            migrationBuilder.AddPrimaryKey(
+                name: "PK_chats",
+                table: "chats",
+                column: "id");
+
+            // Recreate the foreign key constraints with the updated column names.
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_clients_client_current_states_current_state_id",
+                table: "clients",
+                column: "current_state_id",
+                principalTable: "client_current_states",
+                principalColumn: "id",
+                onDelete: ReferentialAction.Cascade);
+
             migrationBuilder.AddForeignKey(
                 name: "FK_chats_clients_telegram_user_id",
                 table: "chats",
@@ -158,6 +207,8 @@ namespace TelegramForwardly.DataAccess.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            // Drop foreign keys first to avoid constraint violations when renaming columns.
+
             migrationBuilder.DropForeignKey(
                 name: "FK_chats_clients_telegram_user_id",
                 table: "chats");
@@ -165,6 +216,26 @@ namespace TelegramForwardly.DataAccess.Migrations
             migrationBuilder.DropForeignKey(
                 name: "FK_keywords_clients_telegram_user_id",
                 table: "keywords");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_clients_client_current_states_current_state_id",
+                table: "clients");
+
+            // Drop primary key constraints before renaming columns.
+
+            migrationBuilder.DropPrimaryKey(
+                name: "PK_keywords",
+                table: "keywords");
+
+            migrationBuilder.DropPrimaryKey(
+                name: "PK_client_current_states",
+                table: "client_current_states");
+
+            migrationBuilder.DropPrimaryKey(
+                name: "PK_chats",
+                table: "chats");
+
+            // Drop the indexes etc that are no longer needed.
 
             migrationBuilder.DropIndex(
                 name: "IX_chats_telegram_user_id",
@@ -300,6 +371,33 @@ namespace TelegramForwardly.DataAccess.Migrations
                 name: "IX_chats_user_id",
                 table: "chats",
                 column: "user_id");
+
+            // Recreate the PRIMARY key constraints with the original column names.
+
+            migrationBuilder.AddPrimaryKey(
+                name: "PK_keywords",
+                table: "keywords",
+                column: "id");
+
+            migrationBuilder.AddPrimaryKey(
+                name: "PK_client_current_states",
+                table: "client_current_states",
+                column: "id");
+
+            migrationBuilder.AddPrimaryKey(
+                name: "PK_chats",
+                table: "chats",
+                column: "db_id");
+
+            // Recreate the foreign key constraints with the original column names.
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_clients_client_current_states_current_state_id",
+                table: "clients",
+                column: "current_state_id",
+                principalTable: "client_current_states",
+                principalColumn: "id",
+                onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
                 name: "FK_chats_chat_types_type_id",
