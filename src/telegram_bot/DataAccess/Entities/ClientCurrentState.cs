@@ -6,9 +6,9 @@ namespace TelegramForwardly.DataAccess.Entities
     [Table("client_current_states")]
     public class ClientCurrentState
     {
-        [Column("id", TypeName = "int")]
+        [Column("id", TypeName = "bigint")]
         [Key]
-        public int Id { get; set; }
+        public long Id { get; set; }
 
         [Column("value", TypeName = "varchar(124)")]
         [Required]

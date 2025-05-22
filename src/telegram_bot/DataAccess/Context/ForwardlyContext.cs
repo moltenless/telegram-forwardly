@@ -9,8 +9,6 @@ namespace TelegramForwardly.DataAccess.Context
         internal DbSet<Keyword> Keywords { get; set; }
         internal DbSet<Chat> Chats { get; set; }
         internal DbSet<ClientCurrentState> ClientCurrentStates { get; set; }
-        internal DbSet<TopicGroupingType> TopicGroupingTypes { get; set; }
-        internal DbSet<ChatType> ChatTypes { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

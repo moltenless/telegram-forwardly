@@ -5,7 +5,6 @@ using TelegramForwardly.DataAccess.Repositories.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddDbContext<ForwardlyContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"),
@@ -17,11 +16,11 @@ builder.Services.AddDbContext<ForwardlyContext>(options =>
     )
 );
 
-builder.Services.AddScoped<ITopicGroupingTypeRepository, TopicGroupingTypeRepository>();
+builder.Services.AddScoped<IClientCurrentStatesRepository, ClientCurrentStatesRepository>();
 
 builder.Services.AddControllers();
 
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+// https://aka.ms/aspnetcore/swashbuckle
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

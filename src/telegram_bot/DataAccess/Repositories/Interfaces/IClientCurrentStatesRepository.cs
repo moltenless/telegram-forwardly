@@ -2,8 +2,8 @@
 
 namespace TelegramForwardly.DataAccess.Repositories.Interfaces
 {
-    public interface ITopicGroupingTypeRepository
+    public interface IClientCurrentStatesRepository
     {
-        Task<IEnumerable<TopicGroupingType>> GetAllAsync();
+        Task<IEnumerable<ClientCurrentState>> GetAllAsync();
     }
 }

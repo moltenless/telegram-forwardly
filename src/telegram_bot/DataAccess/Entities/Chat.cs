@@ -6,24 +6,18 @@ namespace TelegramForwardly.DataAccess.Entities
     [Table("chats")]
     public class Chat
     {
-        [Column("db_id", TypeName = "int")]
+        [Column("id", TypeName = "bigint")]
         [Key]
-        public int Id { get; set; }
+        public long Id { get; set; }
 
-        [Column("user_id", TypeName = "bigint")]
+        [Column("telegram_user_id", TypeName = "bigint")]
         [ForeignKey(nameof(Client))]
         [Required]
-        public long UserId { get; set; }
+        public long TelegramUserId { get; set; }
         public Client Client { get; set; } = null!;
 
-        [Column("tg_id", TypeName = "bigint")]
+        [Column("tg_chat_id", TypeName = "bigint")]
         [Required]
-        public long ChatId { get; set; }
-
-        [Column("type_id")]
-        [ForeignKey(nameof(Type))]
-        [Required]
-        public int TypeId { get; set; }
-        public ChatType Type { get; set; } = null!;
+        public long TelegramChatId { get; set; }
     }
 }
