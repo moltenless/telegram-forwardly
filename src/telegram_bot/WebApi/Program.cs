@@ -46,11 +46,11 @@ builder.Services.AddSingleton<ITelegramBotClient>(provider =>
 });
 
 
-builder.Services.AddHttpClient<IUserbotApiService, UserbotApiService>();
+//builder.Services.AddHttpClient<IUserbotApiService, UserbotApiService>();
 
-builder.Services.AddScoped<ITelegramBotService, TelegramBotService>();
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IUserbotApiService, UserbotApiService>();
+//builder.Services.AddScoped<ITelegramBotService, TelegramBotService>();
+//builder.Services.AddScoped<IUserService, UserService>();
+//builder.Services.AddScoped<IUserbotApiService, UserbotApiService>();
 
 
 
