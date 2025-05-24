@@ -11,6 +11,10 @@ services:
             - ASPNETCORE_Kestrel__Certificates__Default__Password=${LOCAL_CERT_PASSWORD}
             - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
             - ConnectionStrings__DefaultConnection=Server=db,1433;Database=TelegramForwardly;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;
+            - TelegramBot__BotToken=${TELEGRAM_BOT_TOKEN}
+            - TelegramBot__UseWebhook=false
+            - TelegramBot__WebhookUrl=https://telegram-forwardly.com
+            - TelegramBot__UserbotApiBaseUrl=http://userbot:5000
         volumes:
             - ./certs:/https/
         ports:
