@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
 using Telegram.Bot;
+using Telegram.Bot.Types.Enums;
 using TelegramForwardly.DataAccess.Context;
 using TelegramForwardly.DataAccess.Repositories;
 using TelegramForwardly.DataAccess.Repositories.Interfaces;
@@ -32,26 +33,25 @@ builder.Services.Configure<TelegramBotOptions>(
     builder.Configuration.GetSection("TelegramBot"));
 
 
-//// Register Telegram Bot Client
-//builder.Services.AddSingleton<ITelegramBotClient>(provider =>
-//{
-//    var botToken = builder.Configuration["TelegramBot:BotToken"];
-//    if (string.IsNullOrEmpty(botToken))
-//        throw new InvalidOperationException("Telegram Bot Token is not configured");
+builder.Services.AddSingleton<ITelegramBotClient>(provider =>
+{
+    var options = provider.GetRequiredService<IOptions<TelegramBotOptions>>()
+        .Value ?? throw new InvalidOperationException("Telegram Bot Options are not configured");
+    var botToken = options.BotToken;
 
-//    return new TelegramBotClient(botToken);
-//});
+    if (string.IsNullOrEmpty(botToken))
+        throw new InvalidOperationException("Telegram Bot Token is not configured");
 
-//// Register HTTP Client for userbot communication
-//builder.Services.AddHttpClient<IUserbotApiService, UserbotApiService>();
-
-//// Register application services
-//builder.Services.AddScoped<ITelegramBotService, TelegramBotService>();
-//builder.Services.AddScoped<IUserService, UserService>();
-//builder.Services.AddScoped<IUserbotApiService, UserbotApiService>();
+    return new TelegramBotClient(botToken);
+});
 
 
-builder.Services.AddScoped<IClientCurrentStatesRepository, ClientCurrentStatesRepository>();
+builder.Services.AddHttpClient<IUserbotApiService, UserbotApiService>();
+
+builder.Services.AddScoped<ITelegramBotService, TelegramBotService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IUserbotApiService, UserbotApiService>();
+
 
 
 
@@ -67,7 +67,6 @@ builder.Services.AddLogging(logging =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 app.UseSwagger();
 app.UseSwaggerUI();
 
@@ -77,36 +76,39 @@ app.MapControllers();
 
 using (var scope = app.Services.CreateScope())
 {
-    var services = scope.ServiceProvider;
-    var context = services.GetRequiredService<ForwardlyContext>();
+    var provider = scope.ServiceProvider;
+    var context = provider.GetRequiredService<ForwardlyContext>();
     await context.Database.MigrateAsync();
 
-    var statesRepository = services.GetRequiredService<IClientCurrentStatesRepository>();
-    var initialStates = services.GetRequiredService<IOptions<ClientCurrentStatesOptions>>().Value;
+    var statesRepository = provider.GetRequiredService<IClientCurrentStatesRepository>();
+    var initialStatesOptions = provider.GetRequiredService<IOptions<ClientCurrentStatesOptions>>().Value;
     await statesRepository.EnsureStatesPresentAsync
-        (initialStates.States, removeOthers: initialStates.RemoveOthers);
+        (initialStatesOptions.States, removeOthers: initialStatesOptions.RemoveOthers);
 }
 
-var telegramBotOptions = builder.Configuration.GetSection("TelegramBot").Get<TelegramBotOptions>();
-if (telegramBotOptions?.UseWebhook is true
-    && !string.IsNullOrEmpty(telegramBotOptions.WebhookUrl))
+using (var scope = app.Services.CreateScope())
 {
-    using var scope = app.Services.CreateScope();
-    //var botClient = scope.ServiceProvider.GetRequiredService<ITelegramBotClient>();
+    var provider = scope.ServiceProvider;
+    var telegramBotOptions = provider.GetRequiredService<IOptions<TelegramBotOptions>>().Value;
+    if (telegramBotOptions?.UseWebhook is true
+        && !string.IsNullOrEmpty(telegramBotOptions.WebhookUrl))
+    {
+        var botClient = scope.ServiceProvider.GetRequiredService<ITelegramBotClient>();
 
-    //try
-    //{
-    //    await botClient.SetWebhookAsync(
-    //        url: $"{telegramOptions.WebhookUrl}/api/telegram/webhook",
-    //        allowedUpdates: new[] { Telegram.Bot.Types.Enums.UpdateType.Message, Telegram.Bot.Types.Enums.UpdateType.CallbackQuery }
-    //    );
+        try
+        {
+            await botClient.SetWebhook(
+                url: $"{telegramBotOptions.WebhookUrl}/api/telegram/webhook",
+                allowedUpdates: [UpdateType.Message, UpdateType.CallbackQuery]
+            );
 
-    //    app.Logger.LogInformation("Webhook configured successfully: {WebhookUrl}", telegramOptions.WebhookUrl);
-    //}
-    //catch (Exception ex)
-    //{
-    //    app.Logger.LogError(ex, "Failed to configure webhook");
-    //}
+            app.Logger.LogInformation("Webhook configured successfully: {WebhookUrl}", telegramBotOptions.WebhookUrl);
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogError(ex, "Failed to configure webhook");
+        }
+    }
 }
 
 await app.RunAsync();
