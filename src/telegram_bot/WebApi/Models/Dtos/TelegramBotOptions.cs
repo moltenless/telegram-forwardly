@@ -1,4 +1,4 @@
-﻿namespace TelegramForwardly.WebApi.Models.Pocos
+﻿namespace TelegramForwardly.WebApi.Models.Dtos
 {
     public class TelegramBotOptions
     {

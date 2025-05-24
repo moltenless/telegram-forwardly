@@ -6,8 +6,7 @@ using Telegram.Bot.Types.Enums;
 using TelegramForwardly.DataAccess.Context;
 using TelegramForwardly.DataAccess.Repositories;
 using TelegramForwardly.DataAccess.Repositories.Interfaces;
-using TelegramForwardly.WebApi.Models.Pocos;
-
+using TelegramForwardly.WebApi.Models.Dtos;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +14,7 @@ builder.Services.AddControllers()
     .AddJsonOptions(options =>
         options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
     );
+
 
 builder.Services.AddDbContext<ForwardlyContext>(options =>
     options.UseSqlServer(
@@ -27,8 +27,7 @@ builder.Services.AddDbContext<ForwardlyContext>(options =>
     )
 );
 
-builder.Services.Configure<ClientCurrentStatesOptions>(
-    builder.Configuration.GetSection("ClientCurrentStates"));
+
 builder.Services.Configure<TelegramBotOptions>(
     builder.Configuration.GetSection("TelegramBot"));
 
@@ -46,12 +45,14 @@ builder.Services.AddSingleton<ITelegramBotClient>(provider =>
 });
 
 
-//builder.Services.AddHttpClient<IUserbotApiService, UserbotApiService>();
+builder.Services.AddHttpClient<IUserbotApiService, UserbotApiService>();
 
-//builder.Services.AddScoped<ITelegramBotService, TelegramBotService>();
-//builder.Services.AddScoped<IUserService, UserService>();
-//builder.Services.AddScoped<IUserbotApiService, UserbotApiService>();
+builder.Services.AddScoped<ITelegramBotService, TelegramBotService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IUserbotApiService, UserbotApiService>();
 
+
+builder.Services.AddScoped<IClientCurrentStatesRepository, ClientCurrentStatesRepository>();
 
 
 
@@ -62,7 +63,6 @@ builder.Services.AddLogging(logging =>
 {
     logging.AddConsole();
     logging.AddDebug();
-    logging.AddJsonConsole();
 });
 
 var app = builder.Build();
@@ -79,11 +79,6 @@ using (var scope = app.Services.CreateScope())
     var provider = scope.ServiceProvider;
     var context = provider.GetRequiredService<ForwardlyContext>();
     await context.Database.MigrateAsync();
-
-    var statesRepository = provider.GetRequiredService<IClientCurrentStatesRepository>();
-    var initialStatesOptions = provider.GetRequiredService<IOptions<ClientCurrentStatesOptions>>().Value;
-    await statesRepository.EnsureStatesPresentAsync
-        (initialStatesOptions.States, removeOthers: initialStatesOptions.RemoveOthers);
 }
 
 using (var scope = app.Services.CreateScope())
