@@ -5,13 +5,14 @@ using TelegramForwardly.WebApi.Services.Interfaces;
 namespace TelegramForwardly.WebApi.Services
 {
     public class UserService(
+        IClientsRepository clientsRepository,
+        IClientCurrentStatesRepository statesRepository,
 
-        IClientCurrentStatesRepository StatesRepository,
-
-        ILogger < UserService > logger) : IUserService
+        ILogger < UserService > logger
+        ) : IUserService
     {
-
-        private readonly IClientCurrentStatesRepository statesRepository = StatesRepository;
+        private readonly IClientsRepository clientsRepository = clientsRepository;
+        private readonly IClientCurrentStatesRepository statesRepository = statesRepository;
 
         private readonly ILogger<UserService> logger = logger;
 
@@ -41,9 +42,13 @@ namespace TelegramForwardly.WebApi.Services
             throw new NotImplementedException();
         }
 
-        public Task<BotUser> GetOrCreateUserAsync(long telegramUserId)
+        public async Task<BotUser> GetOrCreateUserAsync(long telegramUserId)
         {
-            throw new NotImplementedException();
+            var idleState = await statesRepository.GetStateAsync(nameof(UserState.Idle));
+            var client = await clientsRepository.GetOrCreateClientAsync(
+                telegramUserId, idleState);
+
+            return BotUser.FromEntity(client);
         }
 
         public Task RemoveChatAsync(long telegramUserId, long telegramChatId)

@@ -5,6 +5,7 @@ using TelegramForwardly.WebApi.Services.Interfaces;
 using TelegramForwardly.WebApi.Models.Dtos;
 using Telegram.Bot.Types.Enums;
 using TelegramForwardly.DataAccess.Repositories.Interfaces;
+using TelegramForwardly.WebApi.Services.Interfaces.Handlers;
 
 namespace TelegramForwardly.WebApi.Services;
 
@@ -12,16 +13,21 @@ public class BotService(
     ITelegramBotClient botClient,
     IUserService userService,
     IUserbotApiService userbotApiService,
-    IOptions<TelegramConfig> config,
-    ILogger<BotService> logger,
-    IClientCurrentStatesRepository statesRepository) : IBotService
+
+    ICommandHandler commandHandler,
+    IUserInputHandler userInputHandler,
+
+    ILogger<BotService> logger
+    ) : IBotService
 {
     private readonly ITelegramBotClient botClient = botClient;
     private readonly IUserService userService = userService;
     private readonly IUserbotApiService userbotApiService = userbotApiService;
-    private readonly TelegramConfig config = config.Value;
+
+    private readonly ICommandHandler commandHandler = commandHandler;
+    private readonly IUserInputHandler userInputHandler = userInputHandler;
+
     private readonly ILogger logger = logger;
-    private readonly IClientCurrentStatesRepository statesRepository = statesRepository;
 
     public async Task HandleUpdateAsync(Update update, CancellationToken cancellationToken)
     {
@@ -45,11 +51,17 @@ public class BotService(
 
     private async Task HandleMessageAsync(Message message, CancellationToken cancellationToken)
     {
-        string states = string.Join(", ", (await statesRepository.GetAllAsync()).Select(s => s.Value));
-        await SendTextMessageAsync(message.Chat.Id,
-            "This bot is currently under development. Please check back later." +
-            "\nBy the way states in db are:\n" + states,
-            cancellationToken);
+        var user = await userService.GetOrCreateUserAsync(message.From!.Id);
+
+        var messageText = message.Text ?? string.Empty;
+
+        if (messageText.StartsWith('/'))
+        {
+            await commandHandler.HandleCommandAsync(user, message, cancellationToken);
+            return;
+        }
+
+        await userInputHandler.HandleUserInputAsync(user, message, cancellationToken);
     }
 
     private async Task HandleCallbackQueryAsync(CallbackQuery callbackQuery, CancellationToken cancellationToken)

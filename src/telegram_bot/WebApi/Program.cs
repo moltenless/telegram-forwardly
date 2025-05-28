@@ -8,7 +8,9 @@ using TelegramForwardly.DataAccess.Repositories;
 using TelegramForwardly.DataAccess.Repositories.Interfaces;
 using TelegramForwardly.WebApi.Models.Dtos;
 using TelegramForwardly.WebApi.Services;
+using TelegramForwardly.WebApi.Services.Handlers;
 using TelegramForwardly.WebApi.Services.Interfaces;
+using TelegramForwardly.WebApi.Services.Interfaces.Handlers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -43,13 +45,16 @@ builder.Services.AddSingleton<ITelegramBotClient>(provider =>
     return new TelegramBotClient(botToken);
 });
 
-builder.Services.AddHttpClient<IUserbotApiService, UserbotApiService>();
-builder.Services.AddHostedService<PollingService>();
-
 builder.Services.AddScoped<IBotService, BotService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserbotApiService, UserbotApiService>();
+builder.Services.AddHttpClient<IUserbotApiService, UserbotApiService>();
+builder.Services.AddHostedService<PollingService>();
 
+builder.Services.AddScoped<ICommandHandler, CommandHandler>();
+builder.Services.AddScoped<IUserInputHandler, UserInputHandler>();
+
+builder.Services.AddScoped<IClientsRepository, ClientsRepository>();
 builder.Services.AddScoped<IClientCurrentStatesRepository, ClientCurrentStatesRepository>();
 
 builder.Services.AddEndpointsApiExplorer();
