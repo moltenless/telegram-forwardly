@@ -8,7 +8,7 @@ namespace TelegramForwardly.WebApi.Services
         IClientsRepository clientsRepository,
         IClientCurrentStatesRepository statesRepository,
 
-        ILogger < UserService > logger
+        ILogger<UserService> logger
         ) : IUserService
     {
         private readonly IClientsRepository clientsRepository = clientsRepository;
@@ -17,76 +17,92 @@ namespace TelegramForwardly.WebApi.Services
         private readonly ILogger<UserService> logger = logger;
 
 
-        public Task AddChatAsync(long telegramUserId, long telegramChatId)
+        public async Task AddChatAsync(long telegramUserId, long telegramChatId)
         {
             throw new NotImplementedException();
         }
 
-        public Task AddUserKeywordAsync(long telegramUserId, string keyword)
+        public async Task AddUserKeywordAsync(long telegramUserId, string keyword)
         {
             throw new NotImplementedException();
         }
 
-        public Task CompleteAuthenticationAsync(long telegramUserId, string sessionString)
+        public async Task CompleteAuthenticationAsync(long telegramUserId, string sessionString)
         {
             throw new NotImplementedException();
         }
 
-        public Task<IEnumerable<Chat>> GetChatsAsync(long telegramUserId)
+        public async Task<IEnumerable<Chat>> GetChatsAsync(long telegramUserId)
         {
             throw new NotImplementedException();
         }
 
-        public Task<IEnumerable<Keyword>> GetKeywordsAsync(long telegramUserId)
+        public async Task<IEnumerable<Keyword>> GetKeywordsAsync(long telegramUserId)
         {
             throw new NotImplementedException();
         }
 
-        public async Task<BotUser> GetOrCreateUserAsync(long telegramUserId)
+        public async Task<BotUser> GetOrCreateUserAsync(long telegramUserId,
+            UserState initialStateIfNew,
+            string? userNameIfNew,
+            string? firstNameIfNew)
         {
-            var idleState = await statesRepository.GetStateAsync(nameof(UserState.Idle));
+            var stateIfNew = await statesRepository.GetStateOrDefaultAsync(initialStateIfNew.ToString())
+                ?? throw new InvalidOperationException($"{initialStateIfNew} state not found in database");
+            
             var client = await clientsRepository.GetOrCreateClientAsync(
-                telegramUserId, idleState);
+                telegramUserId, stateIfNew, userNameIfNew, firstNameIfNew);
 
             return BotUser.FromEntity(client);
         }
 
-        public Task RemoveChatAsync(long telegramUserId, long telegramChatId)
+        public async Task RemoveChatAsync(long telegramUserId, long telegramChatId)
         {
             throw new NotImplementedException();
         }
 
-        public Task RemoveUserKeywordAsync(long telegramUserId, string keyword)
+        public async Task RemoveUserKeywordAsync(long telegramUserId, string keyword)
         {
             throw new NotImplementedException();
         }
 
-        public Task SetUserForumSupergroupAsync(long telegramUserId, long forumSupergroupId)
+        public async Task SetUserForumSupergroupAsync(long telegramUserId, long forumSupergroupId)
         {
             throw new NotImplementedException();
         }
 
-        public Task SetUserGroupingModeAsync(long telegramUserId, GroupingMode mode)
+        public async Task SetUserGroupingModeAsync(long telegramUserId, GroupingMode mode)
         {
             throw new NotImplementedException();
         }
 
-        public Task SetUserStateAsync(long telegramUserId, UserState state)
+        public async Task SetUserStateAsync(long telegramUserId, UserState newState)
+        {
+            var client = await clientsRepository.GetClientOrDefaultAsync(telegramUserId);
+            if (client is null) return;
+
+            var state = await statesRepository.GetStateOrDefaultAsync(newState.ToString());
+
+            if (state is null)
+            {
+                logger.LogWarning("State {StateName} not found in database.", newState.ToString());
+                return;
+            }
+
+            await clientsRepository.SetClientStateAsync(client, state);
+        }
+
+        public async Task UpdateUserApiHashAsync(long telegramUserId, string apiHash)
         {
             throw new NotImplementedException();
         }
 
-        public Task UpdateUserApiHashAsync(long telegramUserId, string apiHash)
+        public async Task UpdateUserApiIdAsync(long telegramUserId, string apiId)
         {
             throw new NotImplementedException();
         }
 
-        public Task UpdateUserApiIdAsync(long telegramUserId, string apiId)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task UpdateUserPhoneAsync(long telegramUserId, string phone)
+        public async Task UpdateUserPhoneAsync(long telegramUserId, string phone)
         {
             throw new NotImplementedException();
         }

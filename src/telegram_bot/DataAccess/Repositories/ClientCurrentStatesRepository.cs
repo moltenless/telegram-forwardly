@@ -12,12 +12,10 @@ namespace TelegramForwardly.DataAccess.Repositories
             return await context.ClientCurrentStates.ToListAsync();
         }
 
-        public async Task<ClientCurrentState> GetStateAsync(string value)
+        public async Task<ClientCurrentState?> GetStateOrDefaultAsync(string value)
         {
-            var state = await context.ClientCurrentStates
-                .FirstOrDefaultAsync(s => s.Value == value)
-                ?? throw new InvalidOperationException($"{value} state not found in database");
-            return state;
+            return await context.ClientCurrentStates
+                .FirstOrDefaultAsync(s => s.Value == value);
         }
     }
 }

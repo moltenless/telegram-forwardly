@@ -7,30 +7,63 @@ namespace TelegramForwardly.DataAccess.Repositories
 {
     public class ClientsRepository(ForwardlyContext context) : Repository(context), IClientsRepository
     {
-        public async Task<Client> GetOrCreateClientAsync(long telegramUserId, ClientCurrentState initialState)
+        public async Task<Client> GetOrCreateClientAsync(
+            long telegramUserId
+            , ClientCurrentState initialStateIfNew
+            , string? userNameIfNew
+            , string? firstNameIfNew)
         {
-            var client = await context.Clients
-                .Include(c => c.CurrentState)
-                .FirstOrDefaultAsync(c => c.TelegramUserId == telegramUserId);
+            var client = await GetClientOrDefaultAsync(telegramUserId);
 
             if (client == null)
             {
                 client = new Client
                 {
                     TelegramUserId = telegramUserId,
-                    CurrentStateId = initialState.Id,
+                    CurrentStateId = initialStateIfNew.Id,
+                    UserName = userNameIfNew,
+                    FirstName = firstNameIfNew,
                     RegistrationDataTime = DateTime.UtcNow,
+                    IsAuthenticated = false,
+                    ForwardlyEnabled = false,
+                    TopicGrouping = "ByKeyword",
+                    LoggingTopicEnabled = false,
+                    AllChatsFilteringEnabled = false,
                 };
 
                 context.Clients.Add(client);
                 await context.SaveChangesAsync();
 
-                client = await context.Clients
-                    .Include(c => c.CurrentState)
-                    .FirstAsync(c => c.TelegramUserId == telegramUserId);
+                client = await GetClientAsync(telegramUserId);
             }
 
             return client;
+        }
+
+        public async Task<Client> GetClientAsync(long telegramUserId)
+        {
+            return await context.Clients
+                .Include(c => c.CurrentState)
+                .FirstAsync(c => c.TelegramUserId == telegramUserId);
+        }
+
+        public async Task<Client?> GetClientOrDefaultAsync(long telegramUserId)
+        {
+            return await context.Clients
+                .Include(c => c.CurrentState)
+                .FirstOrDefaultAsync(c => c.TelegramUserId == telegramUserId);
+        }
+
+        public async Task SetClientStateAsync(Client client, ClientCurrentState newState)
+        {
+            if (client.CurrentStateId == newState.Id) return;
+            client.CurrentStateId = newState.Id;
+
+            client = await context.Clients
+                .Include(c => c.CurrentState)
+                .FirstAsync(c => c.TelegramUserId == client.TelegramUserId);
+
+            await context.SaveChangesAsync();
         }
     }
 }

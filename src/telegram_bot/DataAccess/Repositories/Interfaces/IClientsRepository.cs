@@ -4,6 +4,16 @@ namespace TelegramForwardly.DataAccess.Repositories.Interfaces
 {
     public interface IClientsRepository
     {
-        Task<Client> GetOrCreateClientAsync(long telegramUserId, ClientCurrentState initialState);
+        Task<Client> GetOrCreateClientAsync(
+            long telegramUserId, 
+            ClientCurrentState initialStateIfNew,
+            string? userNameIfNew,
+            string? firstNameIfNew);
+
+        Task<Client> GetClientAsync(long telegramUserId);
+
+        Task<Client?> GetClientOrDefaultAsync(long telegramUserId);
+
+        Task SetClientStateAsync(Client client, ClientCurrentState newState);
     }
 }

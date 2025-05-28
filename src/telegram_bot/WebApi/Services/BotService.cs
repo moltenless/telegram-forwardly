@@ -6,6 +6,7 @@ using TelegramForwardly.WebApi.Models.Dtos;
 using Telegram.Bot.Types.Enums;
 using TelegramForwardly.DataAccess.Repositories.Interfaces;
 using TelegramForwardly.WebApi.Services.Interfaces.Handlers;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace TelegramForwardly.WebApi.Services;
 
@@ -51,13 +52,16 @@ public class BotService(
 
     private async Task HandleMessageAsync(Message message, CancellationToken cancellationToken)
     {
-        var user = await userService.GetOrCreateUserAsync(message.From!.Id);
+        var user = await userService.GetOrCreateUserAsync(
+            message.From!.Id, UserState.Idle, message.From!.Username, message.From!.FirstName);
 
         var messageText = message.Text ?? string.Empty;
 
         if (messageText.StartsWith('/'))
         {
-            await commandHandler.HandleCommandAsync(user, message, cancellationToken);
+            await commandHandler.HandleCommandAsync(user, message, 
+                SendTextMessageAsync, ShowMainMenuAsync, userService,
+                cancellationToken);
             return;
         }
 
@@ -67,6 +71,34 @@ public class BotService(
     private async Task HandleCallbackQueryAsync(CallbackQuery callbackQuery, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
+    }
+
+    private async Task ShowMainMenuAsync(BotUser user, long chatId, CancellationToken cancellationToken)
+    {
+        var keyboard = new InlineKeyboardMarkup([
+            [
+                InlineKeyboardButton.WithCallbackData("🔑 Setup API", "setup"),
+                InlineKeyboardButton.WithCallbackData("📝 Keywords", "keywords")
+            ],
+            [
+                InlineKeyboardButton.WithCallbackData("💬 Chats", "chats"),
+                InlineKeyboardButton.WithCallbackData("📊 Status", "status"),
+            ],
+            [
+                InlineKeyboardButton.WithCallbackData("⚙️ Settings", "settings"),
+                InlineKeyboardButton.WithCallbackData("❓ Help", "help")
+            ]
+        ]);
+
+        var menuText = (bool)user.IsAuthenticated!
+            ? "🏠 Main Menu - You're authenticated and ready to go!"
+            : "🏠 Main Menu - Please set up your API credentials first.";
+
+        await botClient.SendMessage(
+            chatId: chatId,
+            text: menuText,
+            replyMarkup: keyboard,
+            cancellationToken: cancellationToken);
     }
 
     private async Task SendTextMessageAsync(long chatId, string text, CancellationToken cancellationToken)

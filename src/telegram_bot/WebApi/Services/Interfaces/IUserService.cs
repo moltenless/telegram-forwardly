@@ -5,8 +5,11 @@ namespace TelegramForwardly.WebApi.Services.Interfaces
 {
     public interface IUserService
     {
-        Task<BotUser> GetOrCreateUserAsync(long telegramUserId);
-        Task SetUserStateAsync(long telegramUserId, UserState state);
+        Task<BotUser> GetOrCreateUserAsync(long telegramUserId,
+            UserState initialStateIfNew,
+            string? userNameIfNew,
+            string? firstNameIfNew);
+        Task SetUserStateAsync(long telegramUserId, UserState newState);
         Task UpdateUserApiIdAsync(long telegramUserId, string apiId);
         Task UpdateUserApiHashAsync(long telegramUserId, string apiHash);
         Task UpdateUserPhoneAsync(long telegramUserId, string phone);

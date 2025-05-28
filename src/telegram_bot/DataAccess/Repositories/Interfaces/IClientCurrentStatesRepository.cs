@@ -6,6 +6,6 @@ namespace TelegramForwardly.DataAccess.Repositories.Interfaces
     {
         Task<IEnumerable<ClientCurrentState>> GetAllAsync();
 
-        Task<ClientCurrentState> GetStateAsync(string value);
+        Task<ClientCurrentState?> GetStateOrDefaultAsync(string value);
     }
 }
