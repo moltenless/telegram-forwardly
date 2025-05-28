@@ -7,6 +7,8 @@ using TelegramForwardly.DataAccess.Context;
 using TelegramForwardly.DataAccess.Repositories;
 using TelegramForwardly.DataAccess.Repositories.Interfaces;
 using TelegramForwardly.WebApi.Models.Dtos;
+using TelegramForwardly.WebApi.Services;
+using TelegramForwardly.WebApi.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,7 +16,6 @@ builder.Services.AddControllers()
     .AddJsonOptions(options =>
         options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
     );
-
 
 builder.Services.AddDbContext<ForwardlyContext>(options =>
     options.UseSqlServer(
@@ -27,16 +28,14 @@ builder.Services.AddDbContext<ForwardlyContext>(options =>
     )
 );
 
-
-builder.Services.Configure<TelegramBotOptions>(
+builder.Services.Configure<TelegramConfig>(
     builder.Configuration.GetSection("TelegramBot"));
-
 
 builder.Services.AddSingleton<ITelegramBotClient>(provider =>
 {
-    var options = provider.GetRequiredService<IOptions<TelegramBotOptions>>()
+    var telegramConfig = provider.GetRequiredService<IOptions<TelegramConfig>>()
         .Value ?? throw new InvalidOperationException("Telegram Bot Options are not configured");
-    var botToken = options.BotToken;
+    var botToken = telegramConfig.BotToken;
 
     if (string.IsNullOrEmpty(botToken))
         throw new InvalidOperationException("Telegram Bot Token is not configured");
@@ -44,17 +43,14 @@ builder.Services.AddSingleton<ITelegramBotClient>(provider =>
     return new TelegramBotClient(botToken);
 });
 
-
 builder.Services.AddHttpClient<IUserbotApiService, UserbotApiService>();
+builder.Services.AddHostedService<PollingService>();
 
-builder.Services.AddScoped<ITelegramBotService, TelegramBotService>();
+builder.Services.AddScoped<IBotService, BotService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserbotApiService, UserbotApiService>();
 
-
 builder.Services.AddScoped<IClientCurrentStatesRepository, ClientCurrentStatesRepository>();
-
-
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -84,25 +80,29 @@ using (var scope = app.Services.CreateScope())
 using (var scope = app.Services.CreateScope())
 {
     var provider = scope.ServiceProvider;
-    var telegramBotOptions = provider.GetRequiredService<IOptions<TelegramBotOptions>>().Value;
-    if (telegramBotOptions?.UseWebhook is true
-        && !string.IsNullOrEmpty(telegramBotOptions.WebhookUrl))
+    var telegramConfig = provider.GetRequiredService<IOptions<TelegramConfig>>().Value;
+    if (telegramConfig.UseWebhook is true
+        && !string.IsNullOrEmpty(telegramConfig.WebhookUrl))
     {
         var botClient = scope.ServiceProvider.GetRequiredService<ITelegramBotClient>();
 
         try
         {
             await botClient.SetWebhook(
-                url: $"{telegramBotOptions.WebhookUrl}/api/telegram/webhook",
+                url: $"{telegramConfig.WebhookUrl}/api/telegram/webhook",
                 allowedUpdates: [UpdateType.Message, UpdateType.CallbackQuery]
             );
 
-            app.Logger.LogInformation("Webhook configured successfully: {WebhookUrl}", telegramBotOptions.WebhookUrl);
+            app.Logger.LogInformation("Webhook configured successfully: {WebhookUrl}", telegramConfig.WebhookUrl);
         }
         catch (Exception ex)
         {
             app.Logger.LogError(ex, "Failed to configure webhook");
         }
+    }
+    else
+    {
+        app.Logger.LogInformation("Bot DOESN'T use webhook. IT IS configured for polling mode");
     }
 }
 

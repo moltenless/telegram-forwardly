@@ -1,6 +1,6 @@
 ﻿namespace TelegramForwardly.WebApi.Models.Dtos
 {
-    public class TelegramBotOptions
+    public class TelegramConfig
     {
         public string BotToken { get; set; } = null!;
         public bool? UseWebhook { get; set; } = null!;

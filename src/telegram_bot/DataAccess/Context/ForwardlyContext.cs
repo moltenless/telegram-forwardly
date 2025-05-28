@@ -31,8 +31,7 @@ namespace TelegramForwardly.DataAccess.Context
                 new ClientCurrentState { Id = 9L, Value = "AwaitingKeywords", },
                 new ClientCurrentState { Id = 10L, Value = "AwaitingForumGroup", },
                 new ClientCurrentState { Id = 11L, Value = "AwaitingGroupingType", },
-                new ClientCurrentState { Id = 12L, Value = "AwaitingEnableLoggingTopic", },
-                new ClientCurrentState { Id = 13L, Value = "Ready" }
+                new ClientCurrentState { Id = 12L, Value = "AwaitingEnableLoggingTopic", }
             );
         }
     }
