@@ -51,10 +51,6 @@ builder.Services.AddScoped<IUserbotApiService, UserbotApiService>();
 builder.Services.AddHttpClient<IUserbotApiService, UserbotApiService>();
 builder.Services.AddHostedService<PollingService>();
 
-builder.Services.AddScoped<ICommandHandler, CommandHandler>();
-builder.Services.AddScoped<ICallbackHandler, CallbackHandler>();
-builder.Services.AddScoped<IUserInputHandler, UserInputHandler>();
-
 builder.Services.AddScoped<IClientsRepository, ClientsRepository>();
 builder.Services.AddScoped<IClientCurrentStatesRepository, ClientCurrentStatesRepository>();
 

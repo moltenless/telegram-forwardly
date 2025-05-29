@@ -1,20 +1,19 @@
 ﻿using Telegram.Bot;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using TelegramForwardly.WebApi.Models.Dtos;
 using TelegramForwardly.WebApi.Services.Interfaces;
-using TelegramForwardly.WebApi.Services.Interfaces.Handlers;
 
 namespace TelegramForwardly.WebApi.Services.Handlers
 {
-    public class CommandHandler : ICommandHandler
+    public static class CommandHandler
     {
-        public async Task HandleCommandAsync(BotUser user, Message message,
-            Func<long, string, CancellationToken, Task> sendTextMessageAsync,
-            Func<BotUser, long, CancellationToken, Task> showMainMenuAsync,
-            ITelegramBotClient botClient,
+        public static async Task HandleCommandAsync(
+            BotUser user, 
+            Message message,
             IUserService userService,
+            ITelegramBotClient botClient,
+            ILogger logger,
             CancellationToken cancellationToken)
         {
             var command = message.Text!.Split(' ')[0].ToLower();
@@ -22,74 +21,132 @@ namespace TelegramForwardly.WebApi.Services.Handlers
             switch (command)
             {
                 case "/start":
-                    await HandleStartCommandAsync(user, message,
-                        sendTextMessageAsync, showMainMenuAsync, cancellationToken);
+                    await HandleStartCommandAsync(
+                        user, message,
+                        botClient, logger,
+                        cancellationToken);
                     break;
                 case "/menu":
-                    await showMainMenuAsync(user, message.Chat.Id, cancellationToken);
+                    await ShowMainMenuAsync(
+                        user, message.Chat.Id,
+                        botClient, logger, 
+                        cancellationToken);
                     break;
                 case "/setup":
-                    await HandleSetupCommandAsync(user, message,
-                        sendTextMessageAsync, botClient,
-                        userService, cancellationToken);
+                    await HandleSetupCommandAsync(
+                        user, message,
+                        userService,
+                        botClient, logger,
+                        cancellationToken);
                     break;
                 case "/keywords":
-                    await HandleKeywordsCommandAsync(user, message,
-                        sendTextMessageAsync,
+                    await HandleKeywordsCommandAsync(
+                        user, message,
+                        botClient, logger,
                         cancellationToken);
                     break;
                 case "/chats":
-                    await HandleChatsCommandAsync(user, message,
-                        sendTextMessageAsync,
+                    await HandleChatsCommandAsync(
+                        user, message,
+                        botClient, logger,
                         cancellationToken);
                     break;
                 case "/status":
-                    await HandleStatusCommandAsync(user, message,
-                        sendTextMessageAsync,
+                    await HandleStatusCommandAsync(
+                        user, message,
+                        botClient, logger,
                         cancellationToken);
                     break;
                 case "/settings":
-                    await HandleSettingsCommandAsync(user, message,
-                        sendTextMessageAsync,
+                    await HandleSettingsCommandAsync(
+                        user, message,
+                        botClient, logger,
                         cancellationToken);
                     break;
                 case "/help":
-                    await HandleHelpCommandAsync(user, message,
-                        sendTextMessageAsync,
+                    await HandleHelpCommandAsync(
+                        user, message,
+                        botClient, logger,
                         cancellationToken);
                     break;
                 default:
-                    await sendTextMessageAsync(message.Chat.Id,
+                    await BotHelper.SendTextMessageAsync(
+                        message.Chat.Id,
                         "Unknown command. Use /help to see available commands.",
+                        botClient, logger,
                         cancellationToken);
                     break;
             }
         }
 
-        private static async Task HandleStartCommandAsync(BotUser user, Message message,
-            Func<long, string, CancellationToken, Task> sendTextMessageAsync,
-            Func<BotUser, long, CancellationToken, Task> showMainMenuAsync,
+        private static async Task HandleStartCommandAsync(
+            BotUser user,
+            Message message,
+            ITelegramBotClient botClient,
+            ILogger logger,
             CancellationToken cancellationToken)
         {
-            var welcomeMessage = $"Welcome to Telegram Forwardly! 🚀\n\n" +
+            var welcomeMessage = $"{BotHelper.GetUserNameOrEmpty(user)} Welcome to Telegram Forwardly! 🚀\n\n" +
                                 $"I'll help you forward important messages from active Telegram groups or channels to your organized forum.\n\n" +
                                 $"*To get started*, you need to set up *your account information* and Telegram API credentials.\n\n" +
                                 $"Please click *🔑 Setup credentials* button below\n*Or*\nUse /setup to begin the configuration process.";
 
-            await sendTextMessageAsync(message.Chat.Id, welcomeMessage, cancellationToken);
-            await showMainMenuAsync(user, message.Chat.Id, cancellationToken);
+            await BotHelper.SendTextMessageAsync(
+                message.Chat.Id, welcomeMessage,
+                botClient, logger,
+                cancellationToken);
+            await ShowMainMenuAsync(
+                user, message.Chat.Id,
+                botClient, logger,
+                cancellationToken);
         }
 
-        private static async Task HandleSetupCommandAsync(BotUser user, Message message,
-            Func<long, string, CancellationToken, Task> sendTextMessageAsync,
+        public static async Task ShowMainMenuAsync(
+            BotUser user, 
+            long chatId,
             ITelegramBotClient botClient,
+            ILogger logger,
+            CancellationToken cancellationToken)
+        {
+            var keyboard = new InlineKeyboardMarkup([
+                [
+                InlineKeyboardButton.WithCallbackData("🔑 Setup credentials", "setup"),
+                InlineKeyboardButton.WithCallbackData("📝 Keywords", "keywords")
+            ],
+            [
+                InlineKeyboardButton.WithCallbackData("💬 Chats", "chats"),
+                InlineKeyboardButton.WithCallbackData("📊 Status", "status"),
+            ],
+            [
+                InlineKeyboardButton.WithCallbackData("⚙️ Settings", "settings"),
+                InlineKeyboardButton.WithCallbackData("❓ Help", "help")
+            ]
+            ]);
+
+            var menuText = (bool)user.IsAuthenticated!
+                ? "🏠 Main Menu - You're authenticated and ready to go!"
+                : "🏠 Main Menu - Please set up your credentials first.";
+
+            await BotHelper.SendTextMessageAsync(
+                chatId, menuText,
+                botClient, logger,
+                cancellationToken,
+                keyboard);
+        }
+
+        private static async Task HandleSetupCommandAsync(
+            BotUser user, 
+            Message message,
             IUserService userService,
+            ITelegramBotClient botClient,
+            ILogger logger,
             CancellationToken cancellationToken)
         {
             if ((bool)user.IsAuthenticated!)
             {
-                await sendTextMessageAsync(message.Chat.Id,
+                await BotHelper.SendTextMessageAsync(message.Chat.Id, 
                     "You're already authenticated! Use /menu to see available options.",
+                    botClient, logger,
                     cancellationToken);
                 return;
             }
@@ -107,60 +164,76 @@ namespace TelegramForwardly.WebApi.Services.Handlers
             { RequestContact = true })
             { ResizeKeyboard = true, OneTimeKeyboard = true, };
 
-            await botClient.SendMessage(
-                chatId: message.Chat.Id,
-                text: BotService.EscapeMarkdownV2(setupMessage),
-                replyMarkup: keyboard,
-                parseMode: ParseMode.MarkdownV2,
-                cancellationToken: cancellationToken);
+            await BotHelper.SendTextMessageAsync(
+                message.Chat.Id,
+                setupMessage,
+                botClient, logger,
+                cancellationToken,
+                keyboard);
         }
 
         private static async Task HandleKeywordsCommandAsync(
-            BotUser user, Message message,
-            Func<long, string, CancellationToken, Task> sendTextMessageAsync,
+            BotUser user, 
+            Message message,
+            ITelegramBotClient botClient,
+            ILogger logger,
             CancellationToken cancellationToken)
         {
-            await sendTextMessageAsync(message.Chat.Id,
-                "You want to manage your keywords? This feature is not implemented yet. ",
+            await BotHelper.SendTextMessageAsync(message.Chat.Id,
+                $"{BotHelper.GetUserNameOrEmpty(user)}You want to manage your keywords? This feature is not implemented yet. ",
+                botClient, logger,
                 cancellationToken);
         }
 
         private static async Task HandleChatsCommandAsync(
-            BotUser user, Message message,
-            Func<long, string, CancellationToken, Task> sendTextMessageAsync,
+            BotUser user,
+            Message message,
+            ITelegramBotClient botClient,
+            ILogger logger,
             CancellationToken cancellationToken)
         {
-            await sendTextMessageAsync(message.Chat.Id,
-                "You want to manage your chats? This feature is not implemented yet. ",
+            await BotHelper.SendTextMessageAsync(message.Chat.Id,
+                $"{BotHelper.GetUserNameOrEmpty(user)}You want to manage your chats? This feature is not implemented yet. ",
+                botClient, logger,
                 cancellationToken);
         }
 
         private static async Task HandleStatusCommandAsync(
-            BotUser user, Message message,
-            Func<long, string, CancellationToken, Task> sendTextMessageAsync,
+            BotUser user,
+            Message message,
+            ITelegramBotClient botClient,
+            ILogger logger,
             CancellationToken cancellationToken)
         {
-            await sendTextMessageAsync(message.Chat.Id,
-                "Check your status? This feature is not implemented yet. ",
+            await BotHelper.SendTextMessageAsync(message.Chat.Id,
+                $"{BotHelper.GetUserNameOrEmpty(user)}Check your status? This feature is not implemented yet.",
+                botClient, logger,
                 cancellationToken);
         }
 
-        private async Task HandleSettingsCommandAsync(BotUser user, Message message,
-            Func<long, string, CancellationToken, Task> sendTextMessageAsync,
+        private static async Task HandleSettingsCommandAsync(
+            BotUser user,
+            Message message,
+            ITelegramBotClient botClient,
+            ILogger logger,
             CancellationToken cancellationToken)
         {
-            await sendTextMessageAsync(message.Chat.Id,
-                "Settings will be here. This feature is not implemented yet. ",
+            await BotHelper.SendTextMessageAsync(message.Chat.Id,
+                $"{BotHelper.GetUserNameOrEmpty(user)}Settings will be here. This feature is not implemented yet.",
+                botClient, logger,
                 cancellationToken);
         }
 
         private static async Task HandleHelpCommandAsync(
-            BotUser user, Message message,
-            Func<long, string, CancellationToken, Task> sendTextMessageAsync,
+            BotUser user,
+            Message message,
+            ITelegramBotClient botClient,
+            ILogger logger,
             CancellationToken cancellationToken)
         {
-            await sendTextMessageAsync(message.Chat.Id,
-                "Soon here will be help topic. This feature is not implemented yet. ",
+            await BotHelper.SendTextMessageAsync(message.Chat.Id,
+                $"{BotHelper.GetUserNameOrEmpty(user)} Soon here will be help topic. This feature is not implemented yet.",
+                botClient, logger,
                 cancellationToken);
         }
     }

@@ -1,78 +1,99 @@
-﻿using Telegram.Bot.Types;
+﻿using Telegram.Bot;
+using Telegram.Bot.Types;
 using TelegramForwardly.WebApi.Models.Dtos;
-using TelegramForwardly.WebApi.Services.Interfaces.Handlers;
 
 namespace TelegramForwardly.WebApi.Services.Handlers
 {
-    public class CallbackHandler : ICallbackHandler
+    public static class CallbackHandler
     {
-        public async Task HandleCallbackAsync(BotUser user, string data,
+        public static async Task HandleCallbackAsync(
+            BotUser user, 
+            string data,
             CallbackQuery callbackQuery,
-            ICommandHandler commandHandler,
+            ITelegramBotClient botClient,
+            ILogger logger,
             CancellationToken cancellationToken)
         {
             switch (data)
             {
                 case "setup":
-                    await HandleSetupCallbackAsync(user, callbackQuery,
-                        commandHandler, cancellationToken);
+                    await HandleSetupCallbackAsync(
+                        user, callbackQuery,
+                        cancellationToken);
                     break;
                 case "keywords":
-                    await HandleKeywordsCallbackAsync(user, callbackQuery,
-                        commandHandler, cancellationToken);
+                    await HandleKeywordsCallbackAsync(
+                        user, callbackQuery,
+                        cancellationToken);
                     break;
                 case "chats":
-                    await HandleChatsCallbackAsync(user, callbackQuery,
-                        commandHandler, cancellationToken);
+                    await HandleChatsCallbackAsync(
+                        user, callbackQuery,
+                        cancellationToken);
                     break;
                 case "status":
-                    await HandleStatusCallbackAsync(user, callbackQuery,
-                        commandHandler, cancellationToken);
+                    await HandleStatusCallbackAsync(
+                        user, callbackQuery,
+                        cancellationToken);
                     break;
                 case "settings":
-                    await HandleSettingsCallbackAsync(user, callbackQuery,
-                        commandHandler, cancellationToken);
+                    await HandleSettingsCallbackAsync(
+                        user, callbackQuery,
+                        cancellationToken);
                     break;
                 case "help":
-                    await HandleHelpCallbackAsync(user, callbackQuery,
-                        commandHandler, cancellationToken);
+                    await HandleHelpCallbackAsync(
+                        user, callbackQuery,
+                        cancellationToken);
                     break;
             }
         }
 
-        private async Task HandleSetupCallbackAsync(BotUser user, 
+        private static async Task HandleSetupCallbackAsync(
+            BotUser user, 
             CallbackQuery callbackQuery, 
-            ICommandHandler commandHandler, CancellationToken cancellationToken)
+
+            CancellationToken cancellationToken)
         {
         }
 
-        private async Task HandleKeywordsCallbackAsync(BotUser user,
+        private static async Task HandleKeywordsCallbackAsync(
+            BotUser user,
             CallbackQuery callbackQuery, 
-            ICommandHandler commandHandler, CancellationToken cancellationToken)
+
+            CancellationToken cancellationToken)
         {
         }
 
-        private async Task HandleChatsCallbackAsync(BotUser user,
+        private static async Task HandleChatsCallbackAsync(
+            BotUser user,
             CallbackQuery callbackQuery, 
-            ICommandHandler commandHandler, CancellationToken cancellationToken)
+
+            CancellationToken cancellationToken)
         {
         }
 
-        private async Task HandleStatusCallbackAsync(BotUser user, 
+        private static async Task HandleStatusCallbackAsync(
+            BotUser user, 
             CallbackQuery callbackQuery, 
-            ICommandHandler commandHandler, CancellationToken cancellationToken)
+
+            CancellationToken cancellationToken)
         {
         }
 
-        private async Task HandleSettingsCallbackAsync(BotUser user,
+        private static async Task HandleSettingsCallbackAsync(
+            BotUser user,
             CallbackQuery callbackQuery, 
-            ICommandHandler commandHandler, CancellationToken cancellationToken)
+
+            CancellationToken cancellationToken)
         {
         }
 
-        private async Task HandleHelpCallbackAsync(BotUser user,
+        private static async Task HandleHelpCallbackAsync(
+            BotUser user,
             CallbackQuery callbackQuery, 
-            ICommandHandler commandHandler, CancellationToken cancellationToken)
+
+            CancellationToken cancellationToken)
         {
         }
     }

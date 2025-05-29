@@ -3,8 +3,7 @@ using Telegram.Bot.Types;
 using TelegramForwardly.WebApi.Services.Interfaces;
 using TelegramForwardly.WebApi.Models.Dtos;
 using Telegram.Bot.Types.Enums;
-using TelegramForwardly.WebApi.Services.Interfaces.Handlers;
-using Telegram.Bot.Types.ReplyMarkups;
+using TelegramForwardly.WebApi.Services.Handlers;
 
 namespace TelegramForwardly.WebApi.Services;
 
@@ -13,20 +12,12 @@ public class BotService(
     IUserService userService,
     IUserbotApiService userbotApiService,
 
-    ICommandHandler commandHandler,
-    ICallbackHandler callbackHandler,
-    IUserInputHandler userInputHandler,
-
     ILogger<BotService> logger
     ) : IBotService
 {
     private readonly ITelegramBotClient botClient = botClient;
     private readonly IUserService userService = userService;
     private readonly IUserbotApiService userbotApiService = userbotApiService;
-
-    private readonly ICommandHandler commandHandler = commandHandler;
-    private readonly ICallbackHandler callbackHandler = callbackHandler;
-    private readonly IUserInputHandler userInputHandler = userInputHandler;
 
     private readonly ILogger logger = logger;
 
@@ -59,14 +50,19 @@ public class BotService(
 
         if (messageText.StartsWith('/'))
         {
-            await commandHandler.HandleCommandAsync(user, message, 
-                SendTextMessageAsync, ShowMainMenuAsync, 
-                botClient, userService,
+            await CommandHandler.HandleCommandAsync(
+                user, message,
+                userService,
+                botClient, logger,
                 cancellationToken);
             return;
         }
 
-        await userInputHandler.HandleUserInputAsync(user, message, cancellationToken);
+        await UserInputHandler.HandleUserInputAsync(
+            user, message, 
+            userService,
+            botClient, logger,
+            cancellationToken);
     }
 
     private async Task HandleCallbackQueryAsync(CallbackQuery callbackQuery, CancellationToken cancellationToken)
@@ -77,53 +73,10 @@ public class BotService(
 
         await botClient.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: cancellationToken);
 
-        await callbackHandler.HandleCallbackAsync(
-            user, data, callbackQuery, commandHandler, cancellationToken);
-    }
-
-    private async Task ShowMainMenuAsync(BotUser user, long chatId, CancellationToken cancellationToken)
-    {
-        var keyboard = new InlineKeyboardMarkup([
-            [
-                InlineKeyboardButton.WithCallbackData("🔑 Setup credentials", "setup"),
-                InlineKeyboardButton.WithCallbackData("📝 Keywords", "keywords")
-            ],
-            [
-                InlineKeyboardButton.WithCallbackData("💬 Chats", "chats"),
-                InlineKeyboardButton.WithCallbackData("📊 Status", "status"),
-            ],
-            [
-                InlineKeyboardButton.WithCallbackData("⚙️ Settings", "settings"),
-                InlineKeyboardButton.WithCallbackData("❓ Help", "help")
-            ]
-        ]);
-
-        var menuText = (bool)user.IsAuthenticated!
-            ? "🏠 Main Menu - You're authenticated and ready to go!"
-            : "🏠 Main Menu - Please set up your credentials first.";
-
-        await botClient.SendMessage(
-            chatId: chatId,
-            text: menuText,
-            replyMarkup: keyboard,
-            cancellationToken: cancellationToken);
-    }
-
-    private async Task SendTextMessageAsync(long chatId, string text, CancellationToken cancellationToken)
-    {
-        try
-        {
-            await botClient.SendMessage(
-                chatId: chatId,
-                text: EscapeMarkdownV2(text),
-                //replyMarkup: new ReplyKeyboardRemove(),
-                parseMode: ParseMode.MarkdownV2,
-                cancellationToken: cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to send message to chat {ChatId}", chatId);
-        }
+        await CallbackHandler.HandleCallbackAsync(
+            user, data, callbackQuery, 
+            botClient, logger,
+            cancellationToken);
     }
 
     private async Task HandleErrorAsync(Update update, Exception exception, CancellationToken cancellationToken)
@@ -134,8 +87,9 @@ public class BotService(
         {
             try
             {
-                await SendTextMessageAsync(update.Message.Chat.Id,
+                await BotHelper.SendTextMessageAsync(update.Message.Chat.Id,
                     "An error occurred while processing your request. Please try again later.",
+                    botClient, logger,
                     cancellationToken);
             }
             catch
@@ -143,24 +97,5 @@ public class BotService(
                 // Ignore errors when sending error messages
             }
         }
-    }
-
-    public static string EscapeMarkdownV2(string text)
-    {
-        if (string.IsNullOrEmpty(text))
-            return text;
-
-        var specialChars = new[] { '\\', '_', /*'*',*/ '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!' };
-
-        var builder = new System.Text.StringBuilder();
-
-        foreach (var ch in text)
-        {
-            if (Array.IndexOf(specialChars, ch) != -1)
-                builder.Append('\\');
-            builder.Append(ch);
-        }
-
-        return builder.ToString();
     }
 }
