@@ -17,5 +17,7 @@ namespace TelegramForwardly.DataAccess.Repositories.Interfaces
         Task SetClientStateAsync(Client client, ClientCurrentState newState);
 
         Task UpdateClientPhoneAsync(Client client, string phone);
+
+        Task UpdateClientApiIdAsync(Client client, string apiId);
     }
 }

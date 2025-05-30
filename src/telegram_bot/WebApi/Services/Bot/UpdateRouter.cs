@@ -123,6 +123,11 @@ namespace TelegramForwardly.WebApi.Services.Bot
                     break;
 
                 case UserState.AwaitingApiId:
+                    await AuthenticationManager.HandleApiIdInputAsync(
+                        user, message, 
+                        userService,
+                        botClient, logger,
+                        cancellationToken);
                     break;
 
                 case UserState.AwaitingApiHash:

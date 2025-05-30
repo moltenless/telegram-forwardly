@@ -79,11 +79,16 @@ namespace TelegramForwardly.WebApi.Services.Bot
                 "name it whatever you want, for example 'app'. " +
                 "For the _Platform_, select \'Desktop\' or \'Web\'. Remain other fields empty.\n" +
                 "4. Click _Create application_ and then copy your *App api-id*.\n\n" +
-                "_Please note that you should not share your API Id and API Hash with anyone! " +
+                "_! Please note that you should not share your API Id and API Hash with anyone! " +
                 "We don't use them for anything other than forwarding messages to your forum. " + 
                 "Check out our open source code on [GitHub](https://github.com/moltenless/telegram-forwardly). " +
                 "You can always delete them in bot settings menu or revoke access to your app in Telegram settings._\n\n" +
-                "*First, please send me the App api-id:*";
+                "*First, please send me the App api-id:* it looks like '12345678'";
+
+        public static string GetApiHashMessage()
+            => $"Perfect! Now, please send me your *App api-hash*.\n\n" +
+                "You can copy it in the same place where you got your App api-id. " +
+                "it looks like `0123456789abcdef0123456789abcdef`";
 
         public static InlineKeyboardMarkup GetMenuKeyboard()
             => new([

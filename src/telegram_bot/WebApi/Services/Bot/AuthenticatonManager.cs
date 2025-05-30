@@ -41,5 +41,25 @@ namespace TelegramForwardly.WebApi.Services.Bot
                 cancellationToken,
                 new ReplyKeyboardRemove());
         }
+
+        public static async Task HandleApiIdInputAsync(
+            BotUser user,
+            Message message,
+            IUserService userService,
+            ITelegramBotClient botClient,
+            ILogger logger,
+            CancellationToken cancellationToken
+            )
+        {
+            string apiId = message.Text?.Trim() ?? string.Empty;
+            await userService.UpdateUserApiIdAsync(user.TelegramUserId, apiId);
+            await userService.SetUserStateAsync(user.TelegramUserId, UserState.AwaitingApiHash);
+
+            await BotHelper.SendTextMessageAsync(
+                message.Chat.Id,
+                BotHelper.GetApiHashMessage(),
+                botClient, logger,
+                cancellationToken);
+        }
     }
 }
