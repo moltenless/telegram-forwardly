@@ -3,7 +3,7 @@ using Telegram.Bot.Types;
 using TelegramForwardly.WebApi.Services.Interfaces;
 using TelegramForwardly.WebApi.Models.Dtos;
 using Telegram.Bot.Types.Enums;
-using TelegramForwardly.WebApi.Services.Handlers;
+using TelegramForwardly.WebApi.Services.Bot;
 
 namespace TelegramForwardly.WebApi.Services;
 
@@ -50,7 +50,7 @@ public class BotService(
 
         if (messageText.StartsWith('/'))
         {
-            await CommandHandler.HandleCommandAsync(
+            await UpdateRouter.RouteCommandAsync(
                 user, message,
                 userService,
                 botClient, logger,
@@ -58,7 +58,7 @@ public class BotService(
             return;
         }
 
-        await UserInputHandler.HandleUserInputAsync(
+        await UpdateRouter.RouteUserInputAsync(
             user, message, 
             userService,
             botClient, logger,
@@ -69,12 +69,12 @@ public class BotService(
     {
         var user = await userService.GetOrCreateUserAsync(
             callbackQuery.From!.Id, UserState.Idle, callbackQuery.From!.Username, callbackQuery.From!.FirstName);
-        var data = callbackQuery.Data!;
 
         await botClient.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: cancellationToken);
 
-        await CallbackHandler.HandleCallbackAsync(
-            user, data, callbackQuery, 
+        await UpdateRouter.RouteCallbackQueryAsync(
+            user, callbackQuery, 
+            userService,
             botClient, logger,
             cancellationToken);
     }

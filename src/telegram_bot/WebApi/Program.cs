@@ -8,9 +8,7 @@ using TelegramForwardly.DataAccess.Repositories;
 using TelegramForwardly.DataAccess.Repositories.Interfaces;
 using TelegramForwardly.WebApi.Models.Dtos;
 using TelegramForwardly.WebApi.Services;
-using TelegramForwardly.WebApi.Services.Handlers;
 using TelegramForwardly.WebApi.Services.Interfaces;
-using TelegramForwardly.WebApi.Services.Interfaces.Handlers;
 
 var builder = WebApplication.CreateBuilder(args);
 
