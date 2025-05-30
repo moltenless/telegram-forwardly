@@ -1,4 +1,5 @@
 ﻿using Telegram.Bot;
+using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using TelegramForwardly.WebApi.Models.Dtos;
@@ -23,6 +24,7 @@ namespace TelegramForwardly.WebApi.Services.Bot
                     text: parseMode == ParseMode.MarkdownV2 ? EscapeMarkdownV2(text) : text,
                     replyMarkup: replyMarkup,
                     parseMode: parseMode,
+                    linkPreviewOptions: new LinkPreviewOptions { IsDisabled = true },
                     cancellationToken: cancellationToken);
             }
             catch (Exception ex)
@@ -70,18 +72,18 @@ namespace TelegramForwardly.WebApi.Services.Bot
                              "*Please click \'Share phone number 📞🔢\' button below*\nOr\n*Enter manually in the format:* +1234567890 or 1234567890 with country code";
 
         public static string GetApiIdMessage(string phone)
-            => $"Great! Your phone number is {phone}. Now, let's set up your Telegram API ID and API Hash:\n\n" +
+            => $"Great! Your phone number is {phone}.\n*Now, let's set up your Telegram API ID and API Hash:*\n\n" +
                 "You can get them from official Telegram website https://my.telegram.org\n" +
-                "1. There you will need to log in with your phone number and confirmation \'login code\' sent by Telegram.\n" +
-                "2. Then click \'API development tools\'.\n3. Under \'App title\' and \'Short name\'," +
-                "name it whatever you want, for example 'app'." +
-                "For the \'Platform\', select \'Desktop\' or \'Web\'. Remain other fields empty.\n" +
-                "4. Click \'Create application\' and then copy your *App api_id*.\n\n" +
-                "_Please note that you should not share your API Id and API Hash with anyone!" +
-                "We don't use them for anything other than forwarding messages to your forum." + 
-                "Check out our open source code on [GitHub](https://github.com/moltenless/telegram-forwardly)." +
+                "1. There you will need to log in with your phone number and confirm with \'login code\' sent by Telegram.\n" +
+                "2. Then click _API development tools_.\n3. Under _App title_ and _Short name_, " +
+                "name it whatever you want, for example 'app'. " +
+                "For the _Platform_, select \'Desktop\' or \'Web\'. Remain other fields empty.\n" +
+                "4. Click _Create application_ and then copy your *App api-id*.\n\n" +
+                "_Please note that you should not share your API Id and API Hash with anyone! " +
+                "We don't use them for anything other than forwarding messages to your forum. " + 
+                "Check out our open source code on [GitHub](https://github.com/moltenless/telegram-forwardly). " +
                 "You can always delete them in bot settings menu or revoke access to your app in Telegram settings._\n\n" +
-                "First, please send me the *App api_id*:";
+                "*First, please send me the App api-id:*";
 
         public static InlineKeyboardMarkup GetMenuKeyboard()
             => new([
