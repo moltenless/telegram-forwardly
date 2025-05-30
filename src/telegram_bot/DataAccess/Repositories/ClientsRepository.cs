@@ -74,5 +74,12 @@ namespace TelegramForwardly.DataAccess.Repositories
             client.ApiId = apiId;
             await context.SaveChangesAsync();
         }
+
+        public async Task UpdateClientApiHashAsync(Client client, string apiHash)
+        {
+            if (client.ApiHash == apiHash) return;
+            client.ApiHash = apiHash;
+            await context.SaveChangesAsync();
+        }
     }
 }

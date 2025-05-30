@@ -61,5 +61,43 @@ namespace TelegramForwardly.WebApi.Services.Bot
                 botClient, logger,
                 cancellationToken);
         }
+
+        public static async Task HandleApiHashInputAsync(
+            BotUser user,
+            Message message,
+            IUserService userService,
+            IUserbotApiService userbotApiService,
+            ITelegramBotClient botClient,
+            ILogger logger,
+            CancellationToken cancellationToken
+            )
+        {
+            string apiHash = message.Text?.Trim() ?? string.Empty;
+            await userService.UpdateUserApiHashAsync(user.TelegramUserId, apiHash);
+            string apiId = user.ApiId!;
+            string phone = user.Phone!;
+
+            var authResult = await userbotApiService.StartAuthenticationAsync(
+                user.TelegramUserId, phone, apiId, apiHash);
+
+            if (!authResult.Success)
+            {
+                await BotHelper.SendTextMessageAsync(
+                    message.Chat.Id,
+                    $"Authentication failed: {authResult.ErrorMessage}\nPlease try again with /setup", 
+                    botClient, logger,
+                    cancellationToken);
+                await userService.SetUserStateAsync(user.TelegramUserId, UserState.Idle);
+                return;
+            }
+
+            await userService.SetUserStateAsync(user.TelegramUserId, UserState.AwaitingVerificationCode);
+
+            await BotHelper.SendTextMessageAsync(
+                message.Chat.Id,
+                "A verification code has been sent to your Telegram account. *Please send me the code:*",
+                botClient, logger,
+                cancellationToken);
+        }
     }
 }

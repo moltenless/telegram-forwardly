@@ -108,6 +108,7 @@ namespace TelegramForwardly.WebApi.Services.Bot
             BotUser user,
             Message message,
             IUserService userService,
+            IUserbotApiService userbotApiService,
             ITelegramBotClient botClient,
             ILogger logger,
             CancellationToken cancellationToken)
@@ -131,6 +132,12 @@ namespace TelegramForwardly.WebApi.Services.Bot
                     break;
 
                 case UserState.AwaitingApiHash:
+                    await AuthenticationManager.HandleApiHashInputAsync(
+                        user, message, 
+                        userService,
+                        userbotApiService,
+                        botClient, logger,
+                        cancellationToken);
                     break;
 
                 case UserState.AwaitingVerificationCode:

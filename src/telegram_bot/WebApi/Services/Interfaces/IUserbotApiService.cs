@@ -4,7 +4,11 @@ namespace TelegramForwardly.WebApi.Services.Interfaces
 {
     public interface IUserbotApiService
     {
-        Task<AuthenticationResult> StartAuthenticationAsync(long telegramUserId, string phoneNumber);
+        Task<AuthenticationResult> StartAuthenticationAsync(
+            long telegramUserId,
+            string phone, 
+            string apiId,
+            string apiHash);
         Task<AuthenticationResult> VerifyCodeAsync(long telegramUserId, string verificationCode);
         Task<AuthenticationResult> VerifyPasswordAsync(long telegramUserId, string password);
         Task<IEnumerable<ChatInfo>> GetUserChatsAsync(long telegramUserId);

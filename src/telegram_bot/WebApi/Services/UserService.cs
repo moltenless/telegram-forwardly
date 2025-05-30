@@ -62,6 +62,9 @@ namespace TelegramForwardly.WebApi.Services
         
         public async Task UpdateUserApiHashAsync(long telegramUserId, string apiHash)
         {
+            var client = await clientsRepository.GetClientOrDefaultAsync(telegramUserId);
+            if (client is not null)
+                await clientsRepository.UpdateClientApiHashAsync(client, apiHash);
         }
 
         public async Task AddChatAsync(long telegramUserId, long telegramChatId)

@@ -61,6 +61,7 @@ public class BotService(
         await UpdateRouter.RouteUserInputAsync(
             user, message, 
             userService,
+            userbotApiService,
             botClient, logger,
             cancellationToken);
     }

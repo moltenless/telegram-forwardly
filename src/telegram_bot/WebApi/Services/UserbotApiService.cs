@@ -22,6 +22,15 @@ namespace TelegramForwardly.WebApi.Services
             httpClient.BaseAddress = new Uri(this.telegramConfig.UserbotApiBaseUrl);
         }
 
+        public Task<AuthenticationResult> StartAuthenticationAsync(
+            long telegramUserId,
+            string phone,
+            string api_id,
+            string api_hash)
+        {
+            return null; 
+        }
+
         public Task<bool> DisableForwardlyAsync(long telegramUserId)
         {
             throw new NotImplementedException();
@@ -33,11 +42,6 @@ namespace TelegramForwardly.WebApi.Services
         }
 
         public Task<IEnumerable<ChatInfo>> GetUserChatsAsync(long telegramUserId)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<AuthenticationResult> StartAuthenticationAsync(long telegramUserId, string phoneNumber)
         {
             throw new NotImplementedException();
         }
