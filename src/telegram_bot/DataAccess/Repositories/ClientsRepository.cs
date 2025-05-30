@@ -58,11 +58,13 @@ namespace TelegramForwardly.DataAccess.Repositories
         {
             if (client.CurrentStateId == newState.Id) return;
             client.CurrentStateId = newState.Id;
+            await context.SaveChangesAsync();
+        }
 
-            client = await context.Clients
-                .Include(c => c.CurrentState)
-                .FirstAsync(c => c.TelegramUserId == client.TelegramUserId);
-
+        public async Task UpdateClientPhoneAsync(Client client, string phone)
+        {
+            if (client.Phone == phone) return;
+            client.Phone = phone;
             await context.SaveChangesAsync();
         }
     }

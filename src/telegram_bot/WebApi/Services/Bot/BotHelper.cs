@@ -36,7 +36,7 @@ namespace TelegramForwardly.WebApi.Services.Bot
             if (string.IsNullOrEmpty(text))
                 return text;
 
-            var specialChars = new[] { '\\', '_', /*'*',*/ '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!' };
+            var specialChars = new[] { '\\', /*'_', '*', '[', ']', '(', ')',*/ '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!' };
 
             var builder = new System.Text.StringBuilder();
 
@@ -59,19 +59,29 @@ namespace TelegramForwardly.WebApi.Services.Bot
 
 
         public static string GetWelcomeMessage(BotUser user)
-            => $"{GetUserNameOrEmpty(user, " ")}Welcome to Telegram Forwardly! 🚀\n\n" +
-                                "I'll help you forward important messages from active Telegram groups or channels to your organized forum.\n\n" +
-                                "*To get started*, you need to set up *your account information* and Telegram API credentials.\n\n" +
-                                "To begin the configuration process:\n*Please click \"🔑 Setup credentials\" in menu below*\nOr\n*Use /setup*";
+            => $"{GetUserNameOrEmpty(user, " ")}" +
+            $"Welcome to Telegram Forwardly! 🚀\n\n" +
+              "I'll help you forward important messages from active Telegram groups or channels to your organized forum.\n\n" +
+              "*To get started*, you need to set up *your account information* and Telegram API credentials.\n\n" +
+              "To begin the configuration process:\n*Please click \'🔑 Setup credentials\' in menu below*\nOr\n*Use /setup*";
 
         public static string GetSetupMessage()
             => "Let's get started with the phone number linked to your Telegram account:\n\n" +
-                             "*Please click \"Share phone number 📞🔢\" button below*\nOr\n*Enter manually in the format:* +1234567890 or 1234567890";
+                             "*Please click \'Share phone number 📞🔢\' button below*\nOr\n*Enter manually in the format:* +1234567890 or 1234567890 with country code";
 
-        public static string GetApiIdMessage()
-            => "Now, let's set up your Telegram API ID and API Hash:\n\n" +
-                         "First, I need your API ID. You can get it from official Telegram website https://my.telegram.org/apps\n\n" +
-                         "Please send me your API ID:";
+        public static string GetApiIdMessage(string phone)
+            => $"Great! Your phone number is {phone}. Now, let's set up your Telegram API ID and API Hash:\n\n" +
+                "You can get them from official Telegram website https://my.telegram.org\n" +
+                "1. There you will need to log in with your phone number and confirmation \'login code\' sent by Telegram.\n" +
+                "2. Then click \'API development tools\'.\n3. Under \'App title\' and \'Short name\'," +
+                "name it whatever you want, for example 'app'." +
+                "For the \'Platform\', select \'Desktop\' or \'Web\'. Remain other fields empty.\n" +
+                "4. Click \'Create application\' and then copy your *App api_id*.\n\n" +
+                "_Please note that you should not share your API Id and API Hash with anyone!" +
+                "We don't use them for anything other than forwarding messages to your forum." + 
+                "Check out our open source code on [GitHub](https://github.com/moltenless/telegram-forwardly)." +
+                "You can always delete them in bot settings menu or revoke access to your app in Telegram settings._\n\n" +
+                "First, please send me the *App api_id*:";
 
         public static InlineKeyboardMarkup GetMenuKeyboard()
             => new([

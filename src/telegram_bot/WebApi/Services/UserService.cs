@@ -46,6 +46,13 @@ namespace TelegramForwardly.WebApi.Services
             await clientsRepository.SetClientStateAsync(client, state);
         }
 
+        public async Task UpdateUserPhoneAsync(long telegramUserId, string phone)
+        {
+            var client = await clientsRepository.GetClientOrDefaultAsync(telegramUserId);
+            if (client is not null)
+                await clientsRepository.UpdateClientPhoneAsync(client, phone);
+        }
+
         public async Task AddChatAsync(long telegramUserId, long telegramChatId)
         {
         }
@@ -89,10 +96,6 @@ namespace TelegramForwardly.WebApi.Services
         }
 
         public async Task UpdateUserApiIdAsync(long telegramUserId, string apiId)
-        {
-        }
-
-        public async Task UpdateUserPhoneAsync(long telegramUserId, string phone)
         {
         }
     }

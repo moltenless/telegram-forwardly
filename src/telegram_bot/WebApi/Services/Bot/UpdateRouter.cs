@@ -115,7 +115,11 @@ namespace TelegramForwardly.WebApi.Services.Bot
             switch (user.CurrentState)
             {
                 case UserState.AwaitingPhoneNumber:
-
+                    await AuthenticationManager.HandlePhoneInputAsync(
+                        user, message, 
+                        userService,
+                        botClient, logger,
+                        cancellationToken);
                     break;
 
                 case UserState.AwaitingApiId:
