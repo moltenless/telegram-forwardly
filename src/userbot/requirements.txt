@@ -1,3 +1,7 @@
-Flask
 telethon
+Flask
+requests
 python-dotenv
+asyncio
+aiohttp
+APScheduler
