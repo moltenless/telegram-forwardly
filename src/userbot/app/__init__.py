@@ -25,7 +25,7 @@ def create_app():
         loop.run_until_complete(client_manager.initialize_from_database())
 
         scheduler_service.start()
-        
+
         loop.run_until_complete(client_manager.start_message_handling())
 
         loop.run_forever()
