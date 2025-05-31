@@ -52,7 +52,7 @@ class BotUser:
     all_chats_filtering_enabled: Optional[bool] = None
     keywords: List[Keyword] = field(default_factory=list)
     chats: List[Chat] = field(default_factory=list)
-
+    
 class UserClient:
     user: BotUser
     client: Optional[TelegramClient] = None
