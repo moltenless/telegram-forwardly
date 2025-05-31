@@ -1,4 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
+using System.Text;
+using System.Text.Json;
 using TelegramForwardly.WebApi.Models.Dtos;
 using TelegramForwardly.WebApi.Models.Responses;
 using TelegramForwardly.WebApi.Services.Interfaces;
@@ -22,13 +24,37 @@ namespace TelegramForwardly.WebApi.Services
             httpClient.BaseAddress = new Uri(this.telegramConfig.UserbotApiBaseUrl);
         }
 
-        public Task<AuthenticationResult> StartAuthenticationAsync(
+        public async Task<AuthenticationResult> StartAuthenticationAsync(
             long telegramUserId,
             string phone,
-            string api_id,
-            string api_hash)
+            string apiId,
+            string apiHash)
         {
-            return null; 
+            try
+            {
+                var request = new {
+                    user_id = telegramUserId,
+                    phone,
+                    api_id = apiId,
+                    api_hash = apiHash
+                };
+                var json = JsonSerializer.Serialize(request);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await httpClient.PostAsync("/api/auth/start", content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (response.IsSuccessStatusCode)
+                    return new AuthenticationResult { Success = true };
+
+                var errorResult = JsonSerializer.Deserialize<AuthenticationResult>(responseContent);
+                return errorResult ?? new AuthenticationResult { Success = false, ErrorMessage = "Unknown error occurred." };
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error starting authentication for user {TelegramUserId}", telegramUserId);
+                return new AuthenticationResult { Success = false, ErrorMessage = "Connection error" };
+            }
         }
 
         public Task<bool> DisableForwardlyAsync(long telegramUserId)
