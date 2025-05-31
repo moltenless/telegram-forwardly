@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TelegramForwardly.DataAccess.Context;
 
@@ -11,9 +12,11 @@ using TelegramForwardly.DataAccess.Context;
 namespace TelegramForwardly.DataAccess.Migrations
 {
     [DbContext(typeof(ForwardlyContext))]
-    partial class ForwardlyContextModelSnapshot : ModelSnapshot
+    [Migration("20250522120048_RefineSchema")]
+    partial class RefineSchema
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -88,6 +91,10 @@ namespace TelegramForwardly.DataAccess.Migrations
                         .HasColumnType("bit")
                         .HasColumnName("logging_topic_enabled");
 
+                    b.Property<string>("Password")
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("password");
+
                     b.Property<string>("Phone")
                         .HasColumnType("varchar(20)")
                         .HasColumnName("phone");
@@ -107,6 +114,10 @@ namespace TelegramForwardly.DataAccess.Migrations
                     b.Property<string>("UserName")
                         .HasColumnType("varchar(32)")
                         .HasColumnName("username");
+
+                    b.Property<string>("VerificationCode")
+                        .HasColumnType("varchar(16)")
+                        .HasColumnName("verification_code");
 
                     b.HasKey("TelegramUserId");
 
@@ -132,68 +143,6 @@ namespace TelegramForwardly.DataAccess.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("client_current_states");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1L,
-                            Value = "Idle"
-                        },
-                        new
-                        {
-                            Id = 2L,
-                            Value = "AwaitingPhoneNumber"
-                        },
-                        new
-                        {
-                            Id = 3L,
-                            Value = "AwaitingApiId"
-                        },
-                        new
-                        {
-                            Id = 4L,
-                            Value = "AwaitingApiHash"
-                        },
-                        new
-                        {
-                            Id = 5L,
-                            Value = "AwaitingVerificationCode"
-                        },
-                        new
-                        {
-                            Id = 6L,
-                            Value = "AwaitingPassword"
-                        },
-                        new
-                        {
-                            Id = 7L,
-                            Value = "AwaitingEnableAllChats"
-                        },
-                        new
-                        {
-                            Id = 8L,
-                            Value = "AwaitingChats"
-                        },
-                        new
-                        {
-                            Id = 9L,
-                            Value = "AwaitingKeywords"
-                        },
-                        new
-                        {
-                            Id = 10L,
-                            Value = "AwaitingForumGroup"
-                        },
-                        new
-                        {
-                            Id = 11L,
-                            Value = "AwaitingGroupingType"
-                        },
-                        new
-                        {
-                            Id = 12L,
-                            Value = "AwaitingEnableLoggingTopic"
-                        });
                 });
 
             modelBuilder.Entity("TelegramForwardly.DataAccess.Entities.Keyword", b =>

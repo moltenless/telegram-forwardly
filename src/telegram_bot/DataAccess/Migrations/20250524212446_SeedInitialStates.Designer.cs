@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TelegramForwardly.DataAccess.Context;
 
@@ -11,9 +12,11 @@ using TelegramForwardly.DataAccess.Context;
 namespace TelegramForwardly.DataAccess.Migrations
 {
     [DbContext(typeof(ForwardlyContext))]
-    partial class ForwardlyContextModelSnapshot : ModelSnapshot
+    [Migration("20250524212446_SeedInitialStates")]
+    partial class SeedInitialStates
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -88,6 +91,10 @@ namespace TelegramForwardly.DataAccess.Migrations
                         .HasColumnType("bit")
                         .HasColumnName("logging_topic_enabled");
 
+                    b.Property<string>("Password")
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("password");
+
                     b.Property<string>("Phone")
                         .HasColumnType("varchar(20)")
                         .HasColumnName("phone");
@@ -107,6 +114,10 @@ namespace TelegramForwardly.DataAccess.Migrations
                     b.Property<string>("UserName")
                         .HasColumnType("varchar(32)")
                         .HasColumnName("username");
+
+                    b.Property<string>("VerificationCode")
+                        .HasColumnType("varchar(16)")
+                        .HasColumnName("verification_code");
 
                     b.HasKey("TelegramUserId");
 
@@ -193,6 +204,11 @@ namespace TelegramForwardly.DataAccess.Migrations
                         {
                             Id = 12L,
                             Value = "AwaitingEnableLoggingTopic"
+                        },
+                        new
+                        {
+                            Id = 13L,
+                            Value = "Ready"
                         });
                 });
 

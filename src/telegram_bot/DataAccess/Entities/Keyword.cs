@@ -6,14 +6,14 @@ namespace TelegramForwardly.DataAccess.Entities
     [Table("keywords")]
     public class Keyword
     {
-        [Column("id", TypeName = "int")]
+        [Column("id", TypeName = "bigint")]
         [Key]
-        public int Id { get; set; }
+        public long Id { get; set; }
 
-        [Column("user_id", TypeName = "bigint")]
+        [Column("telegram_user_id", TypeName = "bigint")]
         [ForeignKey(nameof(Client))]
         [Required]
-        public long UserId { get; set; }
+        public long TelegramUserId { get; set; }
         public Client Client { get; set; } = null!;
 
         [Column("value", TypeName = "nvarchar(128)")]

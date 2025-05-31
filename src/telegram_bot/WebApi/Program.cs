@@ -1,11 +1,22 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using System.Text.Json;
+using Telegram.Bot;
+using Telegram.Bot.Types.Enums;
 using TelegramForwardly.DataAccess.Context;
 using TelegramForwardly.DataAccess.Repositories;
 using TelegramForwardly.DataAccess.Repositories.Interfaces;
+using TelegramForwardly.WebApi.Models.Dtos;
+using TelegramForwardly.WebApi.Services;
+using TelegramForwardly.WebApi.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
+    );
+
 builder.Services.AddDbContext<ForwardlyContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"),
@@ -17,35 +28,82 @@ builder.Services.AddDbContext<ForwardlyContext>(options =>
     )
 );
 
-builder.Services.AddScoped<ITopicGroupingTypeRepository, TopicGroupingTypeRepository>();
+builder.Services.Configure<TelegramConfig>(
+    builder.Configuration.GetSection("TelegramBot"));
 
-builder.Services.AddControllers();
+builder.Services.AddSingleton<ITelegramBotClient>(provider =>
+{
+    var telegramConfig = provider.GetRequiredService<IOptions<TelegramConfig>>()
+        .Value ?? throw new InvalidOperationException("Telegram Bot Options are not configured");
+    var botToken = telegramConfig.BotToken;
 
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+    if (string.IsNullOrEmpty(botToken))
+        throw new InvalidOperationException("Telegram Bot Token is not configured");
+
+    return new TelegramBotClient(botToken);
+});
+
+builder.Services.AddScoped<IBotService, BotService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IUserbotApiService, UserbotApiService>();
+builder.Services.AddHttpClient<IUserbotApiService, UserbotApiService>();
+builder.Services.AddHostedService<PollingService>();
+
+builder.Services.AddScoped<IClientsRepository, ClientsRepository>();
+builder.Services.AddScoped<IClientCurrentStatesRepository, ClientCurrentStatesRepository>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddLogging(logging =>
+{
+    logging.AddConsole();
+    logging.AddDebug();
+});
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
+app.MapControllers();
 
 using (var scope = app.Services.CreateScope())
 {
-    var services = scope.ServiceProvider;
-    var context = services.GetRequiredService<ForwardlyContext>();
+    var provider = scope.ServiceProvider;
+    var context = provider.GetRequiredService<ForwardlyContext>();
     await context.Database.MigrateAsync();
 }
 
-app.MapControllers();
+using (var scope = app.Services.CreateScope())
+{
+    var provider = scope.ServiceProvider;
+    var telegramConfig = provider.GetRequiredService<IOptions<TelegramConfig>>().Value;
+    if (telegramConfig.UseWebhook is true
+        && !string.IsNullOrEmpty(telegramConfig.WebhookUrl))
+    {
+        var botClient = scope.ServiceProvider.GetRequiredService<ITelegramBotClient>();
+
+        try
+        {
+            await botClient.SetWebhook(
+                url: $"{telegramConfig.WebhookUrl}/api/telegram/webhook",
+                allowedUpdates: [UpdateType.Message, UpdateType.CallbackQuery]
+            );
+
+            app.Logger.LogInformation("Webhook configured successfully: {WebhookUrl}", telegramConfig.WebhookUrl);
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogError(ex, "Failed to configure webhook");
+        }
+    }
+    else
+    {
+        app.Logger.LogInformation("Bot DOESN'T use webhook. IT IS configured for polling mode");
+    }
+}
 
 await app.RunAsync();
