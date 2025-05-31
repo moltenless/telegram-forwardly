@@ -58,4 +58,3 @@ class UserClient:
     client: Optional[TelegramClient] = None
     is_connected: bool = False
     last_error: Optional[str] = None
-    
