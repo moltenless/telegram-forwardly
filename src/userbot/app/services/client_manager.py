@@ -30,225 +30,224 @@ class ClientManager:
 
         log_info(f"Initialized {len(self.clients)} clients")
 
-        async def _create_and_connect_client(self, user: BotUser) -> bool:
-            """Create and connect a Telegram client for user"""
-            try:
-                if not all([user.api_id, user.api_hash, user.session_string]):
-                    log_error(f"Missing credentials for user {user.telegram_user_id}")
-                    return False
-
-                # Create client with string session
-                session = StringSession(user.session_string)
-                client = TelegramClient(
-                    session,
-                    int(user.api_id),
-                    user.api_hash
-                )
-
-                # Connect client
-                await client.connect()
-
-                if not await client.is_user_authorized():
-                    log_error(f"User {user.telegram_user_id} session is not authorized")
-                    await client.disconnect()
-                    return False
-
-                # Store client
-                user_client = UserClient(user=user, client=client, is_connected=True)
-                self.clients[user.telegram_user_id] = user_client
-
-                # Set up message handler
-                await self._setup_message_handler(user_client)
-
-                log_info(f"Connected client for user {user.telegram_user_id}")
-
-                # Report status to bot API
-                await self.telegram_api.report_user_status(user.telegram_user_id, True)
-
-                return True
-
-            except Exception as e:
-                log_error(f"Failed to connect client for user {user.telegram_user_id}", e)
-                await self.telegram_api.report_user_status(user.telegram_user_id, False, str(e))
+    async def _create_and_connect_client(self, user: BotUser) -> bool:
+        """Create and connect a Telegram client for user"""
+        try:
+            if not all([user.api_id, user.api_hash, user.session_string]):
+                log_error(f"Missing credentials for user {user.telegram_user_id}")
                 return False
 
-        async def _setup_message_handler(self, user_client: UserClient):
-            """Set up message handler for user client"""
+            # Create client with string session
+            session = StringSession(user.session_string)
+            client = TelegramClient(
+                session,
+                int(user.api_id),
+                user.api_hash
+            )
+
+            # Connect client
+            await client.connect()
+
+            if not await client.is_user_authorized():
+                log_error(f"User {user.telegram_user_id} session is not authorized")
+                await client.disconnect()
+                return False
+
+            # Store client
+            user_client = UserClient(user=user, client=client, is_connected=True)
+            self.clients[user.telegram_user_id] = user_client
+
+            # Set up message handler
+            await self._setup_message_handler(user_client)
+
+            log_info(f"Connected client for user {user.telegram_user_id}")
+
+            # Report status to bot API
+            await self.telegram_api.report_user_status(user.telegram_user_id, True)
+
+            return True
+
+        except Exception as e:
+            log_error(f"Failed to connect client for user {user.telegram_user_id}", e)
+            await self.telegram_api.report_user_status(user.telegram_user_id, False, str(e))
+            return False
+
+    async def _setup_message_handler(self, user_client: UserClient):
+        """Set up message handler for user client"""
+        try:
+            # Get monitored chat IDs
+            monitored_chat_ids = [chat.telegram_chat_id for chat in user_client.user.chats]
+
+            if not monitored_chat_ids and not user_client.user.all_chats_filtering_enabled:
+                return
+
+            # Create event handler
+            @user_client.client.on(events.NewMessage)
+            async def handle_new_message(event):
+                await self.message_handler.handle_message(event, user_client)
+
+            log_info(f"Set up message handler for user {user_client.user.telegram_user_id}")
+
+        except Exception as e:
+            log_error(f"Failed to setup message handler for user {user_client.user.telegram_user_id}", e)
+
+    async def start_authentication(self, user_id: int, phone: str, api_id: str, api_hash: str) -> Dict[
+        str, Any]:
+        """Start authentication process for a user"""
+        try:
+            # Create temporary client for authentication
+            client = TelegramClient(StringSession(), int(api_id), api_hash)
+            await client.connect()
+
+            # Send code request
+            await client.send_code_request(phone)
+
+            # Store temp session for verification
+            self._auth_sessions[user_id] = {
+                'client': client,
+                'phone': phone,
+                'api_id': api_id,
+                'api_hash': api_hash
+            }
+
+            log_info(f"Started authentication for user {user_id}")
+            return {'success': True, 'message': 'Code sent to phone'}
+
+        except Exception as e:
+            log_error(f"Failed to start authentication for user {user_id}", e)
+            return {'success': False, 'error': str(e)}
+
+    async def verify_code(self, user_id: int, code: str) -> Dict[str, Any]:
+        try:
+            if user_id not in self._auth_sessions:
+                return {'success': False, 'error': 'Authentication session not found'}
+
+            session_data = self._auth_sessions[user_id]
+            client = session_data['client']
+
             try:
-                # Get monitored chat IDs
-                monitored_chat_ids = [chat.telegram_chat_id for chat in user_client.user.chats]
+                await client.sign_in(session_data['phone'], code)
 
-                if not monitored_chat_ids and not user_client.user.all_chats_filtering_enabled:
-                    return
+                # Get session string
+                session_string = client.session.save()
 
-                # Create event handler
-                @user_client.client.on(events.NewMessage)
-                async def handle_new_message(event):
-                    await self.message_handler.handle_message(event, user_client)
+                # Update session in bot API
+                await self.telegram_api.update_user_session(user_id, session_string)
 
-                log_info(f"Set up message handler for user {user_client.user.telegram_user_id}")
+                # Clean up temp session
+                await client.disconnect()
+                del self._auth_sessions[user_id]
 
-            except Exception as e:
-                log_error(f"Failed to setup message handler for user {user_client.user.telegram_user_id}", e)
+                log_info(f"Successfully verified code for user {user_id}")
+                return {'success': True, 'message': 'Authentication successful'}
 
-            async def start_authentication(self, user_id: int, phone: str, api_id: str, api_hash: str) -> Dict[
-                str, Any]:
-                """Start authentication process for a user"""
-                try:
-                    # Create temporary client for authentication
-                    client = TelegramClient(StringSession(), int(api_id), api_hash)
-                    await client.connect()
+            except SessionPasswordNeededError:
+                log_info(f"2FA password required for user {user_id}")
+                return {'success': False, 'requires_password': True, 'message': '2FA password required'}
 
-                    # Send code request
-                    await client.send_code_request(phone)
+            except PhoneCodeInvalidError:
+                return {'success': False, 'error': 'Invalid verification code'}
 
-                    # Store temp session for verification
-                    self._auth_sessions[user_id] = {
-                        'client': client,
-                        'phone': phone,
-                        'api_id': api_id,
-                        'api_hash': api_hash
-                    }
+        except Exception as e:
+            log_error(f"Failed to verify code for user {user_id}", e)
+            return {'success': False, 'error': str(e)}
 
-                    log_info(f"Started authentication for user {user_id}")
-                    return {'success': True, 'message': 'Code sent to phone'}
+    async def verify_password(self, user_id: int, password: str) -> Dict[str, Any]:
+        """Verify 2FA password"""
+        try:
+            if user_id not in self._auth_sessions:
+                return {'success': False, 'error': 'Authentication session not found'}
 
-                except Exception as e:
-                    log_error(f"Failed to start authentication for user {user_id}", e)
-                    return {'success': False, 'error': str(e)}
+            session_data = self._auth_sessions[user_id]
+            client = session_data['client']
 
-            async def verify_code(self, user_id: int, code: str) -> Dict[str, Any]:
-                """Verify authentication code"""
-                try:
-                    if user_id not in self._auth_sessions:
-                        return {'success': False, 'error': 'Authentication session not found'}
+            try:
+                await client.sign_in(password=password)
 
-                    session_data = self._auth_sessions[user_id]
-                    client = session_data['client']
+                # Get session string
+                session_string = client.session.save()
 
-                    try:
-                        await client.sign_in(session_data['phone'], code)
+                # Update session in bot API
+                await self.telegram_api.update_user_session(user_id, session_string)
 
-                        # Get session string
-                        session_string = client.session.save()
+                # Clean up temp session
+                await client.disconnect()
+                del self._auth_sessions[user_id]
 
-                        # Update session in bot API
-                        await self.telegram_api.update_user_session(user_id, session_string)
+                log_info(f"Successfully verified password for user {user_id}")
+                return {'success': True, 'message': 'Authentication successful'}
 
-                        # Clean up temp session
-                        await client.disconnect()
-                        del self._auth_sessions[user_id]
+            except PasswordHashInvalidError:
+                return {'success': False, 'error': 'Invalid password'}
 
-                        log_info(f"Successfully verified code for user {user_id}")
-                        return {'success': True, 'message': 'Authentication successful'}
+        except Exception as e:
+            log_error(f"Failed to verify password for user {user_id}", e)
+            return {'success': False, 'error': str(e)}
 
-                    except SessionPasswordNeededError:
-                        log_info(f"2FA password required for user {user_id}")
-                        return {'success': False, 'requires_password': True, 'message': '2FA password required'}
+    async def update_user(self, user_data: BotUser) -> Dict[str, Any]:
+        """Update user configuration and reconnect if necessary"""
+        try:
+            user_id = user_data.telegram_user_id
 
-                    except PhoneCodeInvalidError:
-                        return {'success': False, 'error': 'Invalid verification code'}
+            # If user already exists, disconnect old client
+            if user_id in self.clients:
+                await self._disconnect_client(user_id)
 
-                except Exception as e:
-                    log_error(f"Failed to verify code for user {user_id}", e)
-                    return {'success': False, 'error': str(e)}
+            # If user is authenticated, create new connection
+            if user_data.is_authenticated and user_data.session_string:
+                success = await self._create_and_connect_client(user_data)
+                if success:
+                    return {'success': True, 'message': 'User updated and connected'}
+                else:
+                    return {'success': False, 'error': 'Failed to connect client'}
 
-            async def verify_password(self, user_id: int, password: str) -> Dict[str, Any]:
-                """Verify 2FA password"""
-                try:
-                    if user_id not in self._auth_sessions:
-                        return {'success': False, 'error': 'Authentication session not found'}
+            return {'success': True, 'message': 'User updated'}
 
-                    session_data = self._auth_sessions[user_id]
-                    client = session_data['client']
+        except Exception as e:
+            log_error(f"Failed to update user {user_data.telegram_user_id}", e)
+            return {'success': False, 'error': str(e)}
 
-                    try:
-                        await client.sign_in(password=password)
+    async def remove_user(self, user_id: int) -> Dict[str, Any]:
+        """Remove user and disconnect client"""
+        try:
+            await self._disconnect_client(user_id)
+            log_info(f"Removed user {user_id}")
+            return {'success': True, 'message': 'User removed'}
 
-                        # Get session string
-                        session_string = client.session.save()
+        except Exception as e:
+            log_error(f"Failed to remove user {user_id}", e)
+            return {'success': False, 'error': str(e)}
 
-                        # Update session in bot API
-                        await self.telegram_api.update_user_session(user_id, session_string)
+    async def _disconnect_client(self, user_id: int):
+        """Disconnect client for user"""
+        if user_id in self.clients:
+            user_client = self.clients[user_id]
+            if user_client.client and user_client.is_connected:
+                await user_client.client.disconnect()
+            del self.clients[user_id]
 
-                        # Clean up temp session
-                        await client.disconnect()
-                        del self._auth_sessions[user_id]
+            # Report disconnection to bot API
+            await self.telegram_api.report_user_status(user_id, False)
 
-                        log_info(f"Successfully verified password for user {user_id}")
-                        return {'success': True, 'message': 'Authentication successful'}
-
-                    except PasswordHashInvalidError:
-                        return {'success': False, 'error': 'Invalid password'}
-
-                except Exception as e:
-                    log_error(f"Failed to verify password for user {user_id}", e)
-                    return {'success': False, 'error': str(e)}
-
-            async def update_user(self, user_data: BotUser) -> Dict[str, Any]:
-                """Update user configuration and reconnect if necessary"""
-                try:
-                    user_id = user_data.telegram_user_id
-
-                    # If user already exists, disconnect old client
-                    if user_id in self.clients:
-                        await self._disconnect_client(user_id)
-
-                    # If user is authenticated, create new connection
-                    if user_data.is_authenticated and user_data.session_string:
-                        success = await self._create_and_connect_client(user_data)
-                        if success:
-                            return {'success': True, 'message': 'User updated and connected'}
-                        else:
-                            return {'success': False, 'error': 'Failed to connect client'}
-
-                    return {'success': True, 'message': 'User updated'}
-
-                except Exception as e:
-                    log_error(f"Failed to update user {user_data.telegram_user_id}", e)
-                    return {'success': False, 'error': str(e)}
-
-            async def remove_user(self, user_id: int) -> Dict[str, Any]:
-                """Remove user and disconnect client"""
-                try:
-                    await self._disconnect_client(user_id)
-                    log_info(f"Removed user {user_id}")
-                    return {'success': True, 'message': 'User removed'}
-
-                except Exception as e:
-                    log_error(f"Failed to remove user {user_id}", e)
-                    return {'success': False, 'error': str(e)}
-
-            async def _disconnect_client(self, user_id: int):
-                """Disconnect client for user"""
-                if user_id in self.clients:
-                    user_client = self.clients[user_id]
-                    if user_client.client and user_client.is_connected:
-                        await user_client.client.disconnect()
-                    del self.clients[user_id]
-
-                    # Report disconnection to bot API
-                    await self.telegram_api.report_user_status(user_id, False)
-
-            def get_all_users_status(self) -> Dict[str, Any]:
-                """Get status of all connected users"""
-                return {
-                    'connected_users': len(self.clients),
-                    'users': [
-                        {
-                            'user_id': user_id,
-                            'is_connected': client.is_connected,
-                            'last_error': client.last_error
-                        }
-                        for user_id, client in self.clients.items()
-                    ]
+    def get_all_users_status(self) -> Dict[str, Any]:
+        """Get status of all connected users"""
+        return {
+            'connected_users': len(self.clients),
+            'users': [
+                {
+                    'user_id': user_id,
+                    'is_connected': client.is_connected,
+                    'last_error': client.last_error
                 }
+                for user_id, client in self.clients.items()
+            ]
+        }
 
-            async def start_message_handling(self):
-                """Start message handling for all connected clients"""
-                log_info("Starting message handling for all clients...")
+    async def start_message_handling(self):
+        """Start message handling for all connected clients"""
+        log_info("Starting message handling for all clients...")
 
-                # All clients are already set up with message handlers
-                # This method can be used for additional setup if needed
-                pass
+        # All clients are already set up with message handlers
+        # This method can be used for additional setup if needed
+        pass
 
