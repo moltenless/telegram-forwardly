@@ -1,6 +1,12 @@
 **/project_description.docx
 **/certs
 **/aspnetapp.pfx
+
+**/.venv
+**/venv/
+**/.idea
+**/idea/
+
 **/.classpath
 **/.dockerignore
 **/.env
