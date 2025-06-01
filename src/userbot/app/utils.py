@@ -1,4 +1,5 @@
 import datetime
+from datetime import datetime, timezone
 import logging
 import json
 from typing import Dict, Any, Optional
@@ -9,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 def log_error(message: str, error: Exception = None, extra_data: Dict[str, Any] = None):
     log_data = {
-        'timestamp': datetime.now(datetime.UTC).isoformat(),
+        'timestamp': datetime.now(timezone.utc).isoformat(),
         'message': message,
         'extra_data': extra_data or {}
     }
@@ -22,7 +23,7 @@ def log_error(message: str, error: Exception = None, extra_data: Dict[str, Any] 
 
 def log_info(message: str, extra_data: Dict[str, Any] = None):
     log_data = {
-        'timestamp': datetime.now(datetime.UTC).isoformat(),
+        'timestamp': datetime.now(timezone.utc).isoformat(),
         'message': message,
         'extra_data': extra_data or {}
     }
