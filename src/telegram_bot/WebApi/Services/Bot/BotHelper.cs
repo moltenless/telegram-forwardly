@@ -110,5 +110,14 @@ namespace TelegramForwardly.WebApi.Services.Bot
             => new(new KeyboardButton("Share phone number 📞🔢")
             { RequestContact = true })
             { ResizeKeyboard = true, OneTimeKeyboard = true, };
+
+	/*
+		'The verification code has been sent to you by Telegram official chat. '
+        'It also could be sent on your phone SMS.'
+        '\nEnter that code: '
+
+		'It seems like your account has enabled 2FA protection measures.'
+        '\nPlease provide with password to your account to get complete authentication: '
+	*/
     }
 }

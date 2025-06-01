@@ -3,32 +3,6 @@ from telethon.sessions import StringSession
 from telethon.errors import SessionPasswordNeededError
 import asyncio
 
-
-async def get_api_id():
-    return input('Please find out and enter your api id: ')
-
-
-async def get_api_hash():
-    return input('Please find out and enter your api hash: ')
-
-
-async def get_phone_number():
-    return input('Please enter your phone number: ')
-
-
-async def get_verification_code():
-    return input(
-        'The verification code has been sent to you by Telegram official chat. '
-        'It also could be sent on your phone SMS.'
-        '\nEnter that code: ')
-
-
-async def get_account_password():
-    return input(
-        'It seems like your account has enabled 2FA protection measures.'
-        '\nPlease provide with password to your account to get complete authentication: ')
-
-
 async def authenticate_first_step_not_disconnected(api_id, api_hash, phone_number):
     client = TelegramClient(StringSession(), api_id, api_hash)
     await client.connect()
@@ -52,16 +26,11 @@ async def authenticate_third_step(client, account_password):
 # the function creates session file, adds a new telegram session as a device session
 # the function connects and disconnects a client by itself
 async def establish_new_client():
-    api_id = await get_api_id()
-    api_hash = await get_api_hash()
-    phone_number = await get_phone_number()
     client = await authenticate_first_step_not_disconnected(api_id, api_hash, phone_number)
 
-    verification_code = await get_verification_code()
     two_fa_enabled = await authenticate_second_step(client, phone_number, verification_code)
 
     if two_fa_enabled:
-        account_password = await get_account_password()
         await authenticate_third_step(client, account_password)
 
     session_string = client.session.save()
@@ -80,7 +49,7 @@ async def connect_existing_client(session_string, api_id, api_hash):
     return client if await client.is_user_authorized() else None
 
 
-async def main():
+async def use_example():
     with open('user_session_587388238.txt', 'r') as f:
         session_string1 = f.read()
     client1 = await connect_existing_client(session_string1, '27445408',
