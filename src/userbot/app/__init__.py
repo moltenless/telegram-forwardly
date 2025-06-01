@@ -13,10 +13,10 @@ def create_app():
     app.register_blueprint(api_bp, url_prefix='/api')
 
     client_manager = ClientManager()
-    scheduler_service = SchedulerService(client_manager)
+    # scheduler_service = SchedulerService(client_manager)
 
     app.client_manager = client_manager
-    app.scheduler_service = scheduler_service
+    # app.scheduler_service = scheduler_service
 
     def start_background_services():
         loop = asyncio.new_event_loop()
@@ -24,9 +24,9 @@ def create_app():
 
         loop.run_until_complete(client_manager.initialize_from_database())
 
-        scheduler_service.start()
+        # scheduler_service.start()
 
-        loop.run_until_complete(client_manager.start_message_handling())
+        # loop.run_until_complete(client_manager.start_message_handling())
 
         loop.run_forever()
 
