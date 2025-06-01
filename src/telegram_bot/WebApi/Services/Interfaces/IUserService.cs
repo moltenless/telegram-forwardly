@@ -9,10 +9,11 @@ namespace TelegramForwardly.WebApi.Services.Interfaces
             UserState initialStateIfNew,
             string? userNameIfNew,
             string? firstNameIfNew);
+        Task<HashSet<BotUser>> GetAllUsersAsync();
         Task SetUserStateAsync(long telegramUserId, UserState newState);
+        Task UpdateUserPhoneAsync(long telegramUserId, string phone);
         Task UpdateUserApiIdAsync(long telegramUserId, string apiId);
         Task UpdateUserApiHashAsync(long telegramUserId, string apiHash);
-        Task UpdateUserPhoneAsync(long telegramUserId, string phone);
         Task CompleteAuthenticationAsync(long telegramUserId, string sessionString);
         Task<IEnumerable<Keyword>> GetKeywordsAsync(long telegramUserId);
         Task AddUserKeywordAsync(long telegramUserId, string keyword);

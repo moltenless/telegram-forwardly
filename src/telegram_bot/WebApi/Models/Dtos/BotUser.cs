@@ -20,8 +20,25 @@ namespace TelegramForwardly.WebApi.Models.Dtos
         public bool? ForwardlyEnabled { get; set; }
         public bool? AllChatsFilteringEnabled { get; set; }
 
+        public ICollection<Keyword> Keywords { get; set; } = new HashSet<Keyword>();
+        public ICollection<Chat> Chats { get; set; } = new HashSet<Chat>();
+
         public static BotUser FromEntity(Client client)
         {
+            var keywords = client.Keywords.Select(k => new Keyword
+            {
+                Id = k.Id,
+                TelegramUserId = k.TelegramUserId,
+                Value = k.Value
+            }).ToHashSet() ?? [];
+
+            var chats = client.Chats.Select(c => new Chat
+            {
+                Id = c.Id,
+                TelegramUserId = c.TelegramUserId,
+                TelegramChatId = c.TelegramChatId,
+            }).ToHashSet() ?? [];
+
             return new BotUser
             {
                 TelegramUserId = client.TelegramUserId,
@@ -38,7 +55,9 @@ namespace TelegramForwardly.WebApi.Models.Dtos
                 LoggingTopicEnabled = client.LoggingTopicEnabled,
                 TopicGrouping = Enum.TryParse(client.TopicGrouping, out GroupingMode groupingMode) ? groupingMode : null,
                 ForwardlyEnabled = client.ForwardlyEnabled,
-                AllChatsFilteringEnabled = client.AllChatsFilteringEnabled
+                AllChatsFilteringEnabled = client.AllChatsFilteringEnabled,
+                Keywords = keywords,
+                Chats = chats
             };
         }
     }

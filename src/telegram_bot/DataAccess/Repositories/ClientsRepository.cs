@@ -40,10 +40,21 @@ namespace TelegramForwardly.DataAccess.Repositories
             return client;
         }
 
+        public async Task<HashSet<Client>> GetAllClientsAsync()
+        {
+            return await context.Clients
+                .Include(c => c.CurrentState)
+                .Include(c => c.Keywords)
+                .Include(c => c.Chats)
+                .ToHashSetAsync();
+        }
+
         public async Task<Client> GetClientAsync(long telegramUserId)
         {
             return await context.Clients
                 .Include(c => c.CurrentState)
+                .Include(c => c.Keywords)
+                .Include(c => c.Chats)
                 .FirstAsync(c => c.TelegramUserId == telegramUserId);
         }
 
@@ -51,6 +62,8 @@ namespace TelegramForwardly.DataAccess.Repositories
         {
             return await context.Clients
                 .Include(c => c.CurrentState)
+                .Include(c => c.Keywords)
+                .Include(c => c.Chats)
                 .FirstOrDefaultAsync(c => c.TelegramUserId == telegramUserId);
         }
 
