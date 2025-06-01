@@ -5,9 +5,6 @@ from app.config import Config
 from app.models import BotUser
 from app.utils import log_error, log_info, parse_user_from_api
 
-import urllib3
-
-
 logger = logging.getLogger(__name__)
 
 class TelegramApiService:
@@ -20,10 +17,7 @@ class TelegramApiService:
     async def get_all_users(self) -> List[BotUser]:
         try:
             url = f"{self.base_url}/users/all"
-
-            urllib3.disable_warnings()
-            response = self.session.get(url, verify=False)
-
+            response = self.session.get(url)
             response.raise_for_status()
 
             users_data = response.json()

@@ -80,7 +80,6 @@ app.MapWhen(context => context.Request.Path.StartsWithSegments("/health"), appBu
     });
 });
 
-app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 

@@ -28,22 +28,16 @@ services:
             context: ..
             dockerfile: src/telegram_bot/WebApi/Dockerfile
         environment:
-            - ASPNETCORE_HTTPS_PORT=8081
-            - ASPNETCORE_HTTPS_PORTS=8081
             - ASPNETCORE_HTTP_PORTS=8080
-            - ASPNETCORE_URLS=https://+:8081;http://+:8080
-            - ASPNETCORE_Kestrel__Certificates__Default__Password=${LOCAL_CERT_PASSWORD}
-            - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
+            - ASPNETCORE_URLS=http://+:8080
             - ConnectionStrings__DefaultConnection=Server=db,1433;Database=TelegramForwardly;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;
             - TelegramBot__BotToken=${TELEGRAM_BOT_TOKEN}
             - TelegramBot__UseWebhook=false
             - TelegramBot__WebhookUrl=https://telegram-forwardly.com
             - TelegramBot__UserbotApiBaseUrl=http://userbot:5000
         volumes:
-            - ./certs:/https/
             - ../storage/logs:/app/logs
         ports:
-            - "8081:8081"
             - "8080:8080"
         depends_on:
             - db
