@@ -3,7 +3,7 @@ import logging
 import json
 from typing import Dict, Any, Optional
 from datetime import datetime
-from models import BotUser, Keyword, Chat, GroupingMode, UserState
+from app.models import BotUser, Keyword, Chat, GroupingMode, UserState
 
 logger = logging.getLogger(__name__)
 
