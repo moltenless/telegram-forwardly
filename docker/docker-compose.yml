@@ -26,6 +26,12 @@ services:
         restart: unless-stopped
         networks:
             - telegram-forwardly-network
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:8080/api/telegram/health"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 40s
 
     userbot:
         build:
@@ -44,7 +50,8 @@ services:
         ports:
             - "5000:5000"
         depends_on:
-            - telegram-bot
+            telegram-bot:
+                condition: service_healthy
         restart: unless-stopped
         networks:
             - telegram-forwardly-network

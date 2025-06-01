@@ -12,6 +12,8 @@ using TelegramForwardly.WebApi.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddHealthChecks();
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -71,6 +73,8 @@ app.UseSwaggerUI();
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
+
+app.MapHealthChecks("api/telegram/health");
 
 using (var scope = app.Services.CreateScope())
 {
