@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Telegram.Bot.Types;
 using TelegramForwardly.WebApi.Services.Interfaces;
 
@@ -35,9 +36,9 @@ namespace TelegramForwardly.WebApi.Controllers
         }
 
         [HttpGet("health")]
-        public IActionResult Health()
+        public Task<HealthCheckResult> Health()
         {
-            return Ok(new { status = "healthy", timestamp = DateTime.UtcNow });
+            return Task.FromResult(HealthCheckResult.Healthy("healthy"));
         }
     }
 }

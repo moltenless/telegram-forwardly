@@ -6,13 +6,12 @@ using Telegram.Bot.Types.Enums;
 using TelegramForwardly.DataAccess.Context;
 using TelegramForwardly.DataAccess.Repositories;
 using TelegramForwardly.DataAccess.Repositories.Interfaces;
+using TelegramForwardly.WebApi.Controllers;
 using TelegramForwardly.WebApi.Models.Dtos;
 using TelegramForwardly.WebApi.Services;
 using TelegramForwardly.WebApi.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
-
-builder.Services.AddHealthChecks();
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -65,16 +64,25 @@ builder.Services.AddLogging(logging =>
     logging.AddDebug();
 });
 
+builder.Services.AddHealthChecks();
+
 var app = builder.Build();
 
 app.UseSwagger();
 app.UseSwaggerUI();
 
+app.MapWhen(context => context.Request.Path.StartsWithSegments("/health"), appBuilder =>
+{
+    appBuilder.UseRouting();
+    appBuilder.UseEndpoints(endpoints =>
+    {
+        endpoints.MapHealthChecks("/health");
+    });
+});
+
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
-
-app.MapHealthChecks("api/telegram/health");
 
 using (var scope = app.Services.CreateScope())
 {

@@ -1,4 +1,28 @@
 services:
+
+    userbot:
+        build:
+            context: ..
+            dockerfile: src/userbot/Dockerfile
+        environment:
+            - TELEGRAM_BOT_API_URL=http://telegram-bot:8080/api
+            - SECRET_KEY=${USERBOT_SECRET_KEY}
+            - FLASK_DEBUG=False
+            - USERS_UPDATE_INTERVAL_MINUTES=30
+            - LOG_LEVEL=INFO
+            - PYTHONPATH=/app
+            - FLASK_APP=main.py
+        volumes:
+            - ../storage/logs:/app/logs
+        ports:
+            - "5000:5000"
+        depends_on:
+            telegram-bot:
+                condition: service_healthy
+        restart: unless-stopped
+        networks:
+            - telegram-forwardly-network
+
     telegram-bot:
         build:
             context: ..
@@ -27,34 +51,11 @@ services:
         networks:
             - telegram-forwardly-network
         healthcheck:
-            test: ["CMD", "curl", "-f", "http://localhost:8080/api/telegram/health"]
-            interval: 30s
+            test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+            interval: 10s
             timeout: 10s
             retries: 3
-            start_period: 40s
-
-    userbot:
-        build:
-            context: ..
-            dockerfile: src/userbot/Dockerfile
-        environment:
-            - TELEGRAM_BOT_API_URL=http://telegram-bot:8080/api
-            - SECRET_KEY=${USERBOT_SECRET_KEY}
-            - FLASK_DEBUG=False
-            - USERS_UPDATE_INTERVAL_MINUTES=30
-            - LOG_LEVEL=INFO
-            - PYTHONPATH=/app
-            - FLASK_APP=main.py
-        volumes:
-            - ../storage/logs:/app/logs
-        ports:
-            - "5000:5000"
-        depends_on:
-            telegram-bot:
-                condition: service_healthy
-        restart: unless-stopped
-        networks:
-            - telegram-forwardly-network
+            start_period: 5s
 
     db:
         image: mcr.microsoft.com/mssql/server:2022-latest

@@ -46,6 +46,7 @@ namespace TelegramForwardly.DataAccess.Repositories
                 .Include(c => c.CurrentState)
                 .Include(c => c.Keywords)
                 .Include(c => c.Chats)
+                .AsSplitQuery()
                 .ToHashSetAsync();
         }
 
@@ -55,6 +56,7 @@ namespace TelegramForwardly.DataAccess.Repositories
                 .Include(c => c.CurrentState)
                 .Include(c => c.Keywords)
                 .Include(c => c.Chats)
+                .AsSplitQuery()
                 .FirstAsync(c => c.TelegramUserId == telegramUserId);
         }
 
@@ -64,6 +66,7 @@ namespace TelegramForwardly.DataAccess.Repositories
                 .Include(c => c.CurrentState)
                 .Include(c => c.Keywords)
                 .Include(c => c.Chats)
+                .AsSplitQuery()
                 .FirstOrDefaultAsync(c => c.TelegramUserId == telegramUserId);
         }
 

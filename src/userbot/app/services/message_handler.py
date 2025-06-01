@@ -93,7 +93,7 @@ class MessageHandler:
 
     def _get_topic_name(self, message: Message, chat_title: str, user_client: UserClient) -> str:
         """Get topic name based on grouping mode"""
-        if user_client.user.topic_grouping == GroupingMode.BY_CHATS:
+        if user_client.user.topic_grouping == GroupingMode.BY_CHAT:
             return chat_title
         else:  # BY_KEYWORDS or default
             # Find matching keyword

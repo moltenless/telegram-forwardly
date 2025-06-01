@@ -18,8 +18,8 @@ class UserState(Enum):
     AWAITING_ENABLE_LOGGING_TOPIC = "AwaitingEnableLoggingTopic"
 
 class GroupingMode(Enum):
-    BY_KEYWORDS = "ByKeywords"
-    BY_CHATS = "ByChats"
+    BY_KEYWORD = "ByKeyword"
+    BY_CHAT = "ByChat"
 
 @dataclass
 class Keyword:
