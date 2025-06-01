@@ -1,6 +1,5 @@
-import asyncio
 import logging
-from typing import Dict, List, Optional, Any
+from typing import Dict, Any
 from telethon import TelegramClient, events
 from telethon.errors import SessionPasswordNeededError, PhoneCodeInvalidError, PasswordHashInvalidError
 from telethon.sessions import StringSession

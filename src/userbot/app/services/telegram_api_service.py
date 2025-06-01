@@ -1,6 +1,6 @@
 import requests
 import logging
-from typing import List, Dict, Any, Optional
+from typing import List, Optional
 from app.config import Config
 from app.models import BotUser
 from app.utils import log_error, log_info, parse_user_from_api

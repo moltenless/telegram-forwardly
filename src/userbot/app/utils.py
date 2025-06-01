@@ -11,7 +11,7 @@ def log_error(message: str, error: Exception = None, extra_data: Dict[str, Any] 
     log_data = {
         'timestamp': datetime.now(datetime.UTC).isoformat(),
         'message': message,
-        'extra_ddata': extra_data or {}
+        'extra_data': extra_data or {}
     }
 
     if error:

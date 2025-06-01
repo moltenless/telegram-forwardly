@@ -1,9 +1,5 @@
-import asyncio
 import logging
-from flask import Flask
 from app import create_app
-from app.services.client_manager import ClientManager
-from app.services.scheduler_service import SchedulerService
 
 logging.basicConfig(
     level=logging.INFO,

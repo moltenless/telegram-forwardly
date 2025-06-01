@@ -1,7 +1,6 @@
 from flask import Blueprint, request, jsonify, current_app
 import asyncio
-from app.utils import log_info, log_error, parse_user_from_api
-from app.models import BotUser
+from app.utils import log_error, parse_user_from_api
 
 api_bp = Blueprint('api', __name__)
 
