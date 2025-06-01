@@ -17,11 +17,37 @@ services:
             - TelegramBot__UserbotApiBaseUrl=http://userbot:5000
         volumes:
             - ./certs:/https/
+            - ../storage/logs:/app/logs
         ports:
             - "8081:8081"
             - "8080:8080"
         depends_on:
             - db
+        restart: unless-stopped
+        networks:
+            - telegram-forwardly-network
+
+    userbot:
+        build:
+            context: ..
+            dockerfile: src/userbot/Dockerfile
+        environment:
+            - TELEGRAM_BOT_API_URL=http://telegram-bot:8080/api
+            - SECRET_KEY=${USERBOT_SECRET_KEY}
+            - FLASK_DEBUG=False
+            - USERS_UPDATE_INTERVAL_MINUTES=30
+            - LOG_LEVEL=INFO
+            - PYTHONPATH=/app
+            - FLASK_APP=main.py
+        volumes:
+            - ../storage/logs:/app/logs
+        ports:
+            - "5000:5000"
+        depends_on:
+            - telegram-bot
+        restart: unless-stopped
+        networks:
+            - telegram-forwardly-network
 
     db:
         image: mcr.microsoft.com/mssql/server:2022-latest
@@ -33,6 +59,13 @@ services:
             - db_data:/var/opt/mssql
         ports:
             - "1433:1433"
+        restart: unless-stopped
+        networks:
+            - telegram-forwardly-network
 
 volumes:
     db_data:
+    
+networks:
+    telegram-forwardly-network:
+        driver: bridge
