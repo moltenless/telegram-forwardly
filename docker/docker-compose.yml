@@ -5,7 +5,6 @@ services:
         container_name: forwardly-db
         environment:
             - ACCEPT_EULA=Y
-            - SA_PASSWORD=${MSSQL_SA_PASSWORD}
             - MSSQL_SA_PASSWORD=${MSSQL_SA_PASSWORD}
         volumes:
             - db_data:/var/opt/mssql

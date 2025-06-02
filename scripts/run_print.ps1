@@ -1,4 +1,4 @@
-$containerName = "docker-db-1"
+$containerName = "forwardly-db"
 $localScriptPath = "scripts/print_all_tables.sh"
 $containerScriptPath = "/tmp/print_all_tables.sh"
 

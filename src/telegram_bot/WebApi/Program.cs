@@ -1,4 +1,6 @@
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
 using Telegram.Bot;
@@ -80,7 +82,25 @@ using (var scope = app.Services.CreateScope())
 {
     var provider = scope.ServiceProvider;
     var context = provider.GetRequiredService<ForwardlyContext>();
-    await context.Database.MigrateAsync();
+    var logger = provider.GetRequiredService<ILogger<Program>>();
+
+    var maxRetries = 5;
+    for (int i = 0; i < maxRetries; i++)
+    {
+        try
+        {
+            await context.Database.MigrateAsync();
+            logger.LogInformation("Database migration completed successfully.");
+            break;
+        }
+        catch (SqlException) when (i < maxRetries - 1)
+        {
+#pragma warning disable S6667 // Logging in a catch clause should pass the caught exception as a parameter.
+            logger.LogInformation("Database not ready, retrying...");
+#pragma warning restore S6667 // Logging in a catch clause should pass the caught exception as a parameter.
+            await Task.Delay(3000);
+        }
+    }
 }
 
 using (var scope = app.Services.CreateScope())
