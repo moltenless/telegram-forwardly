@@ -37,7 +37,7 @@ namespace TelegramForwardly.WebApi.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error retrieving all athenticated users");
+                logger.LogError(ex, "Error retrieving all authenticated users");
                 return StatusCode(500, "Internal server error");
             }
         }

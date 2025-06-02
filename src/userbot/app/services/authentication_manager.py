@@ -25,20 +25,20 @@ async def authenticate_third_step(client, account_password):
 
 # the function creates session file, adds a new telegram session as a device session
 # the function connects and disconnects a client by itself
-async def establish_new_client():
-    client = await authenticate_first_step_not_disconnected(api_id, api_hash, phone_number)
-
-    two_fa_enabled = await authenticate_second_step(client, phone_number, verification_code)
-
-    if two_fa_enabled:
-        await authenticate_third_step(client, account_password)
-
-    session_string = client.session.save()
-    me = await client.get_me()
-    with open(f'user_session_{me.id}.txt', 'w') as f:
-        f.write(session_string)
-
-    await client.disconnect()
+# async def establish_new_client():
+#     client = await authenticate_first_step_not_disconnected(api_id, api_hash, phone_number)
+#
+#     two_fa_enabled = await authenticate_second_step(client, phone_number, verification_code)
+#
+#     if two_fa_enabled:
+#         await authenticate_third_step(client, account_password)
+#
+#     session_string = client.session.save()
+#     me = await client.get_me()
+#     with open(f'user_session_{me.id}.txt', 'w') as f:
+#         f.write(session_string)
+#
+#     await client.disconnect()
 
 
 # the function uses existing session file and also existing telegram session
@@ -67,5 +67,3 @@ async def use_example():
     print(me2.phone)
     await client2.disconnect()
 
-
-asyncio.run(main())

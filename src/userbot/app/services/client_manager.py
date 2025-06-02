@@ -1,11 +1,13 @@
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, List
 from telethon import TelegramClient, events
 from telethon.errors import SessionPasswordNeededError, PhoneCodeInvalidError, PasswordHashInvalidError
 from telethon.sessions import StringSession
 from app.models import BotUser, UserClient
+from app.services.authentication_manager import connect_existing_client
 from app.services.telegram_api_service import TelegramApiService
 from app.services.message_handler import MessageHandler
+import app.services.authentication_manager
 from app.utils import log_error, log_info
 
 logger = logging.getLogger(__name__)
@@ -21,83 +23,65 @@ class ClientManager:
     async def initialize_from_database(self):
         log_info("Initializing clients from database...")
 
+        await self._disconnect_and_clear_all_clients()
+
         users = await self.telegram_api.get_all_users()
 
+        await self._launch_clients_from_users(users)
+
+        log_info(f"Connected {len(self.clients)} clients")
+
+    async def _disconnect_and_clear_all_clients(self):
+        for user_id, client in self.clients.items():
+            try:
+                await client.client.disconnect()
+            except Exception as e:
+                log_error(f"Failed to disconnect client for user {user_id}", e)
         self.clients.clear()
-        for user in users:
-            user_client = UserClient()
-            user_client.user=user
-            self.clients[user_client.user.telegram_user_id] = user_client
 
-
-
-        # for user in users:
-        #     if user.is_authenticated and user.session_string:
-        #         await self._create_and_connect_client(user)
-
-        log_info(f"Initialized {len(self.clients)} clients")
-        log_info(f"client 'me'", {'me': self.clients.get(587388238)})
-
-    async def _create_and_connect_client(self, user: BotUser) -> bool:
-        """Create and connect a Telegram client for user"""
-        # try:
-            # if not all([user.api_id, user.api_hash, user.session_string]):
-            #     log_error(f"Missing credentials for user {user.telegram_user_id}")
-            #     return False
-
-            # Create client with string session
-            # session = StringSession(user.session_string)
-            # client = TelegramClient(
-            #     session,
-            #     int(user.api_id),
-            #     user.api_hash
-            # )
-
-            # Connect client
-            # await client.connect()
-
-            # if not await client.is_user_authorized():
-            #     log_error(f"User {user.telegram_user_id} session is not authorized")
-            #     await client.disconnect()
-            #     return False
-
-            # Store client
-            # user_client = UserClient(user=user, client=client, is_connected=True)
-            # self.clients[user.telegram_user_id] = user_client
-
-            # Set up message handler
-            # await self._setup_message_handler(user_client)
-            #
-            # log_info(f"Connected client for user {user.telegram_user_id}")
-            #
-            # # Report status to bot API
-            # await self.telegram_api.report_user_status(user.telegram_user_id, True)
-            #
-        return True #do tab before
-
-        # except Exception as e:
-        #     log_error(f"Failed to connect client for user {user.telegram_user_id}", e)
-        #     await self.telegram_api.report_user_status(user.telegram_user_id, False, str(e))
-        #     return False
-
-    async def _setup_message_handler(self, user_client: UserClient):
-        """Set up message handler for user client"""
+    async def _launch_clients_from_users(self, users: List[BotUser]):
         try:
-            # Get monitored chat IDs
-            monitored_chat_ids = [chat.telegram_chat_id for chat in user_client.user.chats]
+            for user in users:
+                self.clients[user.telegram_user_id] = UserClient()
+                self.clients[user.telegram_user_id].user = user
+                await self._connect_client(user)
+                await self._setup_message_handler(self.clients[user.telegram_user_id])
+        except Exception as e:
+            log_error(f"Failed to launch clients from users", e)
 
-            if not monitored_chat_ids and not user_client.user.all_chats_filtering_enabled:
+    async def _connect_client(self, user: BotUser):
+        try:
+            client = await connect_existing_client(user.session_string, user.api_id, user.api_hash)
+            if not client:
+                self.clients[
+                    user.telegram_user_id].last_error = "Couldn't connect to telegram client with this api id, hash and session string"
+                log_error(f"Can't connect to Telegram client for {user.telegram_user_id}")
+                await client.disconnect()
                 return
 
-            # Create event handler
-            @user_client.client.on(events.NewMessage)
-            async def handle_new_message(event):
-                await self.message_handler.handle_message(event, user_client)
-
-            log_info(f"Set up message handler for user {user_client.user.telegram_user_id}")
-
+            self.clients[user.telegram_user_id].client = client
+            self.clients[user.telegram_user_id].is_connected = True
+            log_info(f"Connected to Telegram client for {user.telegram_user_id}")
         except Exception as e:
-            log_error(f"Failed to setup message handler for user {user_client.user.telegram_user_id}", e)
+            log_error(f"Failed to open Telegram Client connection or similar for user {user.telegram_user_id}", e)
+
+    async def _setup_message_handler(self, user_client: UserClient):
+        # try:
+        #     monitored_chat_ids = [chat.telegram_chat_id for chat in user_client.user.chats]
+        #
+        #     if not monitored_chat_ids and not user_client.user.all_chats_filtering_enabled:
+        #         return
+        #
+        #     # Create event handler
+        #     @user_client.client.on(events.NewMessage)
+        #     async def handle_new_message(event):
+        #         await self.message_handler.handle_message(event, user_client)
+        #
+        #     log_info(f"Set up message handler for user {user_client.user.telegram_user_id}")
+        #
+        # except Exception as e:
+        #     log_error(f"Failed to setup message handler for user {user_client.user.telegram_user_id}", e)
+        log_info('Here I must subscribe client to handle new messages')
 
     async def start_authentication(self, user_id: int, phone: str, api_id: str, api_hash: str) -> Dict[
         str, Any]:

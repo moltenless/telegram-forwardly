@@ -16,7 +16,7 @@ class TelegramApiService:
 
     async def get_all_users(self) -> List[BotUser]:
         try:
-            url = f"{self.base_url}/users/all"
+            url = f"{self.base_url}/users/all/authenticated"
             response = self.session.get(url)
             response.raise_for_status()
 
