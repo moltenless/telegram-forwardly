@@ -36,6 +36,12 @@ namespace TelegramForwardly.WebApi.Services
             return [.. clients.Select(BotUser.FromEntity)];
         }
 
+        public async Task<HashSet<BotUser>> GetAllAuthenticatedUsersAsync()
+        {
+            var clients = await clientsRepository.GetAllAuthenticatedUsersAsync();
+            return [.. clients.Select(BotUser.FromEntity)];
+        }
+
         public async Task SetUserStateAsync(long telegramUserId, UserState newState)
         {
             var client = await clientsRepository.GetClientOrDefaultAsync(telegramUserId);

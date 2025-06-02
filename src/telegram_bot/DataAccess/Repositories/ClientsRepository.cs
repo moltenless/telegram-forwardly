@@ -50,6 +50,17 @@ namespace TelegramForwardly.DataAccess.Repositories
                 .ToHashSetAsync();
         }
 
+        public async Task<HashSet<Client>> GetAllAuthenticatedUsersAsync()
+        {
+            return await context.Clients
+                .Include(c => c.CurrentState)
+                .Include(c => c.Keywords)
+                .Include(c => c.Chats)
+                .AsSplitQuery()
+                .Where(c => c.IsAuthenticated == true)
+                .ToHashSetAsync();
+        }
+
         public async Task<Client> GetClientAsync(long telegramUserId)
         {
             return await context.Clients

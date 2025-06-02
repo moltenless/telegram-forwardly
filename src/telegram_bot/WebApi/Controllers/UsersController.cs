@@ -26,5 +26,20 @@ namespace TelegramForwardly.WebApi.Controllers
                 return StatusCode(500, "Internal server error");
             }
         }
+
+        [HttpGet("all/authenticated")]
+        public async Task<IActionResult> GetAllAuthenticatedUsers()
+        {
+            try
+            {
+                var user = await userService.GetAllAuthenticatedUsersAsync();
+                return Ok(user);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error retrieving all athenticated users");
+                return StatusCode(500, "Internal server error");
+            }
+        }
     }
 }

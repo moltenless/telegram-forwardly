@@ -10,6 +10,7 @@ namespace TelegramForwardly.WebApi.Services.Interfaces
             string? userNameIfNew,
             string? firstNameIfNew);
         Task<HashSet<BotUser>> GetAllUsersAsync();
+        Task<HashSet<BotUser>> GetAllAuthenticatedUsersAsync();
         Task SetUserStateAsync(long telegramUserId, UserState newState);
         Task UpdateUserPhoneAsync(long telegramUserId, string phone);
         Task UpdateUserApiIdAsync(long telegramUserId, string apiId);
