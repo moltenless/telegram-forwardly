@@ -68,17 +68,10 @@ builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
+app.MapHealthChecks("/health");
+
 app.UseSwagger();
 app.UseSwaggerUI();
-
-app.MapWhen(context => context.Request.Path.StartsWithSegments("/health"), appBuilder =>
-{
-    appBuilder.UseRouting();
-    appBuilder.UseEndpoints(endpoints =>
-    {
-        endpoints.MapHealthChecks("/health");
-    });
-});
 
 app.UseAuthorization();
 app.MapControllers();
