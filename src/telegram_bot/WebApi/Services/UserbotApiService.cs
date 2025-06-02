@@ -33,7 +33,7 @@ namespace TelegramForwardly.WebApi.Services
             try
             {
                 var request = new {
-                    user_id = telegramUserId,
+                    telegram_user_id = telegramUserId,
                     phone,
                     api_id = apiId,
                     api_hash = apiHash

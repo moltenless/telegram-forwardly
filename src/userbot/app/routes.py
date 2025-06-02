@@ -22,7 +22,10 @@ def start_auth():
         api_hash = data.get('api_hash')
 
         if not all([telegram_user_id, phone, api_id, api_hash]):
-            return jsonify({'error': 'Missing required fields'}), 400
+            return jsonify({
+                "Success": False,
+                "ErrorMessage": "Missing required fields",
+            }), 400
 
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
@@ -33,13 +36,19 @@ def start_auth():
             )
         )
 
-        return jsonify(result)
+        if result.get("Success"):
+            return jsonify(result), 200
+        else:
+            return jsonify(result), 500
 
     except Exception as e:
         log_error(
             "Error starting authentication", e,
-            {'telegram_user_id': data.get('telegram_user_id')})
-        return jsonify({'error': str(e)}), 500
+            {'telegram_user_id': request.get_json().get('telegram_user_id')})
+        return jsonify({
+            "Success": False,
+            "ErrorMessage": "Error occurred trying to make connection or sending the code",
+        }), 500
 
 @api_bp.route('/auth/verify', methods=['POST'])
 def verify_code():
@@ -62,7 +71,7 @@ def verify_code():
 
     except Exception as e:
         log_error("Error verifying code", e,
-                  {'user_id': data.get('user_id')})
+                  {'user_id': request.get_json().get('user_id')})
         return jsonify({'error': str(e)}), 500
 
 
@@ -87,7 +96,7 @@ def verify_password():
 
     except Exception as e:
         log_error("Error verifying password", e,
-                  {'user_id': data.get('user_id')})
+                  {'user_id': request.get_json().get('user_id')})
         return jsonify({'error': str(e)}), 500
 
 
@@ -107,7 +116,7 @@ def update_user():
         return jsonify(result)
 
     except Exception as e:
-        log_error("Error updating user", e, {'telegram_user_id': data.get('telegram_user_id')})
+        log_error("Error updating user", e, {'telegram_user_id': request.get_json().get('telegram_user_id')})
         return jsonify({'error': str(e)}), 500
 
 
@@ -131,7 +140,7 @@ def remove_user():
 
     except Exception as e:
         log_error("Error removing user", e,
-                  {'telegram_user_id': data.get('telegram_user_id')})
+                  {'telegram_user_id': request.get_json().get('telegram_user_id')})
         return jsonify({'error': str(e)}), 500
 
 @api_bp.route('/users/status', methods=['GET'])
