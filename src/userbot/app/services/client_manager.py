@@ -88,6 +88,9 @@ class ClientManager:
         try:
             client = await authenticate_first_step_not_disconnected(api_id, api_hash, phone)
 
+            if user_id in self._incomplete_sessions:
+                session = self._incomplete_sessions[user_id]
+                await session['client'].disconnect()
             self._incomplete_sessions[user_id] = {
                 'client': client,
                 'phone': phone,
