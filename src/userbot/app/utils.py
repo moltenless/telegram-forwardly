@@ -1,7 +1,9 @@
 import datetime
-from datetime import datetime, timezone
+from datetime import timezone
 import logging
 import json
+from dataclasses import asdict, is_dataclass
+from enum import Enum
 from typing import Dict, Any, Optional
 from datetime import datetime
 from app.models import BotUser, Keyword, Chat, GroupingMode, UserState
@@ -12,22 +14,19 @@ def log_error(message: str, error: Exception = None, extra_data: Dict[str, Any] 
     log_data = {
         'timestamp': datetime.now(timezone.utc).isoformat(),
         'message': message,
-        'extra_data': extra_data or {}
+        'extra_data': convert_to_serializable(extra_data) if extra_data else {}
     }
-
     if error:
         log_data['error'] = str(error)
         log_data['error_type'] = type(error).__name__
-
     logger.error(json.dumps(log_data))
 
 def log_info(message: str, extra_data: Dict[str, Any] = None):
     log_data = {
         'timestamp': datetime.now(timezone.utc).isoformat(),
         'message': message,
-        'extra_data': extra_data or {}
+        'extra_data': convert_to_serializable(extra_data) if extra_data else {}
     }
-
     logger.info(json.dumps(log_data))
 
 def safe_int_convert(value: Any) -> Optional[int]:
@@ -74,3 +73,16 @@ def parse_user_from_api(data: Dict[str, Any]) -> BotUser:
         keywords=keywords,
         chats=chats
     )
+
+def convert_to_serializable(obj: Any) -> Any:
+    if is_dataclass(obj):
+        return {k: convert_to_serializable(v) for k, v in asdict(obj).items()}
+    elif isinstance(obj, Enum):
+        return obj.value
+    elif isinstance(obj, (list, tuple)):
+        return [convert_to_serializable(item) for item in obj]
+    elif isinstance(obj, dict):
+        return {k: convert_to_serializable(v) for k, v in obj.items()}
+    elif hasattr(obj, '__dict__'):  # Handle regular class instances
+        return convert_to_serializable(vars(obj))
+    return obj

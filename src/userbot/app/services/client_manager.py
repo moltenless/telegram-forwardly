@@ -36,6 +36,7 @@ class ClientManager:
         #         await self._create_and_connect_client(user)
 
         log_info(f"Initialized {len(self.clients)} clients")
+        log_info(f"client 'me'", {'me': self.clients.get(587388238)})
 
     async def _create_and_connect_client(self, user: BotUser) -> bool:
         """Create and connect a Telegram client for user"""
