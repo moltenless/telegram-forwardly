@@ -78,7 +78,7 @@ namespace TelegramForwardly.WebApi.Services.Bot
                 "You can get them from official Telegram website https://my.telegram.org\n" +
                 "1. There you will need to log in with your phone number and confirm with \'login code\' sent by Telegram.\n" +
                 "2. Then click _API development tools_.\n3. Under _App title_ and _Short name_, " +
-                "name it whatever you want, for example 'app'. " +
+                "name them whatever you want, for example 'app' or 'forwardly'. " +
                 "For the _Platform_, select \'Desktop\' or \'Web\'. Remain other fields empty.\n" +
                 "4. Click _Create application_ and then copy your *App api-id*.\n\n" +
                 "_! Please note that you should not share your API Id and API Hash with anyone! " +
