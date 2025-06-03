@@ -21,27 +21,22 @@ namespace TelegramForwardly.WebApi.Services.Bot
                 case "/start":
                     await BotHelper.SendTextMessageAsync(
                         message.Chat.Id, BotHelper.GetWelcomeMessage(user),
-                        botClient, logger,
-                        cancellationToken);
+                        botClient, logger, cancellationToken);
                     await MenuManager.ShowMainMenuAsync(
                         user, message.Chat.Id,
-                        botClient, logger,
-                        cancellationToken);
+                        botClient, logger, cancellationToken);
                     break;
 
                 case "/menu":
                     await MenuManager.ShowMainMenuAsync(
                         user, message.Chat.Id,
-                        botClient, logger,
-                        cancellationToken);
+                        botClient, logger, cancellationToken);
                     break;
 
                 case "/setup":
                     await MenuManager.EnterSetupAsync(
                         user, message.Chat.Id,
-                        userService,
-                        botClient, logger,
-                        cancellationToken);
+                        userService, botClient, logger, cancellationToken);
                     break;
 
                 case "/keywords":
@@ -63,8 +58,7 @@ namespace TelegramForwardly.WebApi.Services.Bot
                     await BotHelper.SendTextMessageAsync(
                         message.Chat.Id,
                         "Unknown command. Use /help to see available commands.",
-                        botClient, logger,
-                        cancellationToken);
+                        botClient, logger, cancellationToken);
                     break;
             }
         }
@@ -82,9 +76,7 @@ namespace TelegramForwardly.WebApi.Services.Bot
                 case "setup":
                     await MenuManager.EnterSetupAsync(
                         user, callbackQuery.Message!.Chat.Id,
-                        userService,
-                        botClient, logger,
-                        cancellationToken);
+                        userService, botClient, logger, cancellationToken);
                     break;
 
                 case "keywords":
@@ -117,30 +109,26 @@ namespace TelegramForwardly.WebApi.Services.Bot
             {
                 case UserState.AwaitingPhoneNumber:
                     await AuthenticationManager.HandlePhoneInputAsync(
-                        user, message, 
-                        userService,
-                        botClient, logger,
-                        cancellationToken);
+                        user, message, userService,
+                        botClient, logger, cancellationToken);
                     break;
 
                 case UserState.AwaitingApiId:
                     await AuthenticationManager.HandleApiIdInputAsync(
-                        user, message, 
-                        userService,
-                        botClient, logger,
-                        cancellationToken);
+                        user, message, userService,
+                        botClient, logger, cancellationToken);
                     break;
 
                 case UserState.AwaitingApiHash:
                     await AuthenticationManager.HandleApiHashInputAsync(
-                        user, message, 
-                        userService,
-                        userbotApiService,
-                        botClient, logger,
-                        cancellationToken);
+                        user, message, userService, userbotApiService,
+                        botClient, logger, cancellationToken);
                     break;
 
                 case UserState.AwaitingVerificationCode:
+                    await AuthenticationManager.HandleVerificationCodeInputAsync(
+                        user, message, userService, userbotApiService,
+                        botClient, logger, cancellationToken);
                     break;
 
                 case UserState.AwaitingPassword:
@@ -167,8 +155,7 @@ namespace TelegramForwardly.WebApi.Services.Bot
                 default:
                     await MenuManager.ShowMainMenuAsync(
                         user, message.Chat.Id,
-                        botClient, logger,
-                        cancellationToken);
+                        botClient, logger, cancellationToken);
                     break;
             }
         }

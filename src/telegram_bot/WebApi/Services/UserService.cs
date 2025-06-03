@@ -71,7 +71,7 @@ namespace TelegramForwardly.WebApi.Services
             if (client is not null)
                 await clientsRepository.UpdateClientApiIdAsync(client, apiId);
         }
-        
+
         public async Task UpdateUserApiHashAsync(long telegramUserId, string apiHash)
         {
             var client = await clientsRepository.GetClientOrDefaultAsync(telegramUserId);
@@ -79,15 +79,20 @@ namespace TelegramForwardly.WebApi.Services
                 await clientsRepository.UpdateClientApiHashAsync(client, apiHash);
         }
 
+        public async Task CompleteAuthenticationAsync(long telegramUserId, string sessionString)
+        {
+            var client = await clientsRepository.GetClientOrDefaultAsync(telegramUserId);
+            if (client is not null)
+                await clientsRepository.CompleteClientAuthentication(client, sessionString);
+            else
+                logger.LogError("Client with Telegram user ID {TelegramUserId} not found.", telegramUserId);
+        }
+
         public async Task AddChatAsync(long telegramUserId, long telegramChatId)
         {
         }
 
         public async Task AddUserKeywordAsync(long telegramUserId, string keyword)
-        {
-        }
-
-        public async Task CompleteAuthenticationAsync(long telegramUserId, string sessionString)
         {
         }
 

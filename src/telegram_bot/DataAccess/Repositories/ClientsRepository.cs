@@ -108,5 +108,13 @@ namespace TelegramForwardly.DataAccess.Repositories
             client.ApiHash = apiHash;
             await context.SaveChangesAsync();
         }
+
+        public async Task CompleteClientAuthentication(Client client, string sessionString)
+        {
+            if (client.IsAuthenticated == true && client.SessionString == sessionString) return;
+            client.SessionString = sessionString;
+            client.IsAuthenticated = true;
+            await context.SaveChangesAsync();
+        }
     }
 }

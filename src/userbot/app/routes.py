@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, current_app
 import asyncio
 from app.utils import log_error, parse_user_from_api
+from app.async_loop_manager import event_loop_manager
 
 api_bp = Blueprint('api', __name__)
 
@@ -27,10 +28,7 @@ def start_auth():
                 "ErrorMessage": "Missing required fields",
             }), 400
 
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-
-        result = loop.run_until_complete(
+        result = event_loop_manager.run_coroutine(
             current_app.client_manager.start_authentication(
                 telegram_user_id, phone, api_id, api_hash
             )
@@ -39,7 +37,7 @@ def start_auth():
         if result.get("Success"):
             return jsonify(result), 200
         else:
-            return jsonify(result), 500
+            return jsonify(result), 400
 
     except Exception as e:
         log_error(
@@ -55,24 +53,32 @@ def verify_code():
     try:
         data = request.get_json()
         telegram_user_id = data.get('telegram_user_id')
-        code = data.get('code')
+        verification_code = data.get('verification_code')
 
-        if not all([telegram_user_id, code]):
-            return jsonify({'error': 'Missinng required fields'}), 400
+        if not all([telegram_user_id, verification_code]):
+            return jsonify({
+                "Success": False,
+                'RequiresPassword': False,
+                "ErrorMessage": "Missing required fields",
+            }), 400
 
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-
-        result = loop.run_until_complete(
-            current_app.client_manager.verify_code(telegram_user_id, code)
+        result = event_loop_manager.run_coroutine(
+            current_app.client_manager.verify_code(telegram_user_id, verification_code)
         )
 
-        return jsonify(result)
+        if result.get("Success"):
+            return jsonify(result), 200
+        else:
+            return jsonify(result), 400
 
     except Exception as e:
         log_error("Error verifying code", e,
-                  {'user_id': request.get_json().get('user_id')})
-        return jsonify({'error': str(e)}), 500
+                  {'user_id': request.get_json().get('telegram_user_id')})
+        return jsonify({
+            "Success": False,
+            'RequiresPassword': False,
+            "ErrorMessage": str(e),
+        }), 500
 
 
 @api_bp.route('/auth/password', methods=['POST'])
@@ -85,10 +91,7 @@ def verify_password():
         if not all([telegram_user_id, password]):
             return jsonify({'error': 'Missing required fields'}), 400
 
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-
-        result = loop.run_until_complete(
+        result = event_loop_manager.run_coroutine(
             current_app.client_manager.verify_password(telegram_user_id, password)
         )
 
@@ -106,10 +109,7 @@ def update_user():
         data = request.get_json()
         user_data = parse_user_from_api(data)
 
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-
-        result = loop.run_until_complete(
+        result = event_loop_manager.run_coroutine(
             current_app.client_manager.update_user(user_data)
         )
 
@@ -129,10 +129,7 @@ def remove_user():
         if not telegram_user_id:
             return jsonify({'error': 'Missing telegram_user_id'}), 400
 
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-
-        result = loop.run_until_complete(
+        result = event_loop_manager.run_coroutine(
             current_app.client_manager.remove_user(telegram_user_id)
         )
 

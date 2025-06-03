@@ -29,7 +29,9 @@ namespace TelegramForwardly.WebApi.Services.Bot
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to send message to chat {ChatId}", chatId);
+                //logger.LogError(ex, "Failed to send message to chat {ChatId}", chatId);
+                //temrorary
+                logger.LogError(ex, "Failed to send message to chat {ChatId}: {Message}", chatId, text);
             }
         }
 

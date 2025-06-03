@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Options;
+using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using TelegramForwardly.WebApi.Models.Dtos;
@@ -57,6 +58,29 @@ namespace TelegramForwardly.WebApi.Services
             }
         }
 
+        public async Task<AuthenticationResult> VerifyCodeAsync(
+            long telegramUserId,
+            string verificationCode)
+        {
+            try
+            {
+                var request = new { telegram_user_id = telegramUserId, verification_code = verificationCode };
+                var json = JsonSerializer.Serialize(request);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await httpClient.PostAsync("/api/auth/verify", content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                var result = JsonSerializer.Deserialize<AuthenticationResult>(responseContent);
+                return result ?? new AuthenticationResult { Success = false, ErrorMessage = "Unknown error" };
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error verifying code for user {UserId}", telegramUserId);
+                return new AuthenticationResult { Success = false, ErrorMessage = "Connection error" };
+            }
+        }
+
         public Task<bool> DisableForwardlyAsync(long telegramUserId)
         {
             throw new NotImplementedException();
@@ -68,11 +92,6 @@ namespace TelegramForwardly.WebApi.Services
         }
 
         public Task<IEnumerable<ChatInfo>> GetUserChatsAsync(long telegramUserId)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<AuthenticationResult> VerifyCodeAsync(long telegramUserId, string verificationCode)
         {
             throw new NotImplementedException();
         }
