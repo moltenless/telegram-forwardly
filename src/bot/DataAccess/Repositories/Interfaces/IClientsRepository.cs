@@ -22,6 +22,8 @@ namespace TelegramForwardly.DataAccess.Repositories.Interfaces
         Task UpdateClientApiHashAsync(Client client, string apiHash);
         Task<HashSet<Client>> GetAllClientsAsync();
         Task<HashSet<Client>> GetAllAuthenticatedUsersAsync();
+        Task UpdateClientPasswordAsync(Client client, string? password);
+        Task UpdateClientVerificationCodeAsync(Client client, string? verificationCode);
         Task CompleteClientAuthentication(Client client, string sessionString);
     }
 }

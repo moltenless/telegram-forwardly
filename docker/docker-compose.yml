@@ -21,6 +21,8 @@ services:
             context: ..
             dockerfile: src/auth/Dockerfile
         container_name: forwardly-auth
+        environment:
+            - TELEGRAM_BOT_API_URL=http://bot:8080/api
         ports:
             - "8000:8000"
         depends_on:

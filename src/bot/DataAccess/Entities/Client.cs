@@ -35,6 +35,15 @@ namespace TelegramForwardly.DataAccess.Entities
         public string? Phone { get; set; }
 
 
+        [Column("verification_code", TypeName = "varchar(20)")]
+        public string? VerificationCode { get; set; }
+
+
+        [Column("password", TypeName = "varchar(100)")]
+        public string? Password { get; set; }
+
+
+
         [Column("is_authenticated", TypeName = "bit")]
         public bool? IsAuthenticated { get; set; }
 

@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using TelegramForwardly.WebApi.Models.Dtos;
+﻿using TelegramForwardly.WebApi.Models.Dtos;
 
 namespace TelegramForwardly.WebApi.Services.Interfaces
 {
@@ -24,5 +23,8 @@ namespace TelegramForwardly.WebApi.Services.Interfaces
         Task RemoveChatAsync(long telegramUserId, long telegramChatId);
         Task SetUserForumSupergroupAsync(long telegramUserId, long forumSupergroupId);
         Task SetUserGroupingModeAsync(long telegramUserId, GroupingMode mode);
+        Task UpdateUserPasswordAsync(long telegramUserId, string? password);
+        Task UpdateUserVerificationCodeAsync(long telegramUserId, string? verificationCode);
+        Task RemoveUserVerificationCode(long telegramUserId);
     }
 }

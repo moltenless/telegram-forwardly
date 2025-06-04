@@ -8,18 +8,8 @@ logger = logging.getLogger(__name__)
 
 _incomplete_sessions = {}
 
-async def start_authentication(user_id, phone, api_id, api_hash) -> Dict[str, Any]:
+async def start_authentication(user_id, phone, api_id, api_hash, password) -> Dict[str, Any]:
     try:
-        client = TelegramClient(StringSession(), api_id, api_hash)
-        await client.connect()
-
-        sent_code = await client.send_code_request(phone, force_sms=True)
-        phone_code_hash = sent_code.phone_code_hash
-        logger.error(f"Phone code hash {phone_code_hash}")
-        session_string = client.session.save()
-        logger.error(f"session string {session_string}")
-        # await client.disconnect()
-
         if user_id in _incomplete_sessions:
             session = _incomplete_sessions[user_id]
             await session['client'].disconnect()

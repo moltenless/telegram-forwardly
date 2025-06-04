@@ -92,6 +92,10 @@ namespace TelegramForwardly.WebApi.Services.Bot
                 "You can copy it in the same place where you got your App api-id. " +
                 "it looks like `0123456789abcdef0123456789abcdef`";
 
+        public static string GetPasswordMessage()
+            => $"If you have enabled 2FA protection for this account please enter password:\n\n" +
+                "If you don't have one - simply skip this part and respond with *'no' or 'No'*\n\n";
+
         public static InlineKeyboardMarkup GetMenuKeyboard()
             => new([
             [

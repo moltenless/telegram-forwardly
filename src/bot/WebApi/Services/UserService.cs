@@ -79,6 +79,27 @@ namespace TelegramForwardly.WebApi.Services
                 await clientsRepository.UpdateClientApiHashAsync(client, apiHash);
         }
 
+        public async Task UpdateUserPasswordAsync(long telegramUserId, string? password)
+        {
+            var client = await clientsRepository.GetClientOrDefaultAsync(telegramUserId);
+            if (client is not null)
+                await clientsRepository.UpdateClientPasswordAsync(client, password);
+        }
+
+        public async Task RemoveUserVerificationCode(long telegramUserId)
+        {
+            var client = await clientsRepository.GetClientOrDefaultAsync(telegramUserId);
+            if (client is not null)
+                await clientsRepository.UpdateClientVerificationCodeAsync(client, null);
+        }
+
+        public async Task UpdateUserVerificationCodeAsync(long telegramUserId, string verificationCode)
+        {
+            var client = await clientsRepository.GetClientOrDefaultAsync(telegramUserId);
+            if (client is not null)
+                await clientsRepository.UpdateClientVerificationCodeAsync(client, verificationCode);
+        }
+
         public async Task CompleteAuthenticationAsync(long telegramUserId, string sessionString)
         {
             var client = await clientsRepository.GetClientOrDefaultAsync(telegramUserId);

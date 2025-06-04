@@ -4,11 +4,12 @@ namespace TelegramForwardly.WebApi.Services.Interfaces
 {
     public interface IAuthApiService
     {
-        Task<AuthenticationResult> StartAuthenticationAsync(
+        Task StartAuthenticationAsync(
             long telegramUserId,
             string phone, 
             string apiId,
-            string apiHash);
+            string apiHash,
+            string? password);
         Task<AuthenticationResult> VerifyCodeAsync(
             long telegramUserId,
             string verificationCode);

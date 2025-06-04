@@ -5,6 +5,7 @@ class StartRequest(BaseModel):
     phone: str
     api_id: str
     api_hash: str
+    password: str
 
 class CodeRequest(BaseModel):
     user_id: int

@@ -72,23 +72,36 @@ namespace TelegramForwardly.WebApi.Services.Bot
         {
             string apiHash = message.Text?.Trim() ?? string.Empty;
             await userService.UpdateUserApiHashAsync(user.TelegramUserId, apiHash);
+            await userService.SetUserStateAsync(user.TelegramUserId, UserState.AwaitingPassword);
+            await BotHelper.SendTextMessageAsync(
+                message.Chat.Id,
+                BotHelper.GetPasswordMessage(),
+                botClient, logger,
+                cancellationToken);
+        }
+
+        public static async Task HandlePasswordInputAsync(
+            BotUser user,
+            Message message,
+            IUserService userService,
+            IAuthApiService authApiService,
+            ITelegramBotClient botClient,
+            ILogger logger,
+            CancellationToken cancellationToken)
+        {
+            string? password = message.Text!.Trim();
+            if (password == "no" || password == "No")
+                password = null;
+            await userService.UpdateUserPasswordAsync(user.TelegramUserId, password);
+
             string apiId = user.ApiId!;
             string phone = user.Phone!;
+            string apiHash = user.ApiHash!;
 
-            var authResult = await authApiService.StartAuthenticationAsync(
-                user.TelegramUserId, phone, apiId, apiHash);
-
-            if (!authResult.Success)
-            {
-                await BotHelper.SendTextMessageAsync(
-                    message.Chat.Id,
-                    $"Authentication failed: {authResult.ErrorMessage}\nPlease try again with /setup",
-                    botClient, logger,
-                    cancellationToken, parseMode: ParseMode.None);
-                await userService.SetUserStateAsync(user.TelegramUserId, UserState.Idle);
-                return;
-            }
-
+            await userService.RemoveUserVerificationCode(user.TelegramUserId);/////////////
+            authApiService.StartAuthenticationAsync(
+                user.TelegramUserId, phone, apiId, apiHash, password);
+                
             await userService.SetUserStateAsync(user.TelegramUserId, UserState.AwaitingVerificationCode);
             await BotHelper.SendTextMessageAsync(
                 message.Chat.Id,
@@ -108,33 +121,43 @@ namespace TelegramForwardly.WebApi.Services.Bot
         {
             var verificationCode = message.Text!.Trim();
 
-            var authResult = await authApiService.VerifyCodeAsync(
+            await BotHelper.SendTextMessageAsync(
+                message.Chat.Id,
+                "Verifying your account. Please wait..",
+                botClient, logger,
+                cancellationToken);
+
+            await userService.UpdateUserVerificationCodeAsync(
                 user.TelegramUserId, verificationCode);
 
-            if (!authResult.Success)
-            {
-                if (authResult.RequiresPassword)
-                {
-                    await userService.SetUserStateAsync(user.TelegramUserId, UserState.AwaitingPassword);
-                    await BotHelper.SendTextMessageAsync(message.Chat.Id,
-                        "Two-factor authentication is enabled. Please send me your *password* linked to this account:",
-                        botClient, logger,
-                        cancellationToken);
-                    return;
-                }
 
-                await BotHelper.SendTextMessageAsync(message.Chat.Id,
-                    $"Verification failed: {authResult.ErrorMessage}\nPlease try again with /setup",
-                    botClient, logger,
-                    cancellationToken, parseMode: ParseMode.None);
-                await userService.SetUserStateAsync(user.TelegramUserId, UserState.Idle);
-                return;
-            }
+            //var authResult = await authApiService.VerifyCodeAsync(
+            //    user.TelegramUserId, verificationCode);
 
-            await CompleteAuthenticationAsync(
-                user, authResult.SessionString!,
-                message.Chat.Id, userService, 
-                botClient, logger, cancellationToken);
+            //if (!authResult.Success)
+            //{
+            //    if (authResult.RequiresPassword)
+            //    {
+            //        await userService.SetUserStateAsync(user.TelegramUserId, UserState.AwaitingPassword);
+            //        await BotHelper.SendTextMessageAsync(message.Chat.Id,
+            //            "Two-factor authentication is enabled. Please send me your *password* linked to this account:",
+            //            botClient, logger,
+            //            cancellationToken);
+            //        return;
+            //    }
+
+            //    await BotHelper.SendTextMessageAsync(message.Chat.Id,
+            //        $"Verification failed: {authResult.ErrorMessage}\nPlease try again with /setup",
+            //        botClient, logger,
+            //        cancellationToken, parseMode: ParseMode.None);
+            //    await userService.SetUserStateAsync(user.TelegramUserId, UserState.Idle);
+            //    return;
+            //}
+
+            //await CompleteAuthenticationAsync(
+            //    user, authResult.SessionString!,
+            //    message.Chat.Id, userService, 
+            //    botClient, logger, cancellationToken);
         }
 
         private static async Task CompleteAuthenticationAsync(
