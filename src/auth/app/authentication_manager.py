@@ -63,7 +63,7 @@ async def verify_code(user_id, code) -> Dict[str, Any]:
             result = await client.sign_in(
                 phone=phone,
                 code=code,
-                phone_code_hash=phone_code_hash
+                phone_code_hash=phone_code_hash,
             )
             logger.error(f'{result}')
             two_fa_enabled = False

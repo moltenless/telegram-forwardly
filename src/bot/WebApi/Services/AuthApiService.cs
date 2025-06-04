@@ -40,6 +40,7 @@ namespace TelegramForwardly.WebApi.Services
                 var json = JsonSerializer.Serialize(request);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
+                /////////////////////////////httpClient.Timeout = TimeSpan.FromMinutes(2);
                 var response = await httpClient.PostAsync("/start", content);
                 var responseContent = await response.Content.ReadAsStringAsync();
 
