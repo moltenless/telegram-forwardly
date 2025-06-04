@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
 from app.models import StartRequest, CodeRequest, PasswordRequest
-from app.authentication_manager import start_authentication, verify_code, verify_password
+from app.authentication_manager import start_authentication, verify_code#, #verify_password
 from app.authentication_manager import logger
 
 app = FastAPI()

@@ -12,7 +12,13 @@ async def start_authentication(user_id, phone, api_id, api_hash) -> Dict[str, An
     try:
         client = TelegramClient(StringSession(), api_id, api_hash)
         await client.connect()
-        await client.send_code_request(phone)
+
+        sent_code = await client.send_code_request(phone, force_sms=True)
+        phone_code_hash = sent_code.phone_code_hash
+        logger.error(f"Phone code hash {phone_code_hash}")
+        session_string = client.session.save()
+        logger.error(f"session string {session_string}")
+        # await client.disconnect()
 
         if user_id in _incomplete_sessions:
             session = _incomplete_sessions[user_id]
@@ -21,10 +27,12 @@ async def start_authentication(user_id, phone, api_id, api_hash) -> Dict[str, An
             'client': client,
             'phone': phone,
             'api_id': api_id,
-            'api_hash': api_hash
+            'api_hash': api_hash,
+            'session_string': session_string,
+            'phone_code_hash': phone_code_hash
         }
 
-        logger.info(f"Started authentication for user {user_id} and sent the code")
+        logger.error(f"Started authentication for user {user_id} and sent the code")
         return {"Success": True}
 
     except Exception as e:
@@ -39,9 +47,25 @@ async def verify_code(user_id, code) -> Dict[str, Any]:
     try:
         session = _incomplete_sessions[user_id]
         client = session['client']
+        api_id = session['api_id']
+        api_hash = session['api_hash']
+        phone = session['phone']
+        incomplete_session_string = session['session_string']
+        phone_code_hash = session['phone_code_hash']
+
+        # client = TelegramClient(StringSession(incomplete_session_string), api_id, api_hash)
+        # await client.connect()
+
+        # logger.error(f"session string after send code request: {incomplete_session_string}")
+        # logger.error(f"session string after rereading client from local dict: {client.session.save()}")
 
         try:
-            await client.sign_in(session['phone'], code)
+            result = await client.sign_in(
+                phone=phone,
+                code=code,
+                phone_code_hash=phone_code_hash
+            )
+            logger.error(f'{result}')
             two_fa_enabled = False
         except SessionPasswordNeededError:
             two_fa_enabled = True
@@ -51,7 +75,7 @@ async def verify_code(user_id, code) -> Dict[str, Any]:
                     'ErrorMessage': f'Invalid verification code or similar. {str(e)}'}
 
         if two_fa_enabled:
-            logger.info(f"2FA password required for user {user_id}")
+            logger.error(f"2FA password required for user {user_id}")
             return {'Success': False, 'RequiresPassword': True, 'ErrorMessage': '2FA password required'}
 
         if not await client.is_user_authorized():
@@ -67,7 +91,7 @@ async def verify_code(user_id, code) -> Dict[str, Any]:
         except:
             logger.error(f"Can't disconnect or del authenticated but temporary session {user_id}")
 
-        logger.info(f"Successfully verified code for user {user_id}")
+        logger.error(f"Successfully verified code for user {user_id}")
         return {'Success': True, 'SessionString': session_string}
 
     except Exception as e:
