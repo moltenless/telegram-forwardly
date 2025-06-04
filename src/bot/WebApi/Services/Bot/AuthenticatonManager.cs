@@ -65,7 +65,7 @@ namespace TelegramForwardly.WebApi.Services.Bot
             BotUser user,
             Message message,
             IUserService userService,
-            IUserbotApiService userbotApiService,
+            IAuthApiService authApiService,
             ITelegramBotClient botClient,
             ILogger logger,
             CancellationToken cancellationToken)
@@ -75,7 +75,7 @@ namespace TelegramForwardly.WebApi.Services.Bot
             string apiId = user.ApiId!;
             string phone = user.Phone!;
 
-            var authResult = await userbotApiService.StartAuthenticationAsync(
+            var authResult = await authApiService.StartAuthenticationAsync(
                 user.TelegramUserId, phone, apiId, apiHash);
 
             if (!authResult.Success)
@@ -84,13 +84,12 @@ namespace TelegramForwardly.WebApi.Services.Bot
                     message.Chat.Id,
                     $"Authentication failed: {authResult.ErrorMessage}\nPlease try again with /setup",
                     botClient, logger,
-                    cancellationToken);
+                    cancellationToken, parseMode: ParseMode.None);
                 await userService.SetUserStateAsync(user.TelegramUserId, UserState.Idle);
                 return;
             }
 
             await userService.SetUserStateAsync(user.TelegramUserId, UserState.AwaitingVerificationCode);
-
             await BotHelper.SendTextMessageAsync(
                 message.Chat.Id,
                 "A verification code has been sent to your Telegram account. *Please send me the code:*",
@@ -102,14 +101,14 @@ namespace TelegramForwardly.WebApi.Services.Bot
             BotUser user,
             Message message,
             IUserService userService,
-            IUserbotApiService userbotApiService,
+            IAuthApiService authApiService,
             ITelegramBotClient botClient,
             ILogger logger,
             CancellationToken cancellationToken)
         {
             var verificationCode = message.Text!.Trim();
 
-            var authResult = await userbotApiService.VerifyCodeAsync(
+            var authResult = await authApiService.VerifyCodeAsync(
                 user.TelegramUserId, verificationCode);
 
             if (!authResult.Success)

@@ -22,7 +22,7 @@ class ClientManager:
         self._incomplete_sessions = {}
 
     async def launch_clients_from_database(self):
-        log_info("Initializing clients from database...")
+        logger.info("Initializing clients from database...")
 
         await self._disconnect_and_clear_all_clients()
 
@@ -30,7 +30,7 @@ class ClientManager:
 
         await self._launch_clients_from_users(users)
 
-        log_info(f"Connected {len(self.clients)} clients")
+        logger.info(f"Connected {len(self.clients)} clients")
 
     async def _disconnect_and_clear_all_clients(self):
         for user_id, client in self.clients.items():
@@ -62,7 +62,7 @@ class ClientManager:
 
             self.clients[user.telegram_user_id].client = client
             self.clients[user.telegram_user_id].is_connected = True
-            log_info(f"Connected to Telegram client for {user.telegram_user_id}")
+            logger.info(f"Connected to Telegram client for {user.telegram_user_id}")
         except Exception as e:
             log_error(f"Failed to open Telegram Client connection or similar for user {user.telegram_user_id}", e)
 

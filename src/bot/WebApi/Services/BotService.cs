@@ -10,6 +10,8 @@ namespace TelegramForwardly.WebApi.Services;
 public class BotService(
     ITelegramBotClient botClient,
     IUserService userService,
+
+    IAuthApiService authApiService,
     IUserbotApiService userbotApiService,
 
     ILogger<BotService> logger
@@ -17,6 +19,8 @@ public class BotService(
 {
     private readonly ITelegramBotClient botClient = botClient;
     private readonly IUserService userService = userService;
+
+    private readonly IAuthApiService authApiService = authApiService;
     private readonly IUserbotApiService userbotApiService = userbotApiService;
 
     private readonly ILogger logger = logger;
@@ -61,7 +65,7 @@ public class BotService(
         await UpdateRouter.RouteUserInputAsync(
             user, message, 
             userService,
-            userbotApiService,
+            authApiService,
             botClient, logger,
             cancellationToken);
     }

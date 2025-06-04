@@ -5,14 +5,6 @@ from app.async_loop_manager import event_loop_manager
 
 api_bp = Blueprint('api', __name__)
 
-@api_bp.route('/health', methods=['GET'])
-def health_check():
-    return jsonify({
-        'status': 'healthy',
-        'service': 'userbot',
-        'connected_clients': len(current_app.client_manager.clients)
-    })
-
 @api_bp.route('/auth/start', methods=['POST'])
 def start_auth():
     try:

@@ -83,6 +83,6 @@ def convert_to_serializable(obj: Any) -> Any:
         return [convert_to_serializable(item) for item in obj]
     elif isinstance(obj, dict):
         return {k: convert_to_serializable(v) for k, v in obj.items()}
-    elif hasattr(obj, '__dict__'):  # Handle regular class instances
+    elif hasattr(obj, '__dict__'):
         return convert_to_serializable(vars(obj))
     return obj

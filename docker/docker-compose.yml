@@ -1,3 +1,5 @@
+name: telegram-forwardly
+
 services:
 
     db:
@@ -7,41 +9,49 @@ services:
             - ACCEPT_EULA=Y
             - MSSQL_SA_PASSWORD=${MSSQL_SA_PASSWORD}
         volumes:
-            - db_data:/var/opt/mssql
+            - forwardly_db_data:/var/opt/mssql
         ports:
             - "1433:1433"
         restart: unless-stopped
         networks:
             - forwardly-network
 
-    telegram-bot:
+    auth:
         build:
             context: ..
-            dockerfile: src/telegram_bot/WebApi/Dockerfile
-        container_name: forwardly-bot
-        environment:
-            - ASPNETCORE_HTTP_PORTS=8080
-            - ASPNETCORE_URLS=http://+:8080
-            - ConnectionStrings__DefaultConnection=Server=db,1433;Database=TelegramForwardly;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;
-            - TelegramBot__BotToken=${TELEGRAM_BOT_TOKEN}
-            - TelegramBot__UseWebhook=false
-            - TelegramBot__WebhookUrl=https://telegram-forwardly.com
-            - TelegramBot__UserbotApiBaseUrl=http://userbot:5000
-        volumes:
-            - ../storage/logs:/app/logs
+            dockerfile: src/auth/Dockerfile
+        container_name: forwardly-auth
         ports:
-            - "8080:8080"
+            - "8000:8000"
         depends_on:
             - db
         restart: unless-stopped
         networks:
             - forwardly-network
-        healthcheck:
-            test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-            interval: 10s
-            timeout: 10s
-            retries: 3
-            start_period: 5s
+
+    bot:
+        build:
+            context: ..
+            dockerfile: src/bot/WebApi/Dockerfile
+        container_name: forwardly-bot
+        environment:
+            - ASPNETCORE_HTTP_PORTS=8080
+            - ASPNETCORE_URLS=http://+:8080
+            - ConnectionStrings__DefaultConnection=Server=db,1433;Database=telegram_forwardly;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;
+            - TelegramBot__BotToken=${TELEGRAM_BOT_TOKEN}
+            - TelegramBot__UseWebhook=false
+            - TelegramBot__WebhookUrl=https://telegram-forwardly.com
+            - TelegramBot__UserbotApiBaseUrl=http://userbot:5000
+            - TelegramBot__AuthApiBaseUrl=http://auth:8000
+        volumes:
+            - ../storage/logs:/app/logs
+        ports:
+            - "8080:8080"
+        depends_on:
+            - auth
+        restart: unless-stopped
+        networks:
+            - forwardly-network
         
     userbot:
         build:
@@ -49,7 +59,7 @@ services:
             dockerfile: src/userbot/Dockerfile
         container_name: forwardly-userbot
         environment:
-            - TELEGRAM_BOT_API_URL=http://telegram-bot:8080/api
+            - TELEGRAM_BOT_API_URL=http://bot:8080/api
             - SECRET_KEY=${USERBOT_SECRET_KEY}
             - FLASK_DEBUG=False
             - USERS_UPDATE_INTERVAL_MINUTES=30
@@ -61,14 +71,14 @@ services:
         ports:
             - "5000:5000"
         depends_on:
-            telegram-bot:
-                condition: service_healthy
+            - bot
         restart: unless-stopped
         networks:
             - forwardly-network
 
 volumes:
-    db_data:
+    forwardly_db_data:
+        name: forwardly_db_data
     
 networks:
     forwardly-network:

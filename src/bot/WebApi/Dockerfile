@@ -10,13 +10,13 @@ EXPOSE 8080
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["src/telegram_bot/TelegramForwardly.sln", "telegram_bot/"]
-COPY ["src/telegram_bot/WebApi/WebApi.csproj", "telegram_bot/WebApi/"]
-COPY ["src/telegram_bot/DataAccess/DataAccess.csproj", "telegram_bot/DataAccess/"]
-RUN dotnet restore "telegram_bot/TelegramForwardly.sln"
-COPY ["src/telegram_bot/WebApi/", "telegram_bot/WebApi/"]
-COPY ["src/telegram_bot/DataAccess/", "telegram_bot/DataAccess/"]
-WORKDIR "/src/telegram_bot"
+COPY ["src/bot/TelegramForwardly.sln", "bot/"]
+COPY ["src/bot/WebApi/WebApi.csproj", "bot/WebApi/"]
+COPY ["src/bot/DataAccess/DataAccess.csproj", "bot/DataAccess/"]
+RUN dotnet restore "bot/TelegramForwardly.sln"
+COPY ["src/bot/WebApi/", "bot/WebApi/"]
+COPY ["src/bot/DataAccess/", "bot/DataAccess/"]
+WORKDIR "/src/bot"
 RUN dotnet build "TelegramForwardly.sln" -c $BUILD_CONFIGURATION -o /app/build
 
 # This stage is used to publish the service project to be copied to the final stage
@@ -28,9 +28,5 @@ RUN dotnet publish "WebApi/WebApi.csproj" -c $BUILD_CONFIGURATION -o /app/publis
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-
-USER root
-RUN apt-get update && apt-get install -y curl
-USER $APP_UID
 
 ENTRYPOINT ["dotnet", "WebApi.dll"]

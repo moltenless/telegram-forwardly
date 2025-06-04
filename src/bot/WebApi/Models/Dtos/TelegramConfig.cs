@@ -6,5 +6,6 @@
         public bool? UseWebhook { get; set; } = null!;
         public string WebhookUrl { get; set; } = null!;
         public string UserbotApiBaseUrl { get; set; } = null!;
+        public string AuthApiBaseUrl { get; set; } = null!;
     }
 }

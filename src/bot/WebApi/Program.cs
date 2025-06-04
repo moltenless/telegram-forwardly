@@ -1,6 +1,5 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
 using Telegram.Bot;
@@ -8,7 +7,6 @@ using Telegram.Bot.Types.Enums;
 using TelegramForwardly.DataAccess.Context;
 using TelegramForwardly.DataAccess.Repositories;
 using TelegramForwardly.DataAccess.Repositories.Interfaces;
-using TelegramForwardly.WebApi.Controllers;
 using TelegramForwardly.WebApi.Models.Dtos;
 using TelegramForwardly.WebApi.Services;
 using TelegramForwardly.WebApi.Services.Interfaces;
@@ -50,8 +48,12 @@ builder.Services.AddSingleton<ITelegramBotClient>(provider =>
 
 builder.Services.AddScoped<IBotService, BotService>();
 builder.Services.AddScoped<IUserService, UserService>();
+
 builder.Services.AddScoped<IUserbotApiService, UserbotApiService>();
 builder.Services.AddHttpClient<IUserbotApiService, UserbotApiService>();
+builder.Services.AddScoped<IAuthApiService, AuthApiService>();
+builder.Services.AddHttpClient<IAuthApiService, AuthApiService>();
+
 builder.Services.AddHostedService<PollingService>();
 
 builder.Services.AddScoped<IClientsRepository, ClientsRepository>();
@@ -66,11 +68,7 @@ builder.Services.AddLogging(logging =>
     logging.AddDebug();
 });
 
-builder.Services.AddHealthChecks();
-
 var app = builder.Build();
-
-app.MapHealthChecks("/health");
 
 app.UseSwagger();
 app.UseSwaggerUI();
