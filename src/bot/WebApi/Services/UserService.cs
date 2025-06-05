@@ -43,6 +43,7 @@ namespace TelegramForwardly.WebApi.Services
             return [.. clients.Select(BotUser.FromEntity)];
         }
 
+
         public async Task SetUserStateAsync(long telegramUserId, UserState newState)
         {
             var client = await clientsRepository.GetClientOrDefaultAsync(telegramUserId);
@@ -58,9 +59,6 @@ namespace TelegramForwardly.WebApi.Services
 
             await clientsRepository.SetClientStateAsync(client, state);
         }
-
-
-
 
         public async Task UpdateUserPhoneAsync(long telegramUserId, string phone)
         {
@@ -81,6 +79,13 @@ namespace TelegramForwardly.WebApi.Services
             var client = await clientsRepository.GetClientOrDefaultAsync(telegramUserId);
             if (client is not null)
                 await clientsRepository.UpdateClientApiHashAsync(client, apiHash);
+        }
+
+        public async Task UpdateUserSessionStringAsync(long telegramUserId, string sessionString)
+        {
+            var client = await clientsRepository.GetClientOrDefaultAsync(telegramUserId);
+            if (client is not null)
+                await clientsRepository.UpdateClientSessionStringAsync(client, sessionString);
         }
 
 

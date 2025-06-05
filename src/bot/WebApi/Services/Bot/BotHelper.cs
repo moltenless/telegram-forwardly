@@ -29,8 +29,6 @@ namespace TelegramForwardly.WebApi.Services.Bot
             }
             catch (Exception ex)
             {
-                //logger.LogError(ex, "Failed to send message to chat {ChatId}", chatId);
-                //temrorary
                 logger.LogError(ex, "Failed to send message to chat {ChatId}: {Message}", chatId, text);
             }
         }
@@ -74,7 +72,7 @@ namespace TelegramForwardly.WebApi.Services.Bot
                              "*Please click \'Share phone number 📞🔢\' button below*\nOr\n*Enter manually in the format:* +1234567890 or 1234567890 with country code";
 
         public static string GetApiIdMessage(string phone)
-            => $"Great! Your phone number is {phone}.\n*Now, let's set up your Telegram API ID and API Hash:*\n\n" +
+            => $"*Now, let's set up your Telegram API ID and API Hash:*\n\n" +
                 "You can get them from official Telegram website https://my.telegram.org\n" +
                 "1. There you will need to log in with your phone number and confirm with \'login code\' sent by Telegram.\n" +
                 "2. Then click _API development tools_.\n3. Under _App title_ and _Short name_, " +
@@ -92,8 +90,21 @@ namespace TelegramForwardly.WebApi.Services.Bot
                 "You can copy it in the same place where you got your App api-id. " +
                 "it looks like `0123456789abcdef0123456789abcdef`";
 
+        public static string GetSessionStringMessage()
+            => $"Awesome! Now, please send me your *Session String*.\n\n" +
+                "The safest way to get it is by using a transparent script in this " +
+                "[generator](https://colab.research.google.com/drive/1lxctt9F8QN0jbAcod12ljCo0QoW6MnYN?usp=sharing). " +
+                "It’s most convenient to use from a laptop.\n" +
+                "👉 Open the link, sign in with your Google account " +
+                "and press ▶️‍ button at the top. Under the code you'll be asked to enter your API ID etc.\n" +
+                "After completing you will get _session string_. *Copy and paste it here.*\n\n" +
+
+                "_Alternatively, there's a third-party service that can generate session string more easily: " +
+                "[service](https://telegram.tools/session-string-generator#telethon) - choose 'User' as 'Account Type'.\n" +
+                "*However, it’s not officially verified and may pose a security risk. Use it at your own risk and discretion.*_\n\n";
+
         public static string GetPasswordMessage()
-            => $"If you have enabled 2FA protection for this account please enter password:\n\n" +
+            => $"Great! If you have enabled 2FA protection for this account please enter password:\n\n" +
                 "If you don't have one - simply skip this part and respond with *'no' or 'No'*\n\n";
 
         public static InlineKeyboardMarkup GetMenuKeyboard()
@@ -117,13 +128,13 @@ namespace TelegramForwardly.WebApi.Services.Bot
             { RequestContact = true })
             { ResizeKeyboard = true, OneTimeKeyboard = true, };
 
-	/*
-		'The verification code has been sent to you by Telegram official chat. '
-        'It also could be sent on your phone SMS.'
-        '\nEnter that code: '
+        /*
+            'The verification code has been sent to you by Telegram official chat. '
+            'It also could be sent on your phone SMS.'
+            '\nEnter that code: '
 
-		'It seems like your account has enabled 2FA protection measures.'
-        '\nPlease provide with password to your account to get complete authentication: '
-	*/
+            'It seems like your account has enabled 2FA protection measures.'
+            '\nPlease provide with password to your account to get complete authentication: '
+        */
     }
 }

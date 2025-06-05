@@ -69,7 +69,7 @@ namespace TelegramForwardly.DataAccess.Repositories
                 .AsSplitQuery()
                 .FirstAsync(c => c.TelegramUserId == telegramUserId);
             await context.Entry(entity).ReloadAsync();
-            return entity; 
+            return entity;
         }
 
         public async Task<Client?> GetClientOrDefaultAsync(long telegramUserId)
@@ -110,6 +110,13 @@ namespace TelegramForwardly.DataAccess.Repositories
         {
             if (client.ApiHash == apiHash) return;
             client.ApiHash = apiHash;
+            await context.SaveChangesAsync();
+        }
+
+        public async Task UpdateClientSessionStringAsync(Client client, string sessionString)
+        {
+            if (client.SessionString == sessionString) return;
+            client.SessionString = sessionString;
             await context.SaveChangesAsync();
         }
     }
