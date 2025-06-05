@@ -8,8 +8,10 @@ logger = logging.getLogger(__name__)
 
 _incomplete_sessions = {}
 
-async def start_authentication(user_id, phone, api_id, api_hash, password) -> Dict[str, Any]:
+async def start_authentication(user_id, phone, api_id, api_hash) -> Dict[str, Any]:
     try:
+        client = TelegramClient(StringSession(), api_id, api_hash)
+
         if user_id in _incomplete_sessions:
             session = _incomplete_sessions[user_id]
             await session['client'].disconnect()
@@ -17,9 +19,7 @@ async def start_authentication(user_id, phone, api_id, api_hash, password) -> Di
             'client': client,
             'phone': phone,
             'api_id': api_id,
-            'api_hash': api_hash,
-            'session_string': session_string,
-            'phone_code_hash': phone_code_hash
+            'api_hash': api_hash
         }
 
         logger.error(f"Started authentication for user {user_id} and sent the code")
@@ -43,11 +43,11 @@ async def verify_code(user_id, code) -> Dict[str, Any]:
         incomplete_session_string = session['session_string']
         phone_code_hash = session['phone_code_hash']
 
-        # client = TelegramClient(StringSession(incomplete_session_string), api_id, api_hash)
-        # await client.connect()
+        client = TelegramClient(StringSession(incomplete_session_string), api_id, api_hash)
+        await client.connect()
 
-        # logger.error(f"session string after send code request: {incomplete_session_string}")
-        # logger.error(f"session string after rereading client from local dict: {client.session.save()}")
+        logger.error(f"session string after send code request: {incomplete_session_string}")
+        logger.error(f"session string after rereading client from local dict: {client.session.save()}")
 
         try:
             result = await client.sign_in(
@@ -92,16 +92,16 @@ async def verify_code(user_id, code) -> Dict[str, Any]:
             "ErrorMessage": str(e),
         }
 
-# async def verify_password(phone: str, password: str) -> Dict:
-#     client = _sessions.get(phone)
-#     if not client:
-#         return {"success": False, "error": "Session not found"}
-#
-#     try:
-#         await client.sign_in(password=password)
-#         session_string = client.session.save()
-#         await client.disconnect()
-#         del _sessions[phone]
-#         return {"success": True, "session_string": session_string}
-#     except Exception as e:
-#         return {"success": False, "error": str(e)}
+async def verify_password(phone: str, password: str) -> Dict:
+    client = _incomplete_sessions.get(phone)
+    if not client:
+        return {"success": False, "error": "Session not found"}
+
+    try:
+        await client.sign_in(password=password)
+        session_string = client.session.save()
+        await client.disconnect()
+        del _incomplete_sessions[phone]
+        return {"success": True, "session_string": session_string}
+    except Exception as e:
+        return {"success": False, "error": str(e)}

@@ -1,10 +1,11 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
-from telethon import TelegramClient
+from telethon.sync import TelegramClient
+from telethon.errors import SessionPasswordNeededError
 from telethon.sessions import StringSession
 
 from app.models import StartRequest, CodeRequest, PasswordRequest
-from app.authentication_manager import start_authentication, verify_code#, #verify_password
+from app.authentication_manager import start_authentication, verify_code, verify_password
 from app.authentication_manager import logger
 
 import os
@@ -13,25 +14,6 @@ import httpx
 BOT_URL = os.getenv("TELEGRAM_BOT_API_URL")
 
 app = FastAPI()
-
-async def fetch_data_from_bot(user_id: str):
-    url = f"{BOT_URL}/get_code?user_id={user_id}"  # Example URL with query param
-    logger.error(f'this message is written beyond the bridge. By the way url is {url}')
-
-    # async with httpx.AsyncClient() as client:
-    #     try:
-    #         response = await client.get(url)
-    #         response.raise_for_status()  # Raise exception on 4xx/5xx
-    #
-    #         data = response.json()  # <--- Deserialize JSON
-    #         return data  # Now it's a Python dict
-    #
-    #     except httpx.RequestError as e:
-    #         print(f"Request failed: {e}")
-    #         return None
-    #     except httpx.HTTPStatusError as e:
-    #         print(f"Non-200 response: {e.response.status_code}")
-    #         return None
 
 @app.post("/start")
 async def start_authentication_endpoint(data: StartRequest):
@@ -43,10 +25,7 @@ async def start_authentication_endpoint(data: StartRequest):
 
     http_client = httpx.Client()
 
-    def get_phone() -> str:
-        return phone
-
-    def send_and_await_code() -> str:
+    def await_code() -> str:
         code_response = http_client.get(f"{BOT_URL}/auth/code",
                                         params={'userId': user_id, 'chatId': chat_id},
                                         timeout=180.0)
@@ -60,14 +39,39 @@ async def start_authentication_endpoint(data: StartRequest):
         pass_response.raise_for_status()
         return pass_response.json().get('password')
 
-    client = TelegramClient(StringSession(), int(api_id), api_hash)
-    await client.start(
-        phone=get_phone,
-        password=await_password,
-        code_callback=send_and_await_code
-    )
+    client = TelegramClient(StringSession(), api_id, api_hash)
+    client.connect()
+    result = client.send_code_request(phone)
+    code = await_code()
+
+    try:
+        result = client.sign_in(phone=phone, code=code, phone_code_hash=result.phone_code_hash)
+        logger.error(f'{result}')
+        two_fa_enabled = False
+    except SessionPasswordNeededError:
+        two_fa_enabled = True
+    except Exception as e:
+        logger.error(f'Failed to erify client with code. Exception: {e}')
+        #maybe notify
+        raise e
+
+    if two_fa_enabled:
+        password = await_password()
+        result = client.sign_in(password=password)
+        logger.error(f'{result}')
+
+    if not client.is_user_authorized():
+        issue = "The client passed code verification without issues, but the user is still not authorized"
+        logger.error(f"!!! For user {user_id}: {issue} !!!")
+
+    me = client.get_me()
+    logger.error(me.phone)
+
     session_string = client.session.save()
-    logger.error(f'client is authorized: {await client.is_user_authorized()}\nsessions string: {session_string}')
+
+    logger.error(f'client is authorized: {client.is_user_authorized()}\nsessions string: {session_string}')
+
+    client.disconnect()
 
     async with httpx.AsyncClient() as async_http:
         session_response = await async_http.post(f"{BOT_URL}/auth/session",

@@ -1,14 +1,7 @@
 import logging
 from typing import Dict, Any, List
-from telethon import TelegramClient, events
-from telethon.errors import SessionPasswordNeededError, PhoneCodeInvalidError, PasswordHashInvalidError
-from telethon.sessions import StringSession
 from app.models import BotUser, UserClient
-from app.services.authentication_manager import connect_existing_client, authenticate_first_step_not_disconnected, \
-    authenticate_second_step
 from app.services.telegram_api_service import TelegramApiService
-from app.services.message_handler import MessageHandler
-import app.services.authentication_manager
 from app.utils import log_error, log_info
 
 logger = logging.getLogger(__name__)
@@ -19,7 +12,6 @@ class ClientManager:
         self.clients: Dict[int, UserClient] = {}
         self.telegram_api = TelegramApiService()
         # self.message_handler = MessageHandler()
-        self._incomplete_sessions = {}
 
     async def launch_clients_from_database(self):
         logger.info("Initializing clients from database...")
@@ -83,100 +75,6 @@ class ClientManager:
         # except Exception as e:
         #     log_error(f"Failed to setup message handler for user {user_client.user.telegram_user_id}", e)
         log_info('Here I must subscribe client to handle new messages')
-
-    async def start_authentication(self, user_id: int, phone: str, api_id: str, api_hash: str) -> Dict[
-        str, Any]:
-        try:
-            client = await authenticate_first_step_not_disconnected(api_id, api_hash, phone)
-
-            if user_id in self._incomplete_sessions:
-                session = self._incomplete_sessions[user_id]
-                await session['client'].disconnect()
-            self._incomplete_sessions[user_id] = {
-                'client': client,
-                'phone': phone,
-                'api_id': api_id,
-                'api_hash': api_hash
-            }
-
-            log_info(f"Started authentication for user {user_id} and sent the code")
-            return { "Success": True }
-
-        except Exception as e:
-            log_error(f"Failed to start authentication for user {user_id}", e)
-            return {
-                "Success": False,
-                "ErrorMessage": "Error occurred trying to make connection or sending the code",
-            }
-
-    async def verify_code(self, user_id: int, code: str) -> Dict[str, Any]:
-        try:
-            if user_id not in self._incomplete_sessions:
-                return {
-                    "Success": False, 'RequiresPassword': False,
-                    "ErrorMessage": "In-memory incomplete authentication session not found",
-                }
-
-            session_data = self._incomplete_sessions[user_id]
-            client = session_data['client']
-
-            try:
-                two_fa_enabled = await authenticate_second_step(client, session_data['phone'], code)
-            except Exception as e:
-                #temporary sdfsdfsfsdfsfsdf
-                log_error(f"Failed to verify client with code. Exception: {str(e)}")
-                return {'Success': False, 'RequiresPassword': False, 'ErrorMessage': f'Invalid verification code or similar'}
-
-            if two_fa_enabled:
-                log_info(f"2FA password required for user {user_id}")
-                return {'Success': False, 'RequiresPassword': True, 'ErrorMessage': '2FA password required'}
-
-            session_string = client.session.save()
-
-            try:
-                await client.disconnect()
-                del self._incomplete_sessions[user_id]
-            except:
-                log_error(f"Can't disconnect or del authenticated but temporary session {user_id}")
-
-            log_info(f"Successfully verified code for user {user_id}")
-            return {'Success': True, 'SessionString': session_string}
-
-        except Exception as e:
-            log_error(f"Failed to verify code for user {user_id}", e)
-            return {'Success': False, 'RequiresPassword': False, 'ErrorMessage': str(e)}
-
-    async def verify_password(self, user_id: int, password: str) -> Dict[str, Any]:
-        """Verify 2FA password"""
-        try:
-            if user_id not in self._incomplete_sessions:
-                return {'success': False, 'error': 'Authentication session not found'}
-
-            session_data = self._incomplete_sessions[user_id]
-            client = session_data['client']
-
-            try:
-                await client.sign_in(password=password)
-
-                # Get session string
-                session_string = client.session.save()
-
-                # Update session in bot API
-                await self.telegram_api.update_user_session(user_id, session_string)
-
-                # Clean up temp session
-                await client.disconnect()
-                del self._incomplete_sessions[user_id]
-
-                log_info(f"Successfully verified password for user {user_id}")
-                return {'success': True, 'message': 'Authentication successful'}
-
-            except PasswordHashInvalidError:
-                return {'success': False, 'error': 'Invalid password'}
-
-        except Exception as e:
-            log_error(f"Failed to verify password for user {user_id}", e)
-            return {'success': False, 'error': str(e)}
 
     async def update_user(self, user_data: BotUser) -> Dict[str, Any]:
         """Update user configuration and reconnect if necessary"""
