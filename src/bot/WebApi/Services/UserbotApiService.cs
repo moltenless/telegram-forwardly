@@ -19,8 +19,33 @@ namespace TelegramForwardly.WebApi.Services
             ILogger<UserbotApiService> logger)
         {
             this.httpClient = httpClient;
-            this.httpClient.BaseAddress = new Uri(telegramConfig.Value.UserbotApiBaseUrl);
             this.logger = logger;
+            this.httpClient.BaseAddress = new Uri(telegramConfig.Value.UserbotApiBaseUrl);
+        }
+
+
+        public async Task<LaunchResult> LaunchUserAsync(BotUser user)
+        {
+            try
+            {
+                var request = JsonSerializer.Serialize(user);
+                var content = new StringContent(request, Encoding.UTF8, "application/json");
+
+                var response = await httpClient.PostAsync("api/user/launch", content);
+
+                var result = JsonSerializer.Deserialize<LaunchResult>(
+                    await response.Content.ReadAsStringAsync());
+                return result!;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error launching userbot API");
+                return new LaunchResult
+                {
+                    Success = false,
+                    ErrorMessage = ex.Message
+                };
+            }
         }
 
 

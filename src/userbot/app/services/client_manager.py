@@ -1,5 +1,9 @@
 import logging
 from typing import Dict, Any, List
+
+from telethon import TelegramClient
+from telethon.sessions import StringSession
+
 from app.models import BotUser, UserClient
 from app.services.telegram_api_service import TelegramApiService
 from app.utils import log_error, log_info
@@ -14,15 +18,26 @@ class ClientManager:
         # self.message_handler = MessageHandler()
 
     async def launch_clients_from_database(self):
-        logger.info("Initializing clients from database...")
-
         await self._disconnect_and_clear_all_clients()
-
         users = await self.telegram_api.get_all_users()
-
         await self._launch_clients_from_users(users)
-
         logger.info(f"Connected {len(self.clients)} clients")
+
+    async def launch_client(self, user: BotUser)-> bool:
+        try:
+            self.clients[user.telegram_user_id] = UserClient()
+            self.clients[user.telegram_user_id].user = user
+            connected = await self._connect_client(user)
+            if connected:
+                self.clients[user.telegram_user_id].user.is_authenticated = True
+            else:
+                return False
+            await self._setup_message_handler(self.clients[user.telegram_user_id])
+            logger.info(f"Connected {user.telegram_user_id} client")
+            return True
+        except Exception as e:
+            logger.warning(f'Exception while launching client {user.telegram_user_id}. {e}')
+            return False
 
     async def _disconnect_and_clear_all_clients(self):
         for user_id, client in self.clients.items():
@@ -42,21 +57,30 @@ class ClientManager:
         except Exception as e:
             log_error(f"Failed to launch clients from users", e)
 
-    async def _connect_client(self, user: BotUser):
+    async def _connect_client(self, user: BotUser) -> bool:
         try:
-            client = await connect_existing_client(user.session_string, user.api_id, user.api_hash)
+            client = TelegramClient(StringSession(user.session_string), user.api_id, user.api_hash)
+            await client.connect()
+
             if not client:
                 self.clients[
                     user.telegram_user_id].last_error = "Couldn't connect to telegram client with this api id, hash and session string"
                 log_error(f"Can't connect to Telegram client for {user.telegram_user_id}")
                 await client.disconnect()
-                return
+                return False
+
+            if not await client.is_user_authorized():
+                return False
+            if (await client.get_me()).user_id is not user.telegram_user_id:
+                return False
 
             self.clients[user.telegram_user_id].client = client
             self.clients[user.telegram_user_id].is_connected = True
             logger.info(f"Connected to Telegram client for {user.telegram_user_id}")
+            return True
         except Exception as e:
             log_error(f"Failed to open Telegram Client connection or similar for user {user.telegram_user_id}", e)
+            return False
 
     async def _setup_message_handler(self, user_client: UserClient):
         # try:

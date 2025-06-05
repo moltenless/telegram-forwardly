@@ -2,6 +2,7 @@
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 using TelegramForwardly.WebApi.Models.Dtos;
+using TelegramForwardly.WebApi.Models.Responses;
 using TelegramForwardly.WebApi.Services.Interfaces;
 
 namespace TelegramForwardly.WebApi.Services.Bot
@@ -72,6 +73,7 @@ namespace TelegramForwardly.WebApi.Services.Bot
             BotUser user,
             Message message,
             IUserService userService,
+            IUserbotApiService userbotApiService,
             ITelegramBotClient botClient,
             ILogger logger,
             CancellationToken cancellationToken)
@@ -80,26 +82,37 @@ namespace TelegramForwardly.WebApi.Services.Bot
             await userService.UpdateUserSessionStringAsync(user.TelegramUserId, sessionString);
 
             await CompleteAuthenticationAsync(
-                user, sessionString, message.Chat.Id,
-                userService, botClient, logger, cancellationToken);
+                user.TelegramUserId, message.Chat.Id,
+                userService, userbotApiService, botClient, logger, cancellationToken);
         }
 
 
         private static async Task CompleteAuthenticationAsync(
-            BotUser user,
-            string sessionString,
+            long telegramUserId,
             long chatId,
             IUserService userService,
+            IUserbotApiService userbotApiService,
             ITelegramBotClient botClient,
             ILogger logger,
             CancellationToken cancellationToken)
         {
-            string apiId = user.ApiId!;
-            string apiHash = user.ApiHash!;
+            BotUser user = await userService.GetUserAsync(telegramUserId);
 
-            // send request with botuser to userbot to launch him separately
+            LaunchResult result = await userbotApiService.LaunchUserAsync(user);
 
+            if (!result.Success)
+            {
+                await userService.SetUserStateAsync(user.TelegramUserId, UserState.Idle);
+                await BotHelper.SendTextMessageAsync(
+                    chatId, $"❌ Authentication failed: {result.ErrorMessage}",
+                    botClient, logger, cancellationToken);
+                await MenuManager.ShowMainMenuAsync(user, chatId, botClient, logger, cancellationToken);
+                return;
+            }
+
+            await userService.SetUserAuthenticatedAsync(telegramUserId, true);
             await userService.SetUserStateAsync(user.TelegramUserId, UserState.Idle);
+
             var successMessage = "🎉 Authentication successful!\n\n" +
                                "You can now:\n" +
                                "• Manage keywords with /keywords\n" +

@@ -8,6 +8,7 @@ namespace TelegramForwardly.WebApi.Services.Interfaces
             UserState initialStateIfNew,
             string? userNameIfNew,
             string? firstNameIfNew);
+        Task<BotUser> GetUserAsync(long telegramUserId);
 
         Task<HashSet<BotUser>> GetAllUsersAsync();
         Task<HashSet<BotUser>> GetAllAuthenticatedUsersAsync();
@@ -17,6 +18,7 @@ namespace TelegramForwardly.WebApi.Services.Interfaces
         Task UpdateUserApiIdAsync(long telegramUserId, string apiId);
         Task UpdateUserApiHashAsync(long telegramUserId, string apiHash);
         Task UpdateUserSessionStringAsync(long telegramUserId, string sessionString);
+        Task SetUserAuthenticatedAsync(long telegramUserId, bool isAuthenticated);
 
         Task<IEnumerable<Keyword>> GetKeywordsAsync(long telegramUserId);
         Task AddUserKeywordAsync(long telegramUserId, string keyword);

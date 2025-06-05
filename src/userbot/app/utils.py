@@ -66,7 +66,6 @@ def parse_user_from_api(data: Dict[str, Any]) -> BotUser:
         user_name=data.get('user_name'),
         first_name=data.get('first_name'),
         forum_supergroup_id=safe_int_convert(data.get('forum_supergroup_id')),
-        logging_topic_enabled=data.get('logging_topic_enabled'),
         topic_grouping=GroupingMode(data.get('topic_grouping')) if data.get('topic_grouping') else None,
         forwardly_enabled=data.get('forwardly_enabled'),
         all_chats_filtering_enabled=data.get('all_chats_filtering_enabled'),

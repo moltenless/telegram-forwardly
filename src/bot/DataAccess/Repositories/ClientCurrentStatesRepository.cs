@@ -17,5 +17,11 @@ namespace TelegramForwardly.DataAccess.Repositories
             return await context.ClientCurrentStates
                 .FirstOrDefaultAsync(s => s.Value == value);
         }
+
+        public async Task<ClientCurrentState> GetStateAsync(string value)
+        {
+            return await context.ClientCurrentStates
+                .FirstAsync(s => s.Value == value);
+        }
     }
 }

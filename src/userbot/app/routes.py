@@ -1,9 +1,32 @@
 from flask import Blueprint, request, jsonify, current_app
-import asyncio
-from app.utils import log_error, parse_user_from_api
 from app.async_loop_manager import event_loop_manager
+from app.utils import log_error, parse_user_from_api, logger
 
 api_bp = Blueprint('api', __name__)
+
+
+@api_bp.route('/user/launch', methods=['POST'])
+def launch_user():
+    try:
+        data = request.get_json()
+        user = parse_user_from_api(data)
+
+        logger.info(user)
+
+        result = event_loop_manager.run_coroutine(
+            current_app.client_manager.launch_client(user)
+        )
+
+        if not result:
+            logger.error(f'Client is not authorized! Silent error.')
+            return jsonify({'Success': False, 'ErrorMessage': 'Authenticaton failed.'}), 500
+
+        return jsonify({'Success': True}), 200
+
+    except Exception as e:
+        logger.error(f'Failed to launch new user. {e}')
+        return jsonify({'Success': False, 'ErrorMessage': 'Authentication failed.'}), 500
+
 
 @api_bp.route('/user/update', methods=['POST'])
 def update_user():

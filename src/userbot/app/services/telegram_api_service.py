@@ -27,7 +27,6 @@ class TelegramApiService:
             users = [parse_user_from_api(user_data)
                     for user_data in users_data]
 
-            logger.info(f"Retrieved {len(users)} users from Telegram Bot API")
             return users
 
         except requests.RequestException as e:

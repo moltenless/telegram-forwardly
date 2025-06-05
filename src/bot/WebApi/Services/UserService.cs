@@ -31,6 +31,12 @@ namespace TelegramForwardly.WebApi.Services
             return BotUser.FromEntity(client);
         }
 
+        public async Task<BotUser> GetUserAsync(long telegramUserId)
+        {
+            var client = await clientsRepository.GetClientAsync(telegramUserId);
+            return BotUser.FromEntity(client);
+        }
+
         public async Task<HashSet<BotUser>> GetAllUsersAsync()
         {
             var clients = await clientsRepository.GetAllClientsAsync();
@@ -46,46 +52,40 @@ namespace TelegramForwardly.WebApi.Services
 
         public async Task SetUserStateAsync(long telegramUserId, UserState newState)
         {
-            var client = await clientsRepository.GetClientOrDefaultAsync(telegramUserId);
-            if (client is null) return;
-
-            var state = await statesRepository.GetStateOrDefaultAsync(newState.ToString());
-
-            if (state is null)
-            {
-                logger.LogError("State {StateName} not found in database.", newState.ToString());
-                return;
-            }
+            var client = await clientsRepository.GetClientAsync(telegramUserId);
+            var state = await statesRepository.GetStateAsync(newState.ToString());
 
             await clientsRepository.SetClientStateAsync(client, state);
         }
 
         public async Task UpdateUserPhoneAsync(long telegramUserId, string phone)
         {
-            var client = await clientsRepository.GetClientOrDefaultAsync(telegramUserId);
-            if (client is not null)
-                await clientsRepository.UpdateClientPhoneAsync(client, phone);
+            var client = await clientsRepository.GetClientAsync(telegramUserId);
+            await clientsRepository.UpdateClientPhoneAsync(client, phone);
         }
 
         public async Task UpdateUserApiIdAsync(long telegramUserId, string apiId)
         {
-            var client = await clientsRepository.GetClientOrDefaultAsync(telegramUserId);
-            if (client is not null)
-                await clientsRepository.UpdateClientApiIdAsync(client, apiId);
+            var client = await clientsRepository.GetClientAsync(telegramUserId);
+            await clientsRepository.UpdateClientApiIdAsync(client, apiId);
         }
 
         public async Task UpdateUserApiHashAsync(long telegramUserId, string apiHash)
         {
-            var client = await clientsRepository.GetClientOrDefaultAsync(telegramUserId);
-            if (client is not null)
-                await clientsRepository.UpdateClientApiHashAsync(client, apiHash);
+            var client = await clientsRepository.GetClientAsync(telegramUserId);
+            await clientsRepository.UpdateClientApiHashAsync(client, apiHash);
         }
 
         public async Task UpdateUserSessionStringAsync(long telegramUserId, string sessionString)
         {
-            var client = await clientsRepository.GetClientOrDefaultAsync(telegramUserId);
-            if (client is not null)
-                await clientsRepository.UpdateClientSessionStringAsync(client, sessionString);
+            var client = await clientsRepository.GetClientAsync(telegramUserId);
+            await clientsRepository.UpdateClientSessionStringAsync(client, sessionString);
+        }
+
+        public async Task SetUserAuthenticatedAsync(long telegramUserId, bool isAuthenticated)
+        {
+            var client = await clientsRepository.GetClientAsync(telegramUserId);
+            await clientsRepository.SetClientAuthenticatedAsync(client, isAuthenticated);
         }
 
 
