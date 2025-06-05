@@ -125,16 +125,16 @@ namespace TelegramForwardly.WebApi.Services.Bot
                         botClient, logger, cancellationToken);
                     break;
 
-                case UserState.AwaitingPassword:
-                    await AuthenticationManager.HandlePasswordInputAsync(
-                        user, message, userService, authApiService,
-                        botClient, logger, cancellationToken);
-                    break;
-
                 case UserState.AwaitingVerificationCode:
                     await AuthenticationManager.HandleVerificationCodeInputAsync(
                         user, message, userService, authApiService,
                         botClient, logger, cancellationToken);
+                    break;
+
+                case UserState.AwaitingPassword:
+                    //await AuthenticationManager.HandlePasswordInputAsync(
+                    //    user, message, userService, authApiService,
+                    //    botClient, logger, cancellationToken);
                     break;
 
                 case UserState.AwaitingEnableAllChats:

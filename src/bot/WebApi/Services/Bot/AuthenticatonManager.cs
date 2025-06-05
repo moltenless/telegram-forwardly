@@ -70,45 +70,55 @@ namespace TelegramForwardly.WebApi.Services.Bot
             ILogger logger,
             CancellationToken cancellationToken)
         {
+            string phone = user.Phone!;
+            string apiId = user.ApiId!;
             string apiHash = message.Text?.Trim() ?? string.Empty;
             await userService.UpdateUserApiHashAsync(user.TelegramUserId, apiHash);
-            await userService.SetUserStateAsync(user.TelegramUserId, UserState.AwaitingPassword);
-            await BotHelper.SendTextMessageAsync(
-                message.Chat.Id,
-                BotHelper.GetPasswordMessage(),
-                botClient, logger,
-                cancellationToken);
+
+            await userService.RemoveUserVerificationCodeAsync(user.TelegramUserId);/////////////
+            await userService.RemoveUserPasswordAsync(user.TelegramUserId);/////////////
+
+            authApiService.StartAuthenticationAsync(
+                user.TelegramUserId, message.Chat.Id, phone, apiId, apiHash);
+
+
+            //await userService.SetUserStateAsync(user.TelegramUserId, UserState.AwaitingPassword);
+            //await BotHelper.SendTextMessageAsync(
+            //    message.Chat.Id,
+            //    BotHelper.GetPasswordMessage(),
+            //    botClient, logger,
+            //    cancellationToken);
         }
 
-        public static async Task HandlePasswordInputAsync(
-            BotUser user,
-            Message message,
-            IUserService userService,
-            IAuthApiService authApiService,
+        public static async Task<string> RequestAndAwaitVerificationCodeAsync(
+            long telegramUserId,
+            long chatId,
+            IUserService userService,   
             ITelegramBotClient botClient,
             ILogger logger,
             CancellationToken cancellationToken)
         {
-            string? password = message.Text!.Trim();
-            if (password == "no" || password == "No")
-                password = null;
-            await userService.UpdateUserPasswordAsync(user.TelegramUserId, password);
-
-            string apiId = user.ApiId!;
-            string phone = user.Phone!;
-            string apiHash = user.ApiHash!;
-
-            await userService.RemoveUserVerificationCode(user.TelegramUserId);/////////////
-            authApiService.StartAuthenticationAsync(
-                user.TelegramUserId, phone, apiId, apiHash, password);
-                
-            await userService.SetUserStateAsync(user.TelegramUserId, UserState.AwaitingVerificationCode);
             await BotHelper.SendTextMessageAsync(
-                message.Chat.Id,
-                "A verification code has been sent to your Telegram account. *Please send me the code:*",
-                botClient, logger,
-                cancellationToken);
+                chatId, "The verification code has been sent. Please write it down",
+                botClient, logger, cancellationToken);
+
+            await userService.SetUserStateAsync(telegramUserId, UserState.AwaitingVerificationCode);
+
+            int interval = 3, maxAttempts = 60;
+            for (int i = 0; i < maxAttempts; i++)
+            {
+                await Task.Delay(interval * 1000, cancellationToken);
+
+                string? code = await userService.GetUserVerificationCodeAsync(telegramUserId);
+                if (code is not null)
+                {
+                    return code;
+                }
+            }
+            throw new TimeoutException(
+                "Verification code input timed out. Please try again with /setup.");
         }
+
 
         public static async Task HandleVerificationCodeInputAsync(
             BotUser user,
@@ -120,45 +130,40 @@ namespace TelegramForwardly.WebApi.Services.Bot
             CancellationToken cancellationToken)
         {
             var verificationCode = message.Text!.Trim();
-
-            await BotHelper.SendTextMessageAsync(
-                message.Chat.Id,
-                "Verifying your account. Please wait..",
-                botClient, logger,
-                cancellationToken);
-
             await userService.UpdateUserVerificationCodeAsync(
                 user.TelegramUserId, verificationCode);
-
-
-            //var authResult = await authApiService.VerifyCodeAsync(
-            //    user.TelegramUserId, verificationCode);
-
-            //if (!authResult.Success)
-            //{
-            //    if (authResult.RequiresPassword)
-            //    {
-            //        await userService.SetUserStateAsync(user.TelegramUserId, UserState.AwaitingPassword);
-            //        await BotHelper.SendTextMessageAsync(message.Chat.Id,
-            //            "Two-factor authentication is enabled. Please send me your *password* linked to this account:",
-            //            botClient, logger,
-            //            cancellationToken);
-            //        return;
-            //    }
-
-            //    await BotHelper.SendTextMessageAsync(message.Chat.Id,
-            //        $"Verification failed: {authResult.ErrorMessage}\nPlease try again with /setup",
-            //        botClient, logger,
-            //        cancellationToken, parseMode: ParseMode.None);
-            //    await userService.SetUserStateAsync(user.TelegramUserId, UserState.Idle);
-            //    return;
-            //}
-
-            //await CompleteAuthenticationAsync(
-            //    user, authResult.SessionString!,
-            //    message.Chat.Id, userService, 
-            //    botClient, logger, cancellationToken);
         }
+
+        //public static async Task HandlePasswordInputAsync(
+        //    BotUser user,
+        //    Message message,
+        //    IUserService userService,
+        //    IAuthApiService authApiService,
+        //    ITelegramBotClient botClient,
+        //    ILogger logger,
+        //    CancellationToken cancellationToken)
+        //{
+        //    string? password = message.Text!.Trim();
+        //    if (password == "no" || password == "No")
+        //        password = null;
+        //    await userService.UpdateUserPasswordAsync(user.TelegramUserId, password);
+
+        //    string apiId = user.ApiId!;
+        //    string phone = user.Phone!;
+        //    string apiHash = user.ApiHash!;
+
+        //    await userService.RemoveUserVerificationCode(user.TelegramUserId);/////////////
+        //    authApiService.StartAuthenticationAsync(
+        //        user.TelegramUserId, phone, apiId, apiHash, password);
+
+        //    await userService.SetUserStateAsync(user.TelegramUserId, UserState.AwaitingVerificationCode);
+        //    await BotHelper.SendTextMessageAsync(
+        //        message.Chat.Id,
+        //        "A verification code has been sent to your Telegram account. *Please send me the code:*",
+        //        botClient, logger,
+        //        cancellationToken);
+        //}
+
 
         private static async Task CompleteAuthenticationAsync(
             BotUser user,

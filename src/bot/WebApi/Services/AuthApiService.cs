@@ -24,20 +24,20 @@ namespace TelegramForwardly.WebApi.Services
 
         public async Task StartAuthenticationAsync(
             long telegramUserId, 
+            long chatId,
             string phone, 
             string apiId, 
-            string apiHash,
-            string? password)
+            string apiHash)
         {
             try
             {
                 var request = new
                 {
                     user_id = telegramUserId,
+                    chat_id = chatId,
                     phone,
                     api_id = apiId,
                     api_hash = apiHash,
-                    password = password ?? string.Empty
                 };
                 var json = JsonSerializer.Serialize(request);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");

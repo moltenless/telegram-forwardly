@@ -6,10 +6,10 @@ namespace TelegramForwardly.WebApi.Services.Interfaces
     {
         Task StartAuthenticationAsync(
             long telegramUserId,
+            long chatId,
             string phone, 
             string apiId,
-            string apiHash,
-            string? password);
+            string apiHash);
         Task<AuthenticationResult> VerifyCodeAsync(
             long telegramUserId,
             string verificationCode);

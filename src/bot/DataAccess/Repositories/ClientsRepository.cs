@@ -63,22 +63,27 @@ namespace TelegramForwardly.DataAccess.Repositories
 
         public async Task<Client> GetClientAsync(long telegramUserId)
         {
-            return await context.Clients
+            var entity = await context.Clients
                 .Include(c => c.CurrentState)
                 .Include(c => c.Keywords)
                 .Include(c => c.Chats)
                 .AsSplitQuery()
                 .FirstAsync(c => c.TelegramUserId == telegramUserId);
+            await context.Entry(entity).ReloadAsync();
+            return entity; 
         }
 
         public async Task<Client?> GetClientOrDefaultAsync(long telegramUserId)
         {
-            return await context.Clients
+            var entity = await context.Clients
                 .Include(c => c.CurrentState)
                 .Include(c => c.Keywords)
                 .Include(c => c.Chats)
                 .AsSplitQuery()
                 .FirstOrDefaultAsync(c => c.TelegramUserId == telegramUserId);
+            if (entity != null)
+                await context.Entry(entity).ReloadAsync();
+            return entity;
         }
 
         public async Task SetClientStateAsync(Client client, ClientCurrentState newState)

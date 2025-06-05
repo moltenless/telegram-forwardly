@@ -2,10 +2,10 @@ from pydantic import BaseModel
 
 class StartRequest(BaseModel):
     user_id: int
+    chat_id: int
     phone: str
     api_id: str
     api_hash: str
-    password: str
 
 class CodeRequest(BaseModel):
     user_id: int

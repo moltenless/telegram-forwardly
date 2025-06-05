@@ -35,37 +35,48 @@ async def fetch_data_from_bot(user_id: str):
 
 @app.post("/start")
 async def start_authentication_endpoint(data: StartRequest):
-    try:
-        user_id = data.user_id
-        phone = data.phone
-        api_id = data.api_id
-        api_hash = data.api_hash
-        password = data.password
+    user_id = data.user_id
+    chat_id = data.chat_id
+    phone = str(data.phone)
+    api_id = data.api_id
+    api_hash = data.api_hash
+
+    http_client = httpx.Client()
+
+    def get_phone() -> str:
+        return phone
+
+    def send_and_await_code() -> str:
+        code_response = http_client.get(f"{BOT_URL}/auth/code",
+                                        params={'userId': user_id, 'chatId': chat_id},
+                                        timeout=180.0)
+        code_response.raise_for_status()
+        return code_response.json().get('code')
+
+    def await_password() -> str:
+        pass_response = http_client.get(f"{BOT_URL}/auth/password",
+                                        params={'user_id': user_id, 'chat_id': chat_id},
+                                        timeout=120)
+        pass_response.raise_for_status()
+        return pass_response.json().get('password')
+
+    client = TelegramClient(StringSession(), int(api_id), api_hash)
+    await client.start(
+        phone=get_phone,
+        password=await_password,
+        code_callback=send_and_await_code
+    )
+    session_string = client.session.save()
+    logger.error(f'client is authorized: {await client.is_user_authorized()}\nsessions string: {session_string}')
+
+    async with httpx.AsyncClient() as async_http:
+        session_response = await async_http.post(f"{BOT_URL}/auth/session",
+                                    json={'user_id': user_id, 'chat_id': chat_id, 'session_string': session_string})
+        session_response.raise_for_status()
+
+    return JSONResponse(content=session_string, status_code=200)
 
 
-
-        # with TelegramClient(StringSession(), int(api_id), api_hash) as client:
-        #     await client.start()
-
-        await client.connect()
-        sent_code = await client.send_code_request(phone)
-
-        client.start()
-
-        if result.get("Success"):
-            return JSONResponse(content=result, status_code=200)
-        else:
-            return JSONResponse(content=result, status_code=400)
-
-    except Exception as e:
-        logger.error(
-            {"Error starting authentication": f'telegram_user_id: {data.user_id}'},
-                    exc_info=e)
-        return JSONResponse(
-            content={
-            "Success": False,
-            "ErrorMessage": "Error occurred trying to make connection or sending the code",
-        }, status_code=500)
 
 @app.post("/verify")
 async def verify_code_endpoint(data: CodeRequest):
