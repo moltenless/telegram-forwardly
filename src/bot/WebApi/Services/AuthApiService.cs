@@ -42,9 +42,9 @@ namespace TelegramForwardly.WebApi.Services
                 var json = JsonSerializer.Serialize(request);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                httpClient.Timeout = TimeSpan.FromMinutes(3);/////
+                httpClient.Timeout = TimeSpan.FromMinutes(3);
                 logger.LogInformation("Starting authentication for user {TelegramUserId} with phone {Phone}, API ID {ApiId}, API Hash {ApiHash}", telegramUserId, phone, apiId, apiHash);
-                httpClient.PostAsync("/start", content);
+                await httpClient.PostAsync("/start", content);
             }
             catch (Exception ex)
             {
@@ -77,7 +77,21 @@ namespace TelegramForwardly.WebApi.Services
 
         public async Task<AuthenticationResult> VerifyPasswordAsync(long telegramUserId, string password)
         {
-            return null;
+            try
+            {
+                var request = new { user_id = telegramUserId, password };
+                var json = JsonSerializer.Serialize(request);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                var response = await httpClient.PostAsync("/verify", content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var result = JsonSerializer.Deserialize<AuthenticationResult>(responseContent);
+                return result ?? new AuthenticationResult { Success = false, ErrorMessage = "Unknown error" };
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error verifying password for user {UserId}", telegramUserId);
+                return new AuthenticationResult { Success = false, ErrorMessage = "Connection error" };
+            }
         }
     }
 }

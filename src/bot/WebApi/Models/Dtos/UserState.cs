@@ -9,13 +9,11 @@ namespace TelegramForwardly.WebApi.Models.Dtos
         AwaitingPhoneNumber,      
         AwaitingApiId,            
         AwaitingApiHash,          
-        AwaitingVerificationCode, 
-        AwaitingPassword,         
+        AwaitingSessionString, 
         AwaitingEnableAllChats,   
         AwaitingChats,            
         AwaitingKeywords,         
         AwaitingForumGroup,      
         AwaitingGroupingType,    
-        AwaitingEnableLoggingTopic
     }
 }

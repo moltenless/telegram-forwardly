@@ -15,7 +15,6 @@ namespace TelegramForwardly.WebApi.Models.Dtos
         public string? UserName { get; set; }
         public string? FirstName { get; set; }
         public long? ForumSupergroupId { get; set; }
-        public bool? LoggingTopicEnabled { get; set; }
         public GroupingMode? TopicGrouping { get; set; }
         public bool? ForwardlyEnabled { get; set; }
         public bool? AllChatsFilteringEnabled { get; set; }
@@ -52,7 +51,6 @@ namespace TelegramForwardly.WebApi.Models.Dtos
                 UserName = client.UserName,
                 FirstName = client.FirstName,
                 ForumSupergroupId = client.ForumSupergroupId,
-                LoggingTopicEnabled = client.LoggingTopicEnabled,
                 TopicGrouping = Enum.TryParse(client.TopicGrouping, out GroupingMode groupingMode) ? groupingMode : null,
                 ForwardlyEnabled = client.ForwardlyEnabled,
                 AllChatsFilteringEnabled = client.AllChatsFilteringEnabled,

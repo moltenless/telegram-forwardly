@@ -27,7 +27,6 @@ namespace TelegramForwardly.DataAccess.Repositories
                     IsAuthenticated = false,
                     ForwardlyEnabled = false,
                     TopicGrouping = "ByKeyword",
-                    LoggingTopicEnabled = false,
                     AllChatsFilteringEnabled = false,
                 };
 
@@ -111,28 +110,6 @@ namespace TelegramForwardly.DataAccess.Repositories
         {
             if (client.ApiHash == apiHash) return;
             client.ApiHash = apiHash;
-            await context.SaveChangesAsync();
-        }
-
-        public async Task UpdateClientPasswordAsync(Client client, string? password)
-        {
-            if (client.Password == password) return;
-            client.Password = password;
-            await context.SaveChangesAsync();
-        }
-
-        public async Task UpdateClientVerificationCodeAsync(Client client, string? verificationCode)
-        {
-            if (client.VerificationCode == verificationCode) return;
-            client.VerificationCode = verificationCode;
-            await context.SaveChangesAsync();
-        }
-
-        public async Task CompleteClientAuthentication(Client client, string sessionString)
-        {
-            if (client.IsAuthenticated == true && client.SessionString == sessionString) return;
-            client.SessionString = sessionString;
-            client.IsAuthenticated = true;
             await context.SaveChangesAsync();
         }
     }

@@ -85,63 +85,6 @@ namespace TelegramForwardly.WebApi.Services
 
 
 
-        public async Task UpdateUserVerificationCodeAsync(long telegramUserId, string? verificationCode)
-        {
-            var client = await clientsRepository.GetClientOrDefaultAsync(telegramUserId);
-            if (client is not null)
-                await clientsRepository.UpdateClientVerificationCodeAsync(client, verificationCode);
-        }
-
-        public async Task UpdateUserPasswordAsync(long telegramUserId, string? password)
-        {
-            var client = await clientsRepository.GetClientOrDefaultAsync(telegramUserId);
-            if (client is not null)
-                await clientsRepository.UpdateClientPasswordAsync(client, password);
-        }
-
-        public async Task RemoveUserVerificationCodeAsync(long telegramUserId)
-        {
-            var client = await clientsRepository.GetClientOrDefaultAsync(telegramUserId);
-            if (client is not null)
-                await clientsRepository.UpdateClientVerificationCodeAsync(client, null);
-        }
-
-        public async Task RemoveUserPasswordAsync(long telegramUserId)
-        {
-            var client = await clientsRepository.GetClientOrDefaultAsync(telegramUserId);
-            if (client is not null)
-                await clientsRepository.UpdateClientPasswordAsync(client, null);
-        }
-
-
-
-
-
-
-        public async Task<string?> GetUserVerificationCodeAsync(long telegramUserId)
-        {
-            logger.LogInformation("Getting verification code for user with Telegram ID {TelegramUserId}", telegramUserId);
-            var client = await clientsRepository.GetClientOrDefaultAsync(telegramUserId)
-                ?? throw new DataException($"There is not such a client in database with {telegramUserId} id");
-            var code = client.VerificationCode;
-            logger.LogInformation("Verification code for user {TelegramUserId} is {Code}", telegramUserId, code ?? "null");
-            return code;
-        }
-
-
-
-
-
-
-        public async Task CompleteAuthenticationAsync(long telegramUserId, string sessionString)
-        {
-            var client = await clientsRepository.GetClientOrDefaultAsync(telegramUserId);
-            if (client is not null)
-                await clientsRepository.CompleteClientAuthentication(client, sessionString);
-            else
-                logger.LogError("Client with Telegram user ID {TelegramUserId} not found.", telegramUserId);
-        }
-
 
 
 
