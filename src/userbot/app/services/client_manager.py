@@ -21,7 +21,7 @@ class ClientManager:
         await self._disconnect_and_clear_all_clients()
         users = await self.telegram_api.get_all_users()
         await self._launch_clients_from_users(users)
-        logger.info(f"Connected {len(self.clients)} clients")
+        logger.info(f"Launched {len(self.clients)} clients")
 
     async def launch_client(self, user: BotUser)-> bool:
         try:
@@ -32,8 +32,14 @@ class ClientManager:
                 self.clients[user.telegram_user_id].user.is_authenticated = True
             else:
                 return False
+
             await self._setup_message_handler(self.clients[user.telegram_user_id])
-            logger.info(f"Connected {user.telegram_user_id} client")
+
+            if await self.clients[user.telegram_user_id].client.is_user_authorized():
+                logger.info(f"Connected and launched {user.telegram_user_id} client")
+            else:
+                logger.info(f"Client {user.telegram_user_id} has been launched but NEVERTHELES it's still UNauthorized")
+
             return True
         except Exception as e:
             logger.warning(f'Exception while launching client {user.telegram_user_id}. {e}')
@@ -54,6 +60,11 @@ class ClientManager:
                 self.clients[user.telegram_user_id].user = user
                 await self._connect_client(user)
                 await self._setup_message_handler(self.clients[user.telegram_user_id])
+                if await self.clients[user.telegram_user_id].client.is_user_authorized():
+                    logger.info(f"Connected and launched {user.telegram_user_id} client")
+                else:
+                    logger.info(
+                        f"Client {user.telegram_user_id} has been launched but NEVERTHELES it's still UNauthorized")
         except Exception as e:
             log_error(f"Failed to launch clients from users", e)
 
@@ -70,13 +81,15 @@ class ClientManager:
                 return False
 
             if not await client.is_user_authorized():
+                logger.error(f"client.is_user_authorized(): is NOT")
                 return False
-            if (await client.get_me()).user_id is not user.telegram_user_id:
+            me = await client.get_me()
+            if me.id != user.telegram_user_id:
+                logger.error(f"me.id != user.telegram_user_id:")
                 return False
 
             self.clients[user.telegram_user_id].client = client
             self.clients[user.telegram_user_id].is_connected = True
-            logger.info(f"Connected to Telegram client for {user.telegram_user_id}")
             return True
         except Exception as e:
             log_error(f"Failed to open Telegram Client connection or similar for user {user.telegram_user_id}", e)

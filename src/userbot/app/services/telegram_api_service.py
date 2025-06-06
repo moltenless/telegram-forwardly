@@ -24,8 +24,11 @@ class TelegramApiService:
             response.raise_for_status()
 
             users_data = response.json()
-            users = [parse_user_from_api(user_data)
-                    for user_data in users_data]
+
+            users = []
+            for user_data in users_data:
+                user = parse_user_from_api(user_data)
+                users.append(user)
 
             return users
 

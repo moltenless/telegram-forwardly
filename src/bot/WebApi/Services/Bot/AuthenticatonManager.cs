@@ -102,6 +102,7 @@ namespace TelegramForwardly.WebApi.Services.Bot
 
             if (!result.Success)
             {
+                await userService.SetUserAuthenticatedAsync(telegramUserId, false);
                 await userService.SetUserStateAsync(user.TelegramUserId, UserState.Idle);
                 await BotHelper.SendTextMessageAsync(
                     chatId, $"❌ Authentication failed: {result.ErrorMessage}",

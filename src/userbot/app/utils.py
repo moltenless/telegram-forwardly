@@ -38,37 +38,37 @@ def safe_int_convert(value: Any) -> Optional[int]:
 def parse_user_from_api(data: Dict[str, Any]) -> BotUser:
     keywords = [
         Keyword(
-            id=kw.get('id'),
-            telegram_user_id=kw.get('telegram_user_id'),
-            value=kw.get('value')
+            id=kw.get('Id'),
+            telegram_user_id=kw.get('TelegramUserId'),
+            value=kw.get('Value')
         )
-        for kw in data.get('keywords', [])
+        for kw in data.get('Keywords', [])
     ]
 
     chats = [
         Chat(
-            id=chat.get('id'),
-            telegram_user_id=chat.get('telegram_user_id'),
-            telegram_chat_id=chat.get('telegram_chat_id')
+            id=chat.get('Id'),
+            telegram_user_id=chat.get('TelegramUserId'),
+            telegram_chat_id=chat.get('TelegramChatId')
         )
-        for chat in data.get('chats', [])
+        for chat in data.get('Chats', [])
     ]
 
     return BotUser(
-        telegram_user_id=data.get('telegram_user_id'),
-        current_state=UserState(data.get('current_state')) if data.get('current_state') else None,
-        api_id=data.get('api_id'),
-        api_hash=data.get('api_hash'),
-        session_string=data.get('session_string'),
-        phone=data.get('phone'),
-        is_authenticated=data.get('is_authenticated'),
-        registration_date_time=data.get('registration_date_time'),
-        user_name=data.get('user_name'),
-        first_name=data.get('first_name'),
-        forum_supergroup_id=safe_int_convert(data.get('forum_supergroup_id')),
-        topic_grouping=GroupingMode(data.get('topic_grouping')) if data.get('topic_grouping') else None,
-        forwardly_enabled=data.get('forwardly_enabled'),
-        all_chats_filtering_enabled=data.get('all_chats_filtering_enabled'),
+        telegram_user_id=data.get('TelegramUserId'),
+        current_state=UserState(data.get('CurrentState')) if data.get('CurrentState') else None,
+        api_id=data.get('ApiId'),
+        api_hash=data.get('ApiHash'),
+        session_string=data.get('SessionString'),
+        phone=data.get('Phone'),
+        is_authenticated=data.get('IsAuthenticated'),
+        registration_date_time=data.get('RegistrationDateTime'),
+        user_name=data.get('UserName'),
+        first_name=data.get('FirstName'),
+        forum_supergroup_id=safe_int_convert(data.get('ForumSupergroupId')),
+        topic_grouping=GroupingMode(data.get('TopicGrouping')) if data.get('TopicGrouping') else None,
+        forwardly_enabled=data.get('ForwardlyEnabled'),
+        all_chats_filtering_enabled=data.get('AllChatsFilteringEnabled'),
         keywords=keywords,
         chats=chats
     )

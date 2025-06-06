@@ -11,15 +11,13 @@ def launch_user():
         data = request.get_json()
         user = parse_user_from_api(data)
 
-        logger.info(user)
-
         result = event_loop_manager.run_coroutine(
             current_app.client_manager.launch_client(user)
         )
 
         if not result:
             logger.error(f'Client is not authorized! Silent error.')
-            return jsonify({'Success': False, 'ErrorMessage': 'Authenticaton failed.'}), 500
+            return jsonify({'Success': False, 'ErrorMessage': 'Authentication failed.'}), 500
 
         return jsonify({'Success': True}), 200
 

@@ -11,7 +11,7 @@ namespace TelegramForwardly.WebApi.Models.Dtos
         public string? SessionString { get; set; }
         public string? Phone { get; set; }
         public bool? IsAuthenticated { get; set; }
-        public DateTime? RegistrationDataTime { get; set; }
+        public DateTime? RegistrationDateTime { get; set; }
         public string? UserName { get; set; }
         public string? FirstName { get; set; }
         public long? ForumSupergroupId { get; set; }
@@ -47,7 +47,7 @@ namespace TelegramForwardly.WebApi.Models.Dtos
                 SessionString = client.SessionString,
                 Phone = client.Phone,
                 IsAuthenticated = client.IsAuthenticated,
-                RegistrationDataTime = client.RegistrationDataTime,
+                RegistrationDateTime = client.RegistrationDataTime,
                 UserName = client.UserName,
                 FirstName = client.FirstName,
                 ForumSupergroupId = client.ForumSupergroupId,

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 using TelegramForwardly.WebApi.Services.Interfaces;
 
 namespace TelegramForwardly.WebApi.Controllers
@@ -18,7 +19,13 @@ namespace TelegramForwardly.WebApi.Controllers
             try
             {
                 var users = await userService.GetAllUsersAsync();
-                return Ok(users);
+                var json = JsonSerializer.Serialize(users);
+                return new ContentResult
+                {
+                    Content = json,
+                    ContentType = "application/json",
+                    StatusCode = 200,
+                };
             }
             catch (Exception ex)
             {
@@ -32,8 +39,14 @@ namespace TelegramForwardly.WebApi.Controllers
         {
             try
             {
-                var user = await userService.GetAllAuthenticatedUsersAsync();
-                return Ok(user);
+                var users = await userService.GetAllAuthenticatedUsersAsync();
+                var json = JsonSerializer.Serialize(users);
+                return new ContentResult
+                {
+                    Content = json,
+                    ContentType = "application/json",
+                    StatusCode = 200,
+                };
             }
             catch (Exception ex)
             {
