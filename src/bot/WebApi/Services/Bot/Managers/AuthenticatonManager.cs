@@ -1,5 +1,6 @@
 ﻿using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using TelegramForwardly.WebApi.Models.Dtos;
 using TelegramForwardly.WebApi.Models.Responses;
@@ -98,7 +99,7 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
         {
             BotUser user = await userService.GetUserAsync(telegramUserId);
 
-            LaunchResult result = 
+            LaunchResult result =
                 await userbotApiService.LaunchUserAsync(user);
 
             if (!result.Success)
@@ -118,12 +119,54 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
             user = await userService.GetUserAsync(telegramUserId);
 
             await BotHelper.SendTextMessageAsync(
-                chatId, 
-                user.ForumSupergroupId == null 
-                ? BotHelper.GetAuthenticatedAndSettingsMessage() 
+                chatId,
+                user.ForumSupergroupId == null
+                ? BotHelper.GetAuthenticatedAndSettingsMessage()
                 : BotHelper.GetAuthenticatedMessage(),
                 botClient, logger, cancellationToken);
             await MenuManager.ShowMainMenuAsync(user, chatId, botClient, logger, cancellationToken);
+        }
+
+
+        public static async Task HandleDeleteConfirmationInputAsync(
+            BotUser user,
+            Message message,
+            IUserService userService,
+            IUserbotApiService userbotApiService,
+            ITelegramBotClient botClient,
+            ILogger logger,
+            CancellationToken cancellationToken)
+        {
+            var conf = message.Text?.Trim().ToLowerInvariant();
+
+            if (conf == "yes, I want this bot not to persist my data".ToLowerInvariant())
+            {
+                FieldUpdateResult result = await userbotApiService.DeleteUserAsync(user.TelegramUserId);
+                if (!result.Success)
+                {
+                    await BotHelper.SendTextMessageAsync(
+                        message.Chat.Id,
+                        $"Failed to delete user data: {result.ErrorMessage}",
+                        botClient, logger, cancellationToken, parseMode: ParseMode.None);
+                    return;
+                }
+                await userService.DeleteUserAsync(user.TelegramUserId);
+                user = await userService.GetOrCreateUserAsync(message.From!.Id, UserState.Idle, message.From!.Username, message.From!.FirstName);
+                await BotHelper.SendTextMessageAsync(
+                    message.Chat.Id,
+                    "Your data has been successfully deleted. You can set up the bot again with /setup.",
+                    botClient, logger, cancellationToken);
+                await MenuManager.ShowMainMenuAsync(user, message.Chat.Id, botClient, logger, cancellationToken);
+            }
+            else
+            {
+                await userService.SetUserStateAsync(user.TelegramUserId, UserState.Idle);
+                await BotHelper.SendTextMessageAsync(
+                    message.Chat.Id,
+                    "Your data has not been deleted. You can continue using the bot.",
+                    botClient, logger, cancellationToken);
+                await MenuManager.ShowMainMenuAsync(user, message.Chat.Id, botClient, logger, cancellationToken);
+            }
         }
 
 

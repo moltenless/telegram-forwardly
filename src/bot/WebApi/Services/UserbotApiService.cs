@@ -49,7 +49,9 @@ namespace TelegramForwardly.WebApi.Services
             }
         }
 
-        public async Task<ForumUpdateResult> UpdateUserForumAsync(long telegramUserId, long forumId)
+        public async Task<FieldUpdateResult> UpdateUserForumAsync(
+            long telegramUserId,
+            long forumId)
         {
             try
             {
@@ -57,15 +59,61 @@ namespace TelegramForwardly.WebApi.Services
                 var content = new StringContent(request, Encoding.UTF8, "application/json");
 
                 var response = await httpClient.PostAsync("api/user/forum", content);
-
-                var result = JsonSerializer.Deserialize<ForumUpdateResult>(
+                var result = JsonSerializer.Deserialize<FieldUpdateResult>(
                     await response.Content.ReadAsStringAsync());
                 return result!;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error launching userbot API");
-                return new ForumUpdateResult
+                logger.LogError(ex, "Checking and updating this forum have failed");
+                return new FieldUpdateResult
+                {
+                    Success = false,
+                    ErrorMessage = ex.Message
+                };
+            }
+        }
+
+        public async Task<FieldUpdateResult> UpdateUserGroupingAsync(
+            long telegramUserId,
+            GroupingMode mode)
+        {
+            try
+            {
+                var request = JsonSerializer.Serialize(new { user_id = telegramUserId, grouping = mode.ToString() });
+                var content = new StringContent(request, Encoding.UTF8, "application/json");
+
+                var response = await httpClient.PostAsync("api/user/grouping", content);
+                var result = JsonSerializer.Deserialize<FieldUpdateResult>(
+                    await response.Content.ReadAsStringAsync());
+                return result!;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error updating user grouping type");
+                return new FieldUpdateResult
+                {
+                    Success = false,
+                    ErrorMessage = ex.Message
+                };
+            }
+        }
+
+        public async Task<FieldUpdateResult> DeleteUserAsync(long telegramUserId)
+        {
+            try
+            {
+                var request = JsonSerializer.Serialize(new { user_id = telegramUserId });
+                var content = new StringContent(request, Encoding.UTF8, "application/json");
+                var response = await httpClient.PostAsync("api/user/delete", content);
+                var result = JsonSerializer.Deserialize<FieldUpdateResult>(
+                    await response.Content.ReadAsStringAsync());
+                return result!;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error deleting user");
+                return new FieldUpdateResult
                 {
                     Success = false,
                     ErrorMessage = ex.Message

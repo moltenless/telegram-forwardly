@@ -45,6 +45,44 @@ def check_and_update_forum():
         return jsonify({"Success": False,
                         "ErrorMessage": f"Failed to check and update forum id: {e}"}), 500
 
+@api_bp.route('/user/grouping', methods=['POST'])
+def update_grouping():
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        grouping = data.get('grouping')
+
+        result = event_loop_manager.run_coroutine(
+            current_app.client_manager.update_grouping(user_id, grouping)
+        )
+
+        if result.get('Success') is True:
+            return jsonify(result), 200
+        else:
+            return jsonify(result), 500
+
+    except Exception as e:
+        return jsonify({"Success": False,
+                        "ErrorMessage": f"Failed to update grouping type: {e}"}), 500
+
+@api_bp.route('/user/delete', methods=['POST'])
+def delete_user():
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+
+        result = event_loop_manager.run_coroutine(
+            current_app.client_manager.delete_user(user_id)
+        )
+
+        if result.get('Success') is True:
+            return jsonify(result), 200
+        else:
+            return jsonify(result), 500
+
+    except Exception as e:
+        return jsonify({"Success": False,
+                        "ErrorMessage": f"Failed to delete user data type: {e}"}), 500
 
 @api_bp.route('/user/update', methods=['POST'])
 def update_user():

@@ -58,6 +58,12 @@ namespace TelegramForwardly.WebApi.Services.Bot
                 case "/help":
                     break;
 
+                case "/delete":
+                    await MenuManager.AskToDeleteData(
+                        user, message.Chat.Id,
+                        userService, botClient, logger, cancellationToken);
+                    break;
+
                 default:
                     await BotHelper.SendTextMessageAsync(
                         message.Chat.Id,
@@ -155,7 +161,13 @@ namespace TelegramForwardly.WebApi.Services.Bot
 
                 case UserState.AwaitingGroupingType:
                     await SettingsManager.HandleGroupingTypeInputAsync(
-                        user, message, userService,
+                        user, message, userService, userbotApiService,
+                        botClient, logger, cancellationToken);
+                    break;
+
+                case UserState.AwaitingDeleteConfirmation:
+                    await AuthenticationManager.HandleDeleteConfirmationInputAsync(
+                        user, message, userService, userbotApiService, 
                         botClient, logger, cancellationToken);
                     break;
 

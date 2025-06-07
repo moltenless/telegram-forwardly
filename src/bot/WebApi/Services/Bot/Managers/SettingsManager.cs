@@ -20,7 +20,7 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
         {
             long forumId = long.Parse(message.Text!);
 
-            ForumUpdateResult result = await userbotApiService.UpdateUserForumAsync(user.TelegramUserId, forumId);
+            FieldUpdateResult result = await userbotApiService.UpdateUserForumAsync(user.TelegramUserId, forumId);
             if (!result.Success)
             {
                 await BotHelper.SendTextMessageAsync(
@@ -43,6 +43,7 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
             BotUser user,
             Message message,
             IUserService userService,
+            IUserbotApiService userbotApiService,
             ITelegramBotClient botClient,
             ILogger logger,
             CancellationToken cancellationToken)
@@ -68,14 +69,22 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
                 return;
             }
 
+            var result = await userbotApiService.UpdateUserGroupingAsync(user.TelegramUserId, mode);
+
+            if (!result.Success)
+            {
+                await BotHelper.SendTextMessageAsync(
+                    message.Chat.Id,
+                    $"Failed to set grouping mode: {result.ErrorMessage}",
+                    botClient, logger, cancellationToken, parseMode: ParseMode.None);
+                return;
+            }
+
             await userService.SetUserGroupingModeAsync(user.TelegramUserId, mode);
-
-
-
             await userService.SetUserStateAsync(user.TelegramUserId, UserState.Idle);
 
             response += user.Chats.Count == 0 ?
-                "\n\n*Now it is time to choose from what chats you want to extract messages with specific keywords*:\n" +
+                "\n\n_Now it is time to choose from what chats you want to extract messages with specific keywords_:\n" +
                "*Please click '💬 Chats' in menu below*\nOr\n*Use /chats*" : string.Empty;
             await BotHelper.SendTextMessageAsync(
                 message.Chat.Id, response,

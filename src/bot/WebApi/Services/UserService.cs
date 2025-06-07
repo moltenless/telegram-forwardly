@@ -100,6 +100,12 @@ namespace TelegramForwardly.WebApi.Services
             await clientsRepository.SetClientGroupingAsync(client, mode.ToString());
         }
 
+        public async Task DeleteUserAsync(long telegramUserId)
+        {
+            var client = await clientsRepository.GetClientAsync(telegramUserId);
+            await clientsRepository.DeleteClientAsync(client);
+        }
+
 
 
 

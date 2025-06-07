@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TelegramForwardly.DataAccess.Context;
 
@@ -11,9 +12,11 @@ using TelegramForwardly.DataAccess.Context;
 namespace TelegramForwardly.DataAccess.Migrations
 {
     [DbContext(typeof(ForwardlyContext))]
-    partial class ForwardlyContextModelSnapshot : ModelSnapshot
+    [Migration("20250607174850_AddNewStateSeeding")]
+    partial class AddNewStateSeeding
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

@@ -25,5 +25,6 @@ namespace TelegramForwardly.DataAccess.Repositories.Interfaces
 
         Task<HashSet<Client>> GetAllClientsAsync();
         Task<HashSet<Client>> GetAllAuthenticatedUsersAsync();
+        Task DeleteClientAsync(Client client);
     }
 }

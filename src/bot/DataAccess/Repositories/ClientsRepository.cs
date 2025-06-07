@@ -140,5 +140,11 @@ namespace TelegramForwardly.DataAccess.Repositories
             client.TopicGrouping = groupingType;
             await context.SaveChangesAsync();
         }
+
+        public async Task DeleteClientAsync(Client client)
+        {
+            context.Clients.Remove(client);
+            await context.SaveChangesAsync();
+        }
     }
 }

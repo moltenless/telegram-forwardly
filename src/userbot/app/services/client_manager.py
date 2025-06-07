@@ -7,7 +7,7 @@ from telethon.sessions import StringSession
 from telethon.tl.functions.channels import GetParticipantRequest
 from telethon.tl.types import ChannelParticipantCreator
 
-from app.models import BotUser, UserClient
+from app.models import BotUser, UserClient, GroupingMode
 from app.services.telegram_api_service import TelegramApiService
 from app.utils import log_error, log_info
 
@@ -54,7 +54,7 @@ class ClientManager:
             try:
                 await client.client.disconnect()
             except Exception as e:
-                log_error(f"Failed to disconnect client for user {user_id}", e)
+                logger.error(f"Failed to disconnect client for user {user_id}: {e}")
         self.clients.clear()
 
     async def _launch_clients_from_users(self, users: List[BotUser]):
@@ -67,10 +67,10 @@ class ClientManager:
                 if await self.clients[user.telegram_user_id].client.is_user_authorized():
                     logger.info(f"Connected and launched {user.telegram_user_id} client")
                 else:
-                    logger.info(
-                        f"Client {user.telegram_user_id} has been launched but NEVERTHELES it's still UNauthorized")
+                    logger.error(
+                        f"!!!!!!!!!!!!! Client {user.telegram_user_id} has been launched but NEVERTHELES it's still UNauthorized")
         except Exception as e:
-            log_error(f"Failed to launch clients from users", e)
+            logger.error(f"Failed to launch clients from users: {e}")
 
     async def _connect_client(self, user: BotUser) -> bool:
         try:
@@ -80,7 +80,7 @@ class ClientManager:
             if not client:
                 self.clients[
                     user.telegram_user_id].last_error = "Couldn't connect to telegram client with this api id, hash and session string"
-                log_error(f"Can't connect to Telegram client for {user.telegram_user_id}")
+                logger.error(f"Can't connect to Telegram client for {user.telegram_user_id}")
                 await client.disconnect()
                 return False
 
@@ -96,7 +96,7 @@ class ClientManager:
             self.clients[user.telegram_user_id].is_connected = True
             return True
         except Exception as e:
-            log_error(f"Failed to open Telegram Client connection or similar for user {user.telegram_user_id}", e)
+            logger.error(f"Failed to open Telegram Client connection or similar for user {user.telegram_user_id}: {e}")
             return False
 
     async def _setup_message_handler(self, user_client: UserClient):
@@ -137,6 +137,30 @@ class ClientManager:
         except Exception as e:
             logger.error(f'Failed to check and update forum id: {e}')
             return {"Success": False, "ErrorMessage": f'Failed to check and update forum id: {e}'}
+
+    async def update_grouping(self, user_id, grouping):
+        try:
+            if grouping == 'ByKeyword':
+                self.clients[user_id].user.topic_grouping = GroupingMode.BY_KEYWORD
+            elif grouping == 'ByChat':
+                self.clients[user_id].user.topic_grouping = GroupingMode.BY_CHAT
+            return {'Success': True}
+        except Exception as e:
+            logger.error(f'Failed to update topic grouping type: {e}')
+            return {'Success': False, 'ErrorMessage': f'Failed to update topic grouping type {e}'}
+
+    async def delete_user(self, user_id):
+        try:
+            client = self.clients[user_id].client
+            await client.disconnect()
+            del self.clients[user_id]
+            return {'Success': True}
+        except Exception as e:
+            logger.error(f'Failed to delete account data: {e}')
+            return {'Success': False, 'ErrorMessage': f'Failed to delete account data: {e}'}
+
+
+
 
 
 

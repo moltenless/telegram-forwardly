@@ -14,6 +14,7 @@ class UserState(Enum):
     AWAITING_KEYWORDS = "AwaitingKeywords"
     AWAITING_FORUM_GROUP = "AwaitingForumGroup"
     AWAITING_GROUPING_TYPE = "AwaitingGroupingType"
+    AWAITING_DELETE_CONFIRMATION = "AwaitingDeleteConfirmation"
 
 class GroupingMode(Enum):
     BY_KEYWORD = "ByKeyword"
