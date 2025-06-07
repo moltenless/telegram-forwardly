@@ -81,4 +81,5 @@ volumes:
     
 networks:
     forwardly-network:
+        name: forwardly-network
         driver: bridge

@@ -107,18 +107,35 @@ namespace TelegramForwardly.WebApi.Services.Bot
             => $"Great! If you have enabled 2FA protection for this account please enter password:\n\n" +
                 "If you don't have one - simply skip this part and respond with *'no' or 'No'*\n\n";
 
+        public static string GetAuthenticatedMessage()
+            => "🎉 Authentication successful!";
+
+        public static string GetAuthenticatedAndSettingsMessage()
+            => "🎉 Authentication successful!\n\n" +
+               "*Now let's set up forwarding details*:\n" +
+               "*Please click '⚙️ Settings' in menu below*\\nOr\\n*Use /settings*\"";
+
+        public static string GetSettingsMessage()
+            => "*Now, create your own group in Telegram* - so I can set this group as your forum supergroup with topics where messages will be forwarded.\n\n" +
+               "1. Create a new group in Telegram.\n" +
+               "2. Go to group settings and click on 'Topics' section.\n" +
+               "3. Enable this option and choose style of topic layout you prefer. Select 'Tabs' for now. Save the changes.\n" +
+               "4. Then, click on 'Add member' and add @getidsbot. It will immediately send you a message with the group ID.\n" +
+               "5. Please, copy the group id - *it looks like '-100XXXXXXXXX' - and send it to me here* " +
+               "6. Remove @getidsbot from the group members.";
+
         public static InlineKeyboardMarkup GetMenuKeyboard()
             => new([
             [
                 InlineKeyboardButton.WithCallbackData("🔑 Setup credentials", "setup"),
-                InlineKeyboardButton.WithCallbackData("📝 Keywords", "keywords")
+                InlineKeyboardButton.WithCallbackData("⚙️ Settings", "settings"),
             ],
             [
                 InlineKeyboardButton.WithCallbackData("💬 Chats", "chats"),
-                InlineKeyboardButton.WithCallbackData("📊 Status", "status"),
+                InlineKeyboardButton.WithCallbackData("📝 Keywords", "keywords")
             ],
             [
-                InlineKeyboardButton.WithCallbackData("⚙️ Settings", "settings"),
+                InlineKeyboardButton.WithCallbackData("📊 Status", "status"),
                 InlineKeyboardButton.WithCallbackData("❓ Help", "help")
             ]
             ]);

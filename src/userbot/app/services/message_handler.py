@@ -21,11 +21,20 @@ class MessageHandler:
             if not user_client.user.forwardly_enabled:
                 return
 
+            #if not forumsupergroupid - return
+
+            #     monitored_chat_ids = [chat.telegram_chat_id for chat in user_client.user.chats]
+            #
+            #     if not monitored_chat_ids and not user_client.user.all_chats_filtering_enabled:
+            #         return
+
+            #if there isn't single keyword - return
+
             message = event.message
             chat_id = event.chat_id
 
             # Check if this chat should be monitored
-            if not self._should_monitor_chat(chat_id, user_client):
+            if not self._is_chat_monitored(chat_id, user_client):
                 return
 
             # Check if message contains keywords
@@ -38,7 +47,7 @@ class MessageHandler:
         except Exception as e:
             log_error(f"Error handling message for user {user_client.user.telegram_user_id}", e)
 
-    def _should_monitor_chat(self, chat_id: int, user_client: UserClient) -> bool:
+    def _is_chat_monitored(self, chat_id: int, user_client: UserClient) -> bool:
         """Check if chat should be monitored"""
         if user_client.user.all_chats_filtering_enabled:
             return True
@@ -57,12 +66,7 @@ class MessageHandler:
         return any(keyword in message_text for keyword in keyword_values)
 
     async def _forward_message(self, message: Message, source_chat_id: int, user_client: UserClient):
-        """Forward message to user's forum group"""
         try:
-            if not user_client.user.forum_supergroup_id:
-                log_error(f"No forum group configured for user {user_client.user.telegram_user_id}")
-                return
-
             # Get chat info for topic name
             chat = await user_client.client.get_entity(source_chat_id)
             chat_title = getattr(chat, 'title', f'Chat {source_chat_id}')

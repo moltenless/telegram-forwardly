@@ -19,6 +19,8 @@ namespace TelegramForwardly.WebApi.Services.Interfaces
         Task UpdateUserApiHashAsync(long telegramUserId, string apiHash);
         Task UpdateUserSessionStringAsync(long telegramUserId, string sessionString);
         Task SetUserAuthenticatedAsync(long telegramUserId, bool isAuthenticated);
+        Task UpdateUserForumIdAsync(long telegramUserId, long forumId);
+        Task SetUserGroupingModeAsync(long telegramUserId, GroupingMode mode);
 
         Task<IEnumerable<Keyword>> GetKeywordsAsync(long telegramUserId);
         Task AddUserKeywordAsync(long telegramUserId, string keyword);
@@ -27,8 +29,5 @@ namespace TelegramForwardly.WebApi.Services.Interfaces
         Task<IEnumerable<Chat>> GetChatsAsync(long telegramUserId);
         Task AddChatAsync(long telegramUserId, long telegramChatId);
         Task RemoveChatAsync(long telegramUserId, long telegramChatId);
-
-        Task SetUserForumSupergroupAsync(long telegramUserId, long forumSupergroupId);
-        Task SetUserGroupingModeAsync(long telegramUserId, GroupingMode mode);
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Telegram.Bot;
 using Telegram.Bot.Types;
 using TelegramForwardly.WebApi.Models.Dtos;
+using TelegramForwardly.WebApi.Services.Bot.Managers;
 using TelegramForwardly.WebApi.Services.Interfaces;
 
 namespace TelegramForwardly.WebApi.Services.Bot
@@ -39,6 +40,12 @@ namespace TelegramForwardly.WebApi.Services.Bot
                         userService, botClient, logger, cancellationToken);
                     break;
 
+                case "/settings":
+                    await MenuManager.EnterSettingsAsync(
+                        user, message.Chat.Id,
+                        userService, botClient, logger, cancellationToken);
+                    break;
+
                 case "/keywords":
                     break;
 
@@ -46,9 +53,6 @@ namespace TelegramForwardly.WebApi.Services.Bot
                     break;
 
                 case "/status":
-                    break;
-
-                case "/settings":
                     break;
 
                 case "/help":
@@ -79,6 +83,12 @@ namespace TelegramForwardly.WebApi.Services.Bot
                         userService, botClient, logger, cancellationToken);
                     break;
 
+                case "settings":
+                    await MenuManager.EnterSettingsAsync(
+                        user, callbackQuery.Message!.Chat.Id,
+                        userService, botClient, logger, cancellationToken);
+                    break;
+
                 case "keywords":
                     break;
 
@@ -86,9 +96,6 @@ namespace TelegramForwardly.WebApi.Services.Bot
                     break;
 
                 case "status":
-                    break;
-
-                case "settings":
                     break;
 
                 case "help":
@@ -141,9 +148,15 @@ namespace TelegramForwardly.WebApi.Services.Bot
                     break;
 
                 case UserState.AwaitingForumGroup:
+                    await SettingsManager.HandleTopicGroupId(
+                        user, message, userService,
+                        botClient, logger, cancellationToken);
                     break;
 
                 case UserState.AwaitingGroupingType:
+                    await SettingsManager.HandleGroupingTypeInputAsync(
+                        user, message, userService,
+                        botClient, logger, cancellationToken);
                     break;
 
                 default:

@@ -2,7 +2,7 @@
 using TelegramForwardly.WebApi.Models.Dtos;
 using TelegramForwardly.WebApi.Services.Interfaces;
 
-namespace TelegramForwardly.WebApi.Services.Bot
+namespace TelegramForwardly.WebApi.Services.Bot.Managers
 {
     public static class MenuManager
     {
@@ -45,15 +45,29 @@ namespace TelegramForwardly.WebApi.Services.Bot
 
             await userService.SetUserStateAsync(user.TelegramUserId, UserState.AwaitingPhoneNumber);
 
-            var setupMessage = BotHelper.GetSetupMessage();
-            var keyboard = BotHelper.GetPhoneKeyboard();
-
             await BotHelper.SendTextMessageAsync(
                 chatId,
-                setupMessage,
+                BotHelper.GetSetupMessage(),
                 botClient, logger,
                 cancellationToken,
-                keyboard);
+                BotHelper.GetPhoneKeyboard());
+        }
+
+        public static async Task EnterSettingsAsync(
+            BotUser user,
+            long chatId,
+            IUserService userService,
+            ITelegramBotClient botClient,
+            ILogger logger,
+            CancellationToken cancellationToken)
+        {
+            await userService.SetUserStateAsync(user.TelegramUserId, UserState.AwaitingForumGroup);
+
+            await BotHelper.SendTextMessageAsync(
+                chatId, 
+                BotHelper.GetSettingsMessage(),
+                botClient, logger,
+                cancellationToken);
         }
     }
 }

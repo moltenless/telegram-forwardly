@@ -88,6 +88,18 @@ namespace TelegramForwardly.WebApi.Services
             await clientsRepository.SetClientAuthenticatedAsync(client, isAuthenticated);
         }
 
+        public async Task UpdateUserForumIdAsync(long telegramUserId, long forumId)
+        {
+            var client = await clientsRepository.GetClientAsync(telegramUserId);
+            await clientsRepository.UpdateClientForumIdAsync(client, forumId);
+        }
+
+        public async Task SetUserGroupingModeAsync(long telegramUserId, GroupingMode mode)
+        {
+            var client = await clientsRepository.GetClientAsync(telegramUserId);
+            await clientsRepository.SetClientGroupingAsync(client, mode.ToString());
+        }
+
 
 
 
@@ -117,14 +129,6 @@ namespace TelegramForwardly.WebApi.Services
         }
 
         public async Task RemoveUserKeywordAsync(long telegramUserId, string keyword)
-        {
-        }
-
-        public async Task SetUserForumSupergroupAsync(long telegramUserId, long forumSupergroupId)
-        {
-        }
-
-        public async Task SetUserGroupingModeAsync(long telegramUserId, GroupingMode mode)
         {
         }
     }

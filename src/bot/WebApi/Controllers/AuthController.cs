@@ -7,7 +7,7 @@ using System.Text.Json;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using TelegramForwardly.WebApi.Services;
-using TelegramForwardly.WebApi.Services.Bot;
+using TelegramForwardly.WebApi.Services.Bot.Managers;
 using TelegramForwardly.WebApi.Services.Interfaces;
 
 namespace TelegramForwardly.WebApi.Controllers

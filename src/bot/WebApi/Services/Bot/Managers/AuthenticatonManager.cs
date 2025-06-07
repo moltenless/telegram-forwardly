@@ -5,7 +5,7 @@ using TelegramForwardly.WebApi.Models.Dtos;
 using TelegramForwardly.WebApi.Models.Responses;
 using TelegramForwardly.WebApi.Services.Interfaces;
 
-namespace TelegramForwardly.WebApi.Services.Bot
+namespace TelegramForwardly.WebApi.Services.Bot.Managers
 {
     public static class AuthenticationManager
     {
@@ -98,30 +98,30 @@ namespace TelegramForwardly.WebApi.Services.Bot
         {
             BotUser user = await userService.GetUserAsync(telegramUserId);
 
-            LaunchResult result = await userbotApiService.LaunchUserAsync(user);
+            LaunchResult result = 
+                await userbotApiService.LaunchUserAsync(user);
 
             if (!result.Success)
             {
                 await userService.SetUserAuthenticatedAsync(telegramUserId, false);
                 await userService.SetUserStateAsync(user.TelegramUserId, UserState.Idle);
+                user = await userService.GetUserAsync(telegramUserId);
                 await BotHelper.SendTextMessageAsync(
                     chatId, $"❌ Authentication failed: {result.ErrorMessage}",
                     botClient, logger, cancellationToken);
                 await MenuManager.ShowMainMenuAsync(user, chatId, botClient, logger, cancellationToken);
                 return;
-            }
+            }//when cancelling is authenticated is FALSE 
 
             await userService.SetUserAuthenticatedAsync(telegramUserId, true);
             await userService.SetUserStateAsync(user.TelegramUserId, UserState.Idle);
+            user = await userService.GetUserAsync(telegramUserId);
 
-            var successMessage = "🎉 Authentication successful!\n\n" +
-                               "You can now:\n" +
-                               "• Manage keywords with /keywords\n" +
-                               "• Select chats to monitor with /chats\n" +
-                               "• Check your status with /status\n" +
-                               "• Use /menu to see all options";
             await BotHelper.SendTextMessageAsync(
-                chatId, successMessage,
+                chatId, 
+                user.ForumSupergroupId == null 
+                ? BotHelper.GetAuthenticatedAndSettingsMessage() 
+                : BotHelper.GetAuthenticatedMessage(),
                 botClient, logger, cancellationToken);
             await MenuManager.ShowMainMenuAsync(user, chatId, botClient, logger, cancellationToken);
         }

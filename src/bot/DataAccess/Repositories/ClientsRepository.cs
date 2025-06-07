@@ -126,5 +126,19 @@ namespace TelegramForwardly.DataAccess.Repositories
             client.IsAuthenticated = isAuthenticated;
             await context.SaveChangesAsync();
         }
+
+        public async Task UpdateClientForumIdAsync(Client client, long forumId)
+        {
+            if (client.ForumSupergroupId == forumId) return;
+            client.ForumSupergroupId = forumId;
+            await context.SaveChangesAsync();
+        }
+
+        public async Task SetClientGroupingAsync(Client client, string groupingType)
+        {
+            if (client.TopicGrouping == groupingType) return;
+            client.TopicGrouping = groupingType;
+            await context.SaveChangesAsync();
+        }
     }
 }

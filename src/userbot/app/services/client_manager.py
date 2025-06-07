@@ -39,7 +39,8 @@ class ClientManager:
                 logger.info(f"Connected and launched {user.telegram_user_id} client")
             else:
                 logger.info(f"Client {user.telegram_user_id} has been launched but NEVERTHELES it's still UNauthorized")
-
+                return False
+            
             return True
         except Exception as e:
             logger.warning(f'Exception while launching client {user.telegram_user_id}. {e}')
@@ -97,12 +98,6 @@ class ClientManager:
 
     async def _setup_message_handler(self, user_client: UserClient):
         # try:
-        #     monitored_chat_ids = [chat.telegram_chat_id for chat in user_client.user.chats]
-        #
-        #     if not monitored_chat_ids and not user_client.user.all_chats_filtering_enabled:
-        #         return
-        #
-        #     # Create event handler
         #     @user_client.client.on(events.NewMessage)
         #     async def handle_new_message(event):
         #         await self.message_handler.handle_message(event, user_client)
@@ -111,7 +106,7 @@ class ClientManager:
         #
         # except Exception as e:
         #     log_error(f"Failed to setup message handler for user {user_client.user.telegram_user_id}", e)
-        log_info('Here I must subscribe client to handle new messages')
+        logger.info('Here I must subscribe client to handle new messages')
 
     async def update_user(self, user_data: BotUser) -> Dict[str, Any]:
         """Update user configuration and reconnect if necessary"""
