@@ -2,6 +2,7 @@
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using Telegram.Bot.Types;
 using TelegramForwardly.WebApi.Models.Dtos;
 using TelegramForwardly.WebApi.Models.Responses;
 using TelegramForwardly.WebApi.Services.Interfaces;
@@ -41,6 +42,30 @@ namespace TelegramForwardly.WebApi.Services
             {
                 logger.LogError(ex, "Error launching userbot API");
                 return new LaunchResult
+                {
+                    Success = false,
+                    ErrorMessage = ex.Message
+                };
+            }
+        }
+
+        public async Task<ForumUpdateResult> UpdateUserForumAsync(long telegramUserId, long forumId)
+        {
+            try
+            {
+                var request = JsonSerializer.Serialize(new { user_id = telegramUserId, forum_id = forumId });
+                var content = new StringContent(request, Encoding.UTF8, "application/json");
+
+                var response = await httpClient.PostAsync("api/user/forum", content);
+
+                var result = JsonSerializer.Deserialize<ForumUpdateResult>(
+                    await response.Content.ReadAsStringAsync());
+                return result!;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error launching userbot API");
+                return new ForumUpdateResult
                 {
                     Success = false,
                     ErrorMessage = ex.Message

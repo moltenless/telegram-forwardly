@@ -25,6 +25,26 @@ def launch_user():
         logger.error(f'Failed to launch new user. {e}')
         return jsonify({'Success': False, 'ErrorMessage': 'Authentication failed.'}), 500
 
+@api_bp.route('/user/forum', methods=['POST'])
+def check_and_update_forum():
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        forum_id = data.get('forum_id')
+
+        result = event_loop_manager.run_coroutine(
+            current_app.client_manager.check_and_update_forum(user_id, forum_id)
+        )
+
+        if result.get('Success') is True:
+            return jsonify(result), 200
+        else:
+            return jsonify(result), 500
+
+    except Exception as e:
+        return jsonify({"Success": False,
+                        "ErrorMessage": f"Failed to check and update forum id: {e}"}), 500
+
 
 @api_bp.route('/user/update', methods=['POST'])
 def update_user():

@@ -1,6 +1,8 @@
 ﻿using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 using TelegramForwardly.WebApi.Models.Dtos;
+using TelegramForwardly.WebApi.Models.Responses;
 using TelegramForwardly.WebApi.Services.Interfaces;
 
 namespace TelegramForwardly.WebApi.Services.Bot.Managers
@@ -11,21 +13,30 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
             BotUser user,
             Message message,
             IUserService userService,
+            IUserbotApiService userbotApiService,
             ITelegramBotClient botClient,
             ILogger logger,
             CancellationToken cancellationToken)
         {
             long forumId = long.Parse(message.Text!);
+
+            ForumUpdateResult result = await userbotApiService.UpdateUserForumAsync(user.TelegramUserId, forumId);
+            if (!result.Success)
+            {
+                await BotHelper.SendTextMessageAsync(
+                    message.Chat.Id,
+                    $"Failed to set forum/group ID: {result.ErrorMessage}",
+                    botClient, logger, cancellationToken, parseMode: ParseMode.None);
+                return;
+            }
+
             await userService.UpdateUserForumIdAsync(user.TelegramUserId, forumId);
-
-
-
             await userService.SetUserStateAsync(user.TelegramUserId, UserState.AwaitingGroupingType);
 
             await BotHelper.SendTextMessageAsync(
                 message.Chat.Id,
                 "Please select the grouping/sorting type of filtered messages: \nBy keywords (default) - send '1'\nBy chat titles - send '2'",
-                botClient, logger, cancellationToken);
+                botClient, logger, cancellationToken, parseMode: ParseMode.None);
         }
 
         public static async Task HandleGroupingTypeInputAsync(
@@ -65,7 +76,7 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
 
             response += user.Chats.Count == 0 ?
                 "\n\n*Now it is time to choose from what chats you want to extract messages with specific keywords*:\n" +
-               "*Please click '💬 Chats' in menu below*\\nOr\\n*Use /chats*\"" : string.Empty;
+               "*Please click '💬 Chats' in menu below*\nOr\n*Use /chats*" : string.Empty;
             await BotHelper.SendTextMessageAsync(
                 message.Chat.Id, response,
                 botClient, logger, cancellationToken);

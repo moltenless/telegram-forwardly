@@ -149,7 +149,7 @@ namespace TelegramForwardly.WebApi.Services.Bot
 
                 case UserState.AwaitingForumGroup:
                     await SettingsManager.HandleTopicGroupId(
-                        user, message, userService,
+                        user, message, userService, userbotApiService,
                         botClient, logger, cancellationToken);
                     break;
 

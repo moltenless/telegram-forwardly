@@ -2,7 +2,10 @@ import logging
 from typing import Dict, Any, List
 
 from telethon import TelegramClient
+from telethon.errors import UserNotParticipantError
 from telethon.sessions import StringSession
+from telethon.tl.functions.channels import GetParticipantRequest
+from telethon.tl.types import ChannelParticipantCreator
 
 from app.models import BotUser, UserClient
 from app.services.telegram_api_service import TelegramApiService
@@ -107,6 +110,35 @@ class ClientManager:
         # except Exception as e:
         #     log_error(f"Failed to setup message handler for user {user_client.user.telegram_user_id}", e)
         logger.info('Here I must subscribe client to handle new messages')
+
+    async def check_and_update_forum(self, user_id, forum_id):
+        try:
+            client = self.clients[user_id].client
+            try:
+                entity = await client.get_entity(forum_id)
+            except (ValueError, Exception) as e:
+                return {"Success": False, "ErrorMessage": "Chat not found"}
+
+            if not getattr(entity, "forum", False):
+                return {"Success": False, "ErrorMessage": "Forum topics are not enabled on that group"}
+
+            try:
+                participant = await client(GetParticipantRequest(channel=forum_id, participant=user_id))
+            except UserNotParticipantError:
+                return {"Success": False, "ErrorMessage": "You must be a member of this group"}
+
+            if not isinstance(participant.participant, ChannelParticipantCreator):
+                return {"Success": False, "ErrorMessage": "You must be the owner of the group"}
+
+            self.clients[user_id].user.forum_supergroup_id = forum_id
+
+            return {"Success": True}
+
+        except Exception as e:
+            logger.error(f'Failed to check and update forum id: {e}')
+            return {"Success": False, "ErrorMessage": f'Failed to check and update forum id: {e}'}
+
+
 
     async def update_user(self, user_data: BotUser) -> Dict[str, Any]:
         """Update user configuration and reconnect if necessary"""

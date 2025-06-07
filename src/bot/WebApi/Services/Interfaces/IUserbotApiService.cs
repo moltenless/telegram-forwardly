@@ -7,6 +7,7 @@ namespace TelegramForwardly.WebApi.Services.Interfaces
     {
         Task<LaunchResult> LaunchUserAsync(BotUser user);
         Task<IEnumerable<ChatInfo>> GetUserChatsAsync(long telegramUserId);
+        Task<ForumUpdateResult> UpdateUserForumAsync(long telegramUserId, long forumId);
         Task<bool> EnableForwardlyAsync(long telegramUserId);
         Task<bool> DisableForwardlyAsync(long telegramUserId);
     }
