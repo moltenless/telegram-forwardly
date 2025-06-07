@@ -5,6 +5,7 @@
         public long Id { get; set; }
         public long TelegramUserId { get; set; }
         public long TelegramChatId { get; set; }
+        public string Title { get; set; } = null!;
 
         public static Chat FromEntity(DataAccess.Entities.Chat entity)
         {
@@ -12,7 +13,8 @@
             {
                 Id = entity.Id,
                 TelegramUserId = entity.TelegramUserId,
-                TelegramChatId = entity.TelegramChatId
+                TelegramChatId = entity.TelegramChatId,
+                Title = entity.Title
             };
         }
     }

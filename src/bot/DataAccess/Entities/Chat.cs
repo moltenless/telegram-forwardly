@@ -19,5 +19,9 @@ namespace TelegramForwardly.DataAccess.Entities
         [Column("tg_chat_id", TypeName = "bigint")]
         [Required]
         public long TelegramChatId { get; set; }
+
+        [Column("title", TypeName = "nvarchar(100)")]
+        [Required]
+        public string Title { get; set; } = null!;
     }
 }

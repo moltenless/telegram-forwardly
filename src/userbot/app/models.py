@@ -31,6 +31,7 @@ class Chat:
     id: int
     telegram_user_id: int
     telegram_chat_id: int
+    title: str
 
 @dataclass
 class BotUser:

@@ -84,6 +84,28 @@ def delete_user():
         return jsonify({"Success": False,
                         "ErrorMessage": f"Failed to delete user data type: {e}"}), 500
 
+
+@api_bp.route('/user/chats/all', methods=['POST'])
+def set_all_chats_enabled():
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        enable_all_chats = data.get('enable_all_chats')
+
+        result = event_loop_manager.run_coroutine(
+            current_app.client_manager.enable_all_chats(user_id, enable_all_chats)
+        )
+
+        if result.get('Success') is True:
+            return jsonify(result), 200
+        else:
+            return jsonify(result), 500
+
+    except Exception as e:
+        return jsonify({"Success": False,
+                        "ErrorMessage": f"Failed to set all chats to listen: {e}"}), 500
+
+
 @api_bp.route('/user/update', methods=['POST'])
 def update_user():
     try:

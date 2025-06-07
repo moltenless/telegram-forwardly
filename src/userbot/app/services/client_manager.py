@@ -159,7 +159,13 @@ class ClientManager:
             logger.error(f'Failed to delete account data: {e}')
             return {'Success': False, 'ErrorMessage': f'Failed to delete account data: {e}'}
 
-
+    async def enable_all_chats(self, user_id, enable_all_chats):
+        try:
+            self.clients[user_id].user.all_chats_filtering_enabled = enable_all_chats
+            return {'Success': True}
+        except Exception as e:
+            logger.error(f'Failed to enable all chats: {e}')
+            return {'Success': False, 'ErrorMessage': f'Failed to enable all chats: {e}'}
 
 
 

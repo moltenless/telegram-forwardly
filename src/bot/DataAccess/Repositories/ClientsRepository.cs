@@ -146,5 +146,18 @@ namespace TelegramForwardly.DataAccess.Repositories
             context.Clients.Remove(client);
             await context.SaveChangesAsync();
         }
+
+        public async Task SetClientAllChatsEnabledAsync(Client client, bool value)
+        {
+            if (client.AllChatsFilteringEnabled == value) return;
+            client.AllChatsFilteringEnabled = value;
+            await context.SaveChangesAsync();
+        }
+
+        public async Task<HashSet<Chat>> GetClientChatsAsync(long telegramUserId)
+        {
+            var client = await GetClientAsync(telegramUserId);
+            return [.. client.Chats];
+        }
     }
 }

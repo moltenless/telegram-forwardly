@@ -121,6 +121,28 @@ namespace TelegramForwardly.WebApi.Services
             }
         }
 
+        public async Task<FieldUpdateResult> SetAllChatsEnabledAsync(long telegramUserId, bool enableAllChats)
+        {
+            try
+            {
+                var request = JsonSerializer.Serialize(new { user_id = telegramUserId, enable_all_chats = enableAllChats });
+                var content = new StringContent(request, Encoding.UTF8, "application/json");
+                var response = await httpClient.PostAsync("api/user/chats/all", content);
+                var result = JsonSerializer.Deserialize<FieldUpdateResult>(
+                    await response.Content.ReadAsStringAsync());
+                return result!;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error setting enabled or disabled all chats being listened");
+                return new FieldUpdateResult
+                {
+                    Success = false,
+                    ErrorMessage = ex.Message
+                };
+            }
+        }
+
 
         public Task<bool> DisableForwardlyAsync(long telegramUserId)
         {

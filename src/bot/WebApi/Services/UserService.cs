@@ -106,6 +106,19 @@ namespace TelegramForwardly.WebApi.Services
             await clientsRepository.DeleteClientAsync(client);
         }
 
+        public async Task SetUserAllChatsEnabledAsync(long telegramUserId, bool value)
+        {
+            var client = await clientsRepository.GetClientAsync(telegramUserId);
+            await clientsRepository.SetClientAllChatsEnabledAsync(client, value: value);
+        }
+
+        public async Task<HashSet<Chat>> GetUserChatsAsync(long telegramUserId)
+        {
+            HashSet<DataAccess.Entities.Chat> chats =
+                    await clientsRepository.GetClientChatsAsync(telegramUserId);
+            return [.. chats.Select(Chat.FromEntity)];
+        }
+
 
 
 

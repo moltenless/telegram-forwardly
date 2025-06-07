@@ -46,10 +46,13 @@ namespace TelegramForwardly.WebApi.Services.Bot
                         userService, botClient, logger, cancellationToken);
                     break;
 
-                case "/keywords":
+                case "/chats":
+                    await MenuManager.EnterChatsAsync(
+                        user, message.Chat.Id,
+                        userService, botClient, logger, cancellationToken);
                     break;
 
-                case "/chats":
+                case "/keywords":
                     break;
 
                 case "/status":
@@ -95,10 +98,13 @@ namespace TelegramForwardly.WebApi.Services.Bot
                         userService, botClient, logger, cancellationToken);
                     break;
 
-                case "keywords":
+                case "chats":
+                    await MenuManager.EnterChatsAsync(
+                        user, callbackQuery.Message!.Chat.Id,
+                        userService, botClient, logger, cancellationToken);
                     break;
 
-                case "chats":
+                case "keywords":
                     break;
 
                 case "status":
@@ -145,6 +151,9 @@ namespace TelegramForwardly.WebApi.Services.Bot
                     break;
 
                 case UserState.AwaitingEnableAllChats:
+                    await ChatManager.HandleAllChatsToggleAsync(
+                        user, message, userService, userbotApiService,
+                        botClient, logger, cancellationToken);
                     break;
 
                 case UserState.AwaitingChats:
