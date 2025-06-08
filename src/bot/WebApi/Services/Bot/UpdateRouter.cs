@@ -112,6 +112,12 @@ namespace TelegramForwardly.WebApi.Services.Bot
 
                 case "help":
                     break;
+
+                case "view_page_back":
+                    await ChatManager.HandleViewPageBackAsync(
+                        user, callbackQuery,
+                        userService, botClient, logger, cancellationToken);
+                    break;
             }
         }
 

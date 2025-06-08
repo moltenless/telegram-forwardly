@@ -49,7 +49,8 @@ def parse_user_from_api(data: Dict[str, Any]) -> BotUser:
         Chat(
             id=chat.get('Id'),
             telegram_user_id=chat.get('TelegramUserId'),
-            telegram_chat_id=chat.get('TelegramChatId')
+            telegram_chat_id=chat.get('TelegramChatId'),
+            title=chat.get('Title')
         )
         for chat in data.get('Chats', [])
     ]

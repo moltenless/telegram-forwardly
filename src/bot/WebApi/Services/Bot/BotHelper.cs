@@ -15,13 +15,16 @@ namespace TelegramForwardly.WebApi.Services.Bot
         CancellationToken cancellationToken,
 
         ReplyMarkup? replyMarkup = null,
-        ParseMode parseMode = ParseMode.MarkdownV2)
+        ParseMode parseMode = ParseMode.MarkdownV2,
+        Func<string, string>? markdownV2escaper = null)
         {
             try
             {
+                markdownV2escaper ??= DefaultEscapeMarkdownV2;
+
                 await botClient.SendMessage(
                     chatId: chatId,
-                    text: parseMode == ParseMode.MarkdownV2 ? EscapeMarkdownV2(text) : text,
+                    text: parseMode == ParseMode.MarkdownV2 ? markdownV2escaper(text) : text,
                     replyMarkup: replyMarkup,
                     parseMode: parseMode,
                     linkPreviewOptions: new LinkPreviewOptions { IsDisabled = true },
@@ -33,12 +36,12 @@ namespace TelegramForwardly.WebApi.Services.Bot
             }
         }
 
-        public static string EscapeMarkdownV2(string text)
+        public static string DefaultEscapeMarkdownV2(string text)
         {
             if (string.IsNullOrEmpty(text))
                 return text;
 
-            var specialChars = new[] { '\\', /*'_', '*', '[', ']', '(', ')',*/ '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!' };
+            var specialChars = new[] { '\\', /*'_', '*', '[', ']', '(', ')',*/ '~', '`', '>', '#', '+', '-', '=', /*'|',*/ '{', '}', '.', '!' };
 
             var builder = new System.Text.StringBuilder();
 
@@ -113,7 +116,7 @@ namespace TelegramForwardly.WebApi.Services.Bot
         public static string GetAuthenticatedAndSettingsMessage()
             => "🎉 Authentication successful!\n\n" +
                "*Now let's set up forwarding details*:\n" +
-               "*Please click '⚙️ Settings' in menu below*\\nOr\\n*Use /settings*\"";
+               "*Please click '⚙️ Settings' in menu below*\nOr\n*Use /settings*";
 
         public static string GetSettingsMessage()
             => "*Now, create your own group in Telegram* - so I can set this group as your forum supergroup with topics where messages will be forwarded.\n\n" +
@@ -121,7 +124,7 @@ namespace TelegramForwardly.WebApi.Services.Bot
                "2. Go to group settings and click on 'Topics' section.\n" +
                "3. Enable this option and choose style of topic layout you prefer. Select 'Tabs' for now. Save the changes.\n" +
                "4. Then, click on 'Add member' and add @getidsbot. It will immediately send you a message with the group ID.\n" +
-               "5. Please, copy the group id - *it looks like '-100XXXXXXXXX' - and send it to me here* " +
+               "5. Please, copy the group id - *it looks like '-100XXXXXXXXX' - and send it to me here*\n" +
                "6. Remove @getidsbot from the group members.";
 
         public static InlineKeyboardMarkup GetMenuKeyboard()
