@@ -93,9 +93,55 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
             CancellationToken cancellationToken)
         {
             var chats = await userService.GetUserChatsAsync(user.TelegramUserId);
-            var startWith = GetFirstNumberFromPage(callbackQuery.Message!.Text!, logger);
+            var oldPageFirstNumber = GetFirstNumberFromPage(callbackQuery.Message!.Text!);
+
+            if (oldPageFirstNumber is null || oldPageFirstNumber <= 1)
+            {
+                return;
+            }
+            int startWith;
+            if (oldPageFirstNumber.Value <= 10)
+            {
+                startWith = 1;
+            }
+            else
+            {
+                startWith = oldPageFirstNumber.Value - 10;
+            }
+
+            var page = GetChatPage(chats, startWith, itemsCount: 10);
+
+            await botClient.EditMessageText(
+                chatId: callbackQuery.Message!.Chat.Id,
+                messageId: callbackQuery.Message.MessageId,
+                text: page,
+                replyMarkup: callbackQuery.Message.ReplyMarkup,
+                cancellationToken: cancellationToken);
+        }
+
+        public static async Task HandleViewPageForwardAsync(
+           BotUser user,
+           CallbackQuery callbackQuery,
+           IUserService userService,
+           ITelegramBotClient botClient,
+           ILogger logger,
+           CancellationToken cancellationToken)
+        {
+            var chats = await userService.GetUserChatsAsync(user.TelegramUserId);
+            var startWith = GetLastNumberFromPage(callbackQuery.Message!.Text!);
+            startWith++;
+            if (startWith is null || startWith > chats.Count)
+            {
+                return;
+            }
             var page = GetChatPage(chats, startWith!.Value, itemsCount: 10);
 
+            await botClient.EditMessageText(
+                chatId: callbackQuery.Message!.Chat.Id,
+                messageId: callbackQuery.Message.MessageId,
+                text: page,
+                replyMarkup: callbackQuery.Message.ReplyMarkup,
+                cancellationToken: cancellationToken);
         }
 
         public static string GetChatPage(
@@ -104,7 +150,6 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
             int itemsCount)
         {
             if (chats.Count == 0) return "No chats selected yet.";
-            //if (chats.Count < startWith) return "This page is empty.";
 
             StringBuilder sb = new();
             for (int i = startWith; i < startWith + itemsCount; i++)
@@ -119,19 +164,37 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
                     ? chatIdWithPrefix[4..]
                     : chatIdWithPrefix;
 
-                sb.Append($"~~~> *[{chat.Title}](https://t.me/c/{chatId})* < {i} ||-> {chatIdWithPrefix}||\n");
+                sb.Append($"~~~ {i} ~> *[{chat.Title}](https://t.me/c/{chatId})* ||id: {chatIdWithPrefix}||\n");
             }
 
             return sb.ToString();
         }
 
-        private static int? GetFirstNumberFromPage(string message, ILogger logger)
+        private static int? GetFirstNumberFromPage(string message)
         {
             try
             {
-                logger.LogInformation(
-                    message);
-                return 1;
+                string[] lines = message.Split("~~~", 
+                    StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                string[] splitFirstLine = lines[0].Split(["~>", "id:"], 
+                    StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                return int.Parse(splitFirstLine[0].Trim());
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static int? GetLastNumberFromPage(string message)
+        {
+            try
+            {
+                string[] lines = message.Split("~~~",
+                    StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                string[] splitLastLine = lines[^1].Split(["~>", "id:"],
+                    StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                return int.Parse(splitLastLine[0].Trim());
             }
             catch
             {
