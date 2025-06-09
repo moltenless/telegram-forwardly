@@ -100,7 +100,7 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
                 return;
             }
             int startWith;
-            if (oldPageFirstNumber.Value <= 10)
+            if (oldPageFirstNumber <= 10)
             {
                 startWith = 1;
             }
@@ -128,13 +128,14 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
            CancellationToken cancellationToken)
         {
             var chats = await userService.GetUserChatsAsync(user.TelegramUserId);
-            var startWith = GetLastNumberFromPage(callbackQuery.Message!.Text!);
-            startWith++;
-            if (startWith is null || startWith > chats.Count)
+            int? oldPageLastNumber = GetLastNumberFromPage(callbackQuery.Message!.Text!);
+
+            if (oldPageLastNumber is null || oldPageLastNumber >= chats.Count)
             {
                 return;
             }
-            var page = GetChatPage(chats, startWith!.Value, itemsCount: 10);
+            int startWith = oldPageLastNumber.Value + 1;
+            var page = GetChatPage(chats, startWith, itemsCount: 10);
 
             await botClient.EditMessageText(
                 chatId: callbackQuery.Message!.Chat.Id,
