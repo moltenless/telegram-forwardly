@@ -1,5 +1,6 @@
 ﻿using Telegram.Bot;
 using Telegram.Bot.Types;
+using TelegramForwardly.DataAccess.Entities;
 using TelegramForwardly.WebApi.Models.Dtos;
 using TelegramForwardly.WebApi.Services.Bot.Managers;
 using TelegramForwardly.WebApi.Services.Interfaces;
@@ -80,6 +81,7 @@ namespace TelegramForwardly.WebApi.Services.Bot
             BotUser user,
             CallbackQuery callbackQuery,
             IUserService userService,
+            IUserbotApiService userbotApiService,
             ITelegramBotClient botClient,
             ILogger logger,
             CancellationToken cancellationToken)
@@ -114,15 +116,58 @@ namespace TelegramForwardly.WebApi.Services.Bot
                     break;
 
                 case "view_page_back":
-                    await ChatManager.HandleViewPageBackAsync(
+                    await ChatManager.TurnViewPageBackAsync(
                         user, callbackQuery,
                         userService, botClient, logger, cancellationToken);
                     break;
 
                 case "view_page_forward":
-                    await ChatManager.HandleViewPageForwardAsync(
+                    await ChatManager.TurnViewPageForwardAsync(
                         user, callbackQuery,
                         userService, botClient, logger, cancellationToken);
+                    break;
+
+                case "add_chat":
+                    await ChatManager.StartChatAdditionAsync(
+                        user, callbackQuery, userService, userbotApiService,
+                        botClient, logger, cancellationToken);
+                    break;
+
+                case "addition_page_back":
+                    await ChatManager.TurnAddPageBackAsync(
+                        user, callbackQuery, userService, userbotApiService, 
+                        botClient, logger, cancellationToken);
+                    break;
+
+                case "addition_page_forward":
+                    await ChatManager.TurnAddPageForwardAsync(
+                        user, callbackQuery, userService, userbotApiService,
+                        botClient, logger, cancellationToken);
+                    break;
+
+                case "remove_chat":
+
+                    break;
+
+                case "back_to_menu":
+                    await userService.SetUserStateAsync(user.TelegramUserId, UserState.Idle);
+                    await botClient.EditMessageText(
+                        chatId: callbackQuery.Message!.Chat.Id,
+                        messageId: callbackQuery.Message.MessageId,
+                        text: BotHelper.DefaultEscapeMarkdownV2(BotHelper.GetMenuText(user)),
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.MarkdownV2,
+                        replyMarkup: BotHelper.GetMenuKeyboard(),
+                        cancellationToken: cancellationToken);
+                    break;
+
+                case "back_to_chat_menu":
+                    await userService.SetUserStateAsync(user.TelegramUserId, UserState.Idle);
+                    await botClient.DeleteMessage(
+                        chatId: callbackQuery.Message!.Chat.Id, callbackQuery.Message.MessageId, cancellationToken);
+                    await ChatManager.RunChatMenuAsync(
+                        user, callbackQuery.Message!,
+                        userService, userbotApiService,
+                        botClient, logger, cancellationToken);
                     break;
             }
         }
@@ -169,6 +214,9 @@ namespace TelegramForwardly.WebApi.Services.Bot
                     break;
 
                 case UserState.AwaitingChats:
+                    await ChatManager.HandleChatSelectionAsync(
+                        user, message, userService, userbotApiService,
+                        botClient, logger, cancellationToken);
                     break;
 
                 case UserState.AwaitingKeywords:
@@ -188,7 +236,7 @@ namespace TelegramForwardly.WebApi.Services.Bot
 
                 case UserState.AwaitingDeleteConfirmation:
                     await AuthenticationManager.HandleDeleteConfirmationInputAsync(
-                        user, message, userService, userbotApiService, 
+                        user, message, userService, userbotApiService,
                         botClient, logger, cancellationToken);
                     break;
 

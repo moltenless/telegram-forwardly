@@ -14,17 +14,11 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
             ILogger logger,
             CancellationToken cancellationToken)
         {
-            var keyboard = BotHelper.GetMenuKeyboard();
-
-            var menuText = (bool)user.IsAuthenticated!
-                ? "🏠 Main Menu - You're authenticated and ready to go!"
-                : "🏠 Main Menu - Please set up your credentials first.";
-
             await BotHelper.SendTextMessageAsync(
-                chatId, menuText,
+                chatId, BotHelper.GetMenuText(user),
                 botClient, logger,
                 cancellationToken,
-                keyboard);
+                BotHelper.GetMenuKeyboard());
         }
 
         public static async Task EnterSetupAsync(

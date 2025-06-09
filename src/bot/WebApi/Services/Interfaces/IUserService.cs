@@ -1,4 +1,5 @@
 ﻿using TelegramForwardly.WebApi.Models.Dtos;
+using TelegramForwardly.WebApi.Models.Responses;
 
 namespace TelegramForwardly.WebApi.Services.Interfaces
 {
@@ -23,6 +24,8 @@ namespace TelegramForwardly.WebApi.Services.Interfaces
         Task SetUserGroupingModeAsync(long telegramUserId, GroupingMode mode);
         Task DeleteUserAsync(long telegramUserId);
         Task SetUserAllChatsEnabledAsync(long telegramUserId, bool value);
+        Task AddUserChatsAsync(long telegramUserId, List<ChatInfo> chats);
+
 
         Task<HashSet<Chat>> GetUserChatsAsync(long telegramUserId);
 

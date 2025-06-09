@@ -106,6 +106,50 @@ def set_all_chats_enabled():
                         "ErrorMessage": f"Failed to set all chats to listen: {e}"}), 500
 
 
+@api_bp.route('/user/<int:user_id>/chats', methods=['GET'])
+async def get_user_chats(user_id):
+    try:
+        result = event_loop_manager.run_coroutine(
+            current_app.client_manager.get_user_chats(user_id)
+        )
+
+        if result.get('Success') is True:
+            return jsonify(result), 200
+        else:
+            return jsonify(result), 500
+
+    except Exception as e:
+        return jsonify({
+            'Success': False,
+            'ErrorMessage': f'Failed to retrieve chats: {e}'
+        }), 500
+
+
+@api_bp.route('/user/chats/add', methods=['POST'])
+async def add_chats():
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        chats = data.get('chats')
+
+        result = event_loop_manager.run_coroutine(
+            current_app.client_manager.add_chats(user_id, chats)
+        )
+
+        if result.get('Success') is True:
+            return jsonify(result), 200
+        else:
+            return jsonify(result), 500
+
+    except Exception as e:
+        return jsonify({
+            'Success': False,
+            'ErrorMessage': f'Error adding chats to user: {e}'
+        }), 500
+
+
+
+
 @api_bp.route('/user/update', methods=['POST'])
 def update_user():
     try:

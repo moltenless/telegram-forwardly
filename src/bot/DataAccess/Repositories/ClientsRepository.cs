@@ -157,7 +157,21 @@ namespace TelegramForwardly.DataAccess.Repositories
         public async Task<HashSet<Chat>> GetClientChatsAsync(long telegramUserId)
         {
             var client = await GetClientAsync(telegramUserId);
+
             return [.. client.Chats];
+        }
+
+        public async Task AddChatAsync(Client client, long telegramChatId, string title)
+        {
+            if (client.Chats.Any(c => c.TelegramChatId == telegramChatId)) return;
+            var chat = new Chat
+            {
+                TelegramUserId = client.TelegramUserId,
+                TelegramChatId = telegramChatId,
+                Title = title,
+            };
+            context.Chats.Add(chat);
+            await context.SaveChangesAsync();
         }
     }
 }

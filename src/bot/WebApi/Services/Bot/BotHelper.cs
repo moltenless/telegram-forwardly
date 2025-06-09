@@ -1,4 +1,5 @@
-﻿using Telegram.Bot;
+﻿using System.Text;
+using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -41,9 +42,9 @@ namespace TelegramForwardly.WebApi.Services.Bot
             if (string.IsNullOrEmpty(text))
                 return text;
 
-            var specialChars = new[] { '\\', /*'_', '*', '[', ']', '(', ')',*/ '~', '`', '>', '#', '+', '-', '=', /*'|',*/ '{', '}', '.', '!' };
+            var specialChars = new[] { '\\', /*'_', '*', '[', ']', '(', ')',*/ '~', /*'`',*/ '>', '#', '+', '-', '=', /*'|',*/ '{', '}', '.', '!' };
 
-            var builder = new System.Text.StringBuilder();
+            var builder = new StringBuilder();
 
             foreach (var ch in text)
             {
@@ -55,6 +56,17 @@ namespace TelegramForwardly.WebApi.Services.Bot
             return builder.ToString();
         }
 
+        public static string RemoveSpecialChars(string input)
+        {
+            var specialChars = new[] { '\\', '_', '*', '[', ']', '(', ')', '~', '`', '>', '<', '#', '+', '-', '=', '|', '{', '}', '.', '!' };
+            //var specialChars = new[] { '_', '*', '[', ']', '(', ')', '`', '|' };
+            var sb = new StringBuilder();
+            foreach (char c in input)
+                if (!specialChars.Contains(c))
+                    sb.Append(c);
+            return sb.ToString();
+        }
+
         public static string GetUserNameOrEmpty(BotUser user, string ending)
         {
             string prefix = user.FirstName ?? user.UserName ?? string.Empty;
@@ -62,6 +74,10 @@ namespace TelegramForwardly.WebApi.Services.Bot
             return prefix;
         }
 
+        public static string GetMenuText(BotUser user)
+            => (bool)user.IsAuthenticated!
+                ? "🏠 Main Menu - You're authenticated and ready to go!"
+                : "🏠 Main Menu - Please set up your credentials first.";
 
         public static string GetWelcomeMessage(BotUser user)
             => $"{GetUserNameOrEmpty(user, " ")}" +
@@ -83,7 +99,7 @@ namespace TelegramForwardly.WebApi.Services.Bot
                 "For the _Platform_, select \'Desktop\' or \'Web\'. Remain other fields empty.\n" +
                 "4. Click _Create application_ and then copy your *App api-id*.\n\n" +
                 "_! Please note that you should not share your API Id and API Hash with anyone! " +
-                "We don't use them for anything other than forwarding messages to your forum. " + 
+                "We don't use them for anything other than forwarding messages to your forum. " +
                 "Check out our open source code on [GitHub](https://github.com/moltenless/telegram-forwardly). " +
                 "You can always delete them in bot settings menu or revoke access to your app in Telegram settings._\n\n" +
                 "*First, please send me the App api-id:* it looks like '12345678'";

@@ -143,6 +143,51 @@ namespace TelegramForwardly.WebApi.Services
             }
         }
 
+        public async Task<UserChatsResponse> GetUserChatsAsync(long telegramUserId)
+        {
+            try
+            {
+                var response = await httpClient.GetAsync($"api/user/{telegramUserId}/chats");
+                var result = JsonSerializer.Deserialize<UserChatsResponse>(
+                    await response.Content.ReadAsStringAsync());
+                return result!;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error getting user chats");
+                return new UserChatsResponse
+                {
+                    Success = false,
+                    ErrorMessage = ex.Message,
+                    Chats = []
+                };
+            }
+        }
+
+        public async Task<UserChatsResponse> AddChatsAsync(long telegramUserId, List<long> addedChats)
+        {
+            try
+            {
+                var request = JsonSerializer.Serialize(new { user_id = telegramUserId, chats = addedChats });
+                var content = new StringContent(request, Encoding.UTF8, "application/json");
+                var response = await httpClient.PostAsync("api/user/chats/add", content);
+                var result = JsonSerializer.Deserialize<UserChatsResponse>(
+                    await response.Content.ReadAsStringAsync());
+                return result!;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error adding chats to user");
+                return new UserChatsResponse
+                {
+                    Success = false,
+                    ErrorMessage = ex.Message,
+                    Chats = []
+                };
+            }
+        }
+
+
 
         public Task<bool> DisableForwardlyAsync(long telegramUserId)
         {
@@ -150,11 +195,6 @@ namespace TelegramForwardly.WebApi.Services
         }
 
         public Task<bool> EnableForwardlyAsync(long telegramUserId)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<IEnumerable<ChatInfo>> GetUserChatsAsync(long telegramUserId)
         {
             throw new NotImplementedException();
         }

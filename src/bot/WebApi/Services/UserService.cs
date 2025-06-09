@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using TelegramForwardly.DataAccess.Repositories.Interfaces;
 using TelegramForwardly.WebApi.Models.Dtos;
+using TelegramForwardly.WebApi.Models.Responses;
 using TelegramForwardly.WebApi.Services.Interfaces;
 
 namespace TelegramForwardly.WebApi.Services
@@ -117,6 +118,13 @@ namespace TelegramForwardly.WebApi.Services
             HashSet<DataAccess.Entities.Chat> chats =
                     await clientsRepository.GetClientChatsAsync(telegramUserId);
             return [.. chats.Select(Chat.FromEntity)];
+        }
+
+        public async Task AddUserChatsAsync(long telegramUserId, List<ChatInfo> chats)
+        {
+            var client = await clientsRepository.GetClientAsync(telegramUserId);
+            foreach (var chat in chats)
+                await clientsRepository.AddChatAsync(client, chat.Id, chat.Title);
         }
 
 

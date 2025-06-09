@@ -76,7 +76,7 @@ public class BotService(
 
         await UpdateRouter.RouteCallbackQueryAsync(
             user, callbackQuery, 
-            userService,
+            userService, userbotApiService,
             botClient, logger,
             cancellationToken);
     }

@@ -5,9 +5,9 @@ from telethon import TelegramClient
 from telethon.errors import UserNotParticipantError
 from telethon.sessions import StringSession
 from telethon.tl.functions.channels import GetParticipantRequest
-from telethon.tl.types import ChannelParticipantCreator
+from telethon.tl.types import ChannelParticipantCreator, User, ChatForbidden, ChannelForbidden
 
-from app.models import BotUser, UserClient, GroupingMode
+from app.models import BotUser, UserClient, GroupingMode, Chat
 from app.services.telegram_api_service import TelegramApiService
 from app.utils import log_error, log_info
 
@@ -117,7 +117,7 @@ class ClientManager:
             try:
                 entity = await client.get_entity(forum_id)
             except (ValueError, Exception) as e:
-                return {"Success": False, "ErrorMessage": "Chat not found"}
+                return {"Success": False, "ErrorMessage": f"Chat not found: {e}"}
 
             if not getattr(entity, "forum", False):
                 return {"Success": False, "ErrorMessage": "Forum topics are not enabled on that group"}
@@ -166,6 +166,78 @@ class ClientManager:
         except Exception as e:
             logger.error(f'Failed to enable all chats: {e}')
             return {'Success': False, 'ErrorMessage': f'Failed to enable all chats: {e}'}
+
+    async def get_user_chats(self, user_id):
+        try:
+            client = self.clients[user_id].client
+            dialogs = await client.get_dialogs()
+            chats = []
+            seen_titles = set()
+
+            for dialog in dialogs:
+                entity = dialog.entity
+
+                if isinstance(entity, User):
+                    continue
+
+                if isinstance(entity, (ChatForbidden, ChannelForbidden)):
+                    continue
+
+                title = entity.title
+                if title in seen_titles:
+                    continue
+                seen_titles.add(title)
+
+                chat = {
+                    'Id': entity.id,
+                    'Title': title
+                }
+                chats.append(chat)
+
+            return {
+                'Success': True,
+                'Chats': chats
+            }
+
+
+        except Exception as e:
+            logger.error(f'Failed to retrieve user chats: {e}')
+            return {'Success': False, 'ErrorMessage': f'Failed to retrieve user chats: {e}'}
+
+    async def add_chats(self, user_id, chats):
+        try:
+            user = self.clients[user_id].user
+            client = self.clients[user_id].client
+            chat_infos = []
+
+            for chat_id in chats:
+                try:
+                    already_exists = False
+                    for chat in user.chats:
+                        if chat.telegram_chat_id == chat_id:
+                            already_exists = True
+                            break
+                    if already_exists:
+                        continue
+
+                    entity = await client.get_entity(chat_id)
+
+                    chat_infos.append({
+                        'Id': chat_id,
+                        'Title': entity.title
+                    })
+
+                    user.chats.append(Chat(telegram_user_id=user_id,
+                                           telegram_chat_id=chat_id,
+                                           title=entity.title,
+                                           id = -1))
+                except: continue
+
+            return {'Success': True, 'Chats': chat_infos}
+        except Exception as e:
+            logger.error(f'Failed to enable all chats: {e}')
+            return {'Success': False, 'ErrorMessage': f'Error adding chats to user: {e}'}
+
 
 
 
