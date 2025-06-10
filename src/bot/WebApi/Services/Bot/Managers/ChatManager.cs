@@ -1,5 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using System.Text;
+﻿using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -349,15 +348,15 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
         }
 
         public static async Task HandleChatSelectionAsync(
-            BotUser user, 
+            BotUser user,
             Message message,
-            IUserService userService, 
+            IUserService userService,
             IUserbotApiService userbotApiService,
             ITelegramBotClient botClient,
-            ILogger logger, 
+            ILogger logger,
             CancellationToken cancellationToken)
         {
-            string [] chatIds = message.Text!.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            string[] chatIds = message.Text!.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
             if (chatIds.Length == 0)
             {
                 await BotHelper.SendTextMessageAsync(
@@ -395,9 +394,193 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
                 return;
             }
             await userService.AddUserChatsAsync(user.TelegramUserId, result.Chats);
+            await userService.SetUserStateAsync(user.TelegramUserId, UserState.Idle);
+            user = await userService.GetUserAsync(user.TelegramUserId);
+
+            if (user.Keywords.Count == 0)
+            {
+                await BotHelper.SendTextMessageAsync(
+                    message.Chat.Id,
+                    "Chats successfully added!\n" +
+                    "Now, please add some keywords to filter messages in chats.",
+                    botClient, logger, cancellationToken);
+                await MenuManager.ShowMainMenuAsync(
+                    user, message.Chat.Id,
+                    botClient, logger, cancellationToken);
+            }
+            else
+            {
+                await BotHelper.SendTextMessageAsync(
+                    message.Chat.Id,
+                    "Chats successfully added!",
+                    botClient, logger, cancellationToken);
+                await RunChatMenuAsync(user, message, userService, userbotApiService,
+                    botClient, logger, cancellationToken);
+            }
+        }
+
+
+
+
+
+
+        public static async Task StartChatDeletionAsync(
+            BotUser user,
+            CallbackQuery callbackQuery,
+            IUserService userService,
+            IUserbotApiService userbotApiService,
+            ITelegramBotClient botClient,
+            ILogger logger,
+            CancellationToken cancellationToken)
+        {
+            var chats = await userService.GetUserChatsAsync(user.TelegramUserId);
+            IEnumerable<ChatInfo> chatInfos = chats.Select(c =>
+                new ChatInfo { Id = c.TelegramChatId, Title = c.Title });
+            var startPage = GetChatPage(chatInfos, startWith: 1, itemsCount: 10);
+
+            var keyboard = new InlineKeyboardMarkup(
+            [
+                [InlineKeyboardButton.WithCallbackData("⬅️ Page Back", "deletion_page_back"),
+                    InlineKeyboardButton.WithCallbackData("Page Forward ➡️", "deletion_page_forward")],
+                [ InlineKeyboardButton.WithCallbackData("💬 Back to Chat Menu", "back_to_chat_menu")]]);
+
+            await botClient.EditMessageText(
+                chatId: callbackQuery.Message!.Chat.Id,
+                messageId: callbackQuery.Message.MessageId,
+                text: BotHelper.DefaultEscapeMarkdownV2(startPage),
+                parseMode: ParseMode.MarkdownV2,
+                replyMarkup: keyboard,
+                cancellationToken: cancellationToken);
+
+            await BotHelper.SendTextMessageAsync(
+                callbackQuery.Message.Chat.Id,
+                "*Select chats to STOP TRACKING above* ⬆️. Send me id of chosen ones.\nTap to copy it. " +
+                "To choose *many chats*, delimit them with space\n\nFor example: `123456789 987654321`",
+                botClient, logger, cancellationToken);
+
+            await userService.SetUserStateAsync(user.TelegramUserId, UserState.AwaitingRemoveChats);
+        }
+
+        public static async Task TurnDeletePageBackAsync(BotUser user,
+            CallbackQuery callbackQuery,
+            IUserService userService,
+            IUserbotApiService userbotApiService,
+            ITelegramBotClient botClient,
+            ILogger logger,
+            CancellationToken cancellationToken)
+        {
+            var chats = await userService.GetUserChatsAsync(user.TelegramUserId);
+            IEnumerable<ChatInfo> chatInfos = chats.Select(c =>
+                new ChatInfo { Id = c.TelegramChatId, Title = c.Title });
+
+            var oldPageFirstNumber = ParseFirstNumber(callbackQuery.Message!.Text!);
+            if (oldPageFirstNumber is null || oldPageFirstNumber <= 1)
+            {
+                return;
+            }
+
+            int startWith;
+            if (oldPageFirstNumber <= 10)
+            {
+                startWith = 1;
+            }
+            else
+            {
+                startWith = oldPageFirstNumber.Value - 10;
+            }
+
+            string page = GetChatPage(chatInfos, startWith, itemsCount: 10);
+
+            await botClient.EditMessageText(
+                chatId: callbackQuery.Message!.Chat.Id,
+                messageId: callbackQuery.Message.MessageId,
+                text: BotHelper.DefaultEscapeMarkdownV2(page),
+                parseMode: ParseMode.MarkdownV2,
+                replyMarkup: callbackQuery.Message.ReplyMarkup,
+                cancellationToken: cancellationToken);
+        }
+
+        public static async Task TurnDeletePageForwardAsync(
+            BotUser user,
+            CallbackQuery callbackQuery,
+            IUserService userService,
+            IUserbotApiService userbotApiService,
+            ITelegramBotClient botClient,
+            ILogger logger,
+            CancellationToken cancellationToken)
+        {
+            var chats = await userService.GetUserChatsAsync(user.TelegramUserId);
+            IEnumerable<ChatInfo> chatInfos = chats.Select(c =>
+                new ChatInfo { Id = c.TelegramChatId, Title = c.Title });
+
+            int? oldPageLastNumber = ParseLastNumber(callbackQuery.Message!.Text!);
+            if (oldPageLastNumber is null || oldPageLastNumber >= chatInfos.Count())
+            {
+                return;
+            }
+            int startWith = oldPageLastNumber.Value + 1;
+
+            var page = GetChatPage(chatInfos, startWith, itemsCount: 10);
+
+            await botClient.EditMessageText(
+                chatId: callbackQuery.Message!.Chat.Id,
+                messageId: callbackQuery.Message.MessageId,
+                text: BotHelper.DefaultEscapeMarkdownV2(page),
+                parseMode: ParseMode.MarkdownV2,
+                replyMarkup: callbackQuery.Message.ReplyMarkup,
+                cancellationToken: cancellationToken);
+        }
+
+        public static async Task HandleChatDeletionSelectionAsync(
+            BotUser user,
+            Message message,
+            IUserService userService,
+            IUserbotApiService userbotApiService,
+            ITelegramBotClient botClient,
+            ILogger logger,
+            CancellationToken cancellationToken)
+        {
+            string[] chatIds = message.Text!.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (chatIds.Length == 0)
+            {
+                await BotHelper.SendTextMessageAsync(
+                    message.Chat.Id,
+                    "No chat IDs provided. Please send at least one ID.",
+                    botClient, logger, cancellationToken);
+                return;
+            }
+            List<long> removedChats = [];
+            foreach (string chatId in chatIds)
+            {
+                if (long.TryParse(chatId, out long parsedChatId))
+                {
+                    removedChats.Add(parsedChatId);
+                }
+                else
+                {
+                    await BotHelper.SendTextMessageAsync(
+                        message.Chat.Id,
+                        $"Invalid chat ID: {chatId}. Please provide valid numeric IDs.",
+                        botClient, logger, cancellationToken);
+                }
+            }
+            if (removedChats.Count == 0)
+            {
+                return;
+            }
+            FieldUpdateResult result = await userbotApiService.RemoveChatsAsync(user.TelegramUserId, removedChats);
+            if (!result.Success)
+            {
+                await BotHelper.SendTextMessageAsync(
+                    message.Chat.Id,
+                    $"Failed to untrack chats: {result.ErrorMessage}",
+                    botClient, logger, cancellationToken, parseMode: ParseMode.None);
+                return;
+            }
+            await userService.RemoveUserChatsAsync(user.TelegramUserId, removedChats);
             await BotHelper.SendTextMessageAsync(
                 message.Chat.Id,
-                "Chats successfully added!",
+                "Chats successfully untracked!",
                 botClient, logger, cancellationToken);
 
             await userService.SetUserStateAsync(user.TelegramUserId, UserState.Idle);

@@ -127,6 +127,13 @@ namespace TelegramForwardly.WebApi.Services
                 await clientsRepository.AddChatAsync(client, chat.Id, chat.Title);
         }
 
+        public async Task RemoveUserChatsAsync(long telegramUserId, List<long> removedChats)
+        {
+            var client = await clientsRepository.GetClientAsync(telegramUserId);
+            foreach (var chatId in removedChats)
+                await clientsRepository.RemoveChatAsync(client, chatId);
+        }
+
 
 
 

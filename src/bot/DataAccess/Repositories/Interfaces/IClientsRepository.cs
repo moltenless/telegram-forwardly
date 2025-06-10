@@ -29,5 +29,6 @@ namespace TelegramForwardly.DataAccess.Repositories.Interfaces
         Task SetClientAllChatsEnabledAsync(Client client, bool value);
         Task<HashSet<Chat>> GetClientChatsAsync(long telegramUserId);
         Task AddChatAsync(Client client, long telegramChatId, string title);
+        Task RemoveChatAsync(Client client, long chatId);
     }
 }

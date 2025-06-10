@@ -187,6 +187,29 @@ namespace TelegramForwardly.WebApi.Services
             }
         }
 
+        public async Task<FieldUpdateResult> RemoveChatsAsync(
+            long telegramUserId, List<long> removedChats)
+        {
+            try
+            {
+                var request = JsonSerializer.Serialize(new { user_id = telegramUserId, chats = removedChats });
+                var content = new StringContent(request, Encoding.UTF8, "application/json");
+                var response = await httpClient.PostAsync("api/user/chats/remove", content);
+                var result = JsonSerializer.Deserialize<FieldUpdateResult>(
+                    await response.Content.ReadAsStringAsync());
+                return result!;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error removing chats from user");
+                return new FieldUpdateResult
+                {
+                    Success = false,
+                    ErrorMessage = ex.Message
+                };
+            }
+        }
+
 
 
         public Task<bool> DisableForwardlyAsync(long telegramUserId)

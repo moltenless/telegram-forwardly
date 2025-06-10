@@ -146,7 +146,21 @@ namespace TelegramForwardly.WebApi.Services.Bot
                     break;
 
                 case "remove_chat":
+                    await ChatManager.StartChatDeletionAsync(
+                        user, callbackQuery, userService, userbotApiService,
+                        botClient, logger, cancellationToken);
+                    break;
 
+                case "deletion_page_back":
+                    await ChatManager.TurnDeletePageBackAsync(
+                        user, callbackQuery, userService, userbotApiService,
+                        botClient, logger, cancellationToken);
+                    break;
+
+                case "deletion_page_forward":
+                    await ChatManager.TurnDeletePageForwardAsync(
+                        user, callbackQuery, userService, userbotApiService,
+                        botClient, logger, cancellationToken);
                     break;
 
                 case "back_to_menu":
@@ -215,6 +229,12 @@ namespace TelegramForwardly.WebApi.Services.Bot
 
                 case UserState.AwaitingChats:
                     await ChatManager.HandleChatSelectionAsync(
+                        user, message, userService, userbotApiService,
+                        botClient, logger, cancellationToken);
+                    break;
+
+                case UserState.AwaitingRemoveChats:
+                    await ChatManager.HandleChatDeletionSelectionAsync(
                         user, message, userService, userbotApiService,
                         botClient, logger, cancellationToken);
                     break;
