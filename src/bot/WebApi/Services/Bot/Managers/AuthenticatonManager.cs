@@ -107,12 +107,14 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
                 await userService.SetUserAuthenticatedAsync(telegramUserId, false);
                 await userService.SetUserStateAsync(user.TelegramUserId, UserState.Idle);
                 user = await userService.GetUserAsync(telegramUserId);
+
+                string errorMessage = user.SessionString!.Trim().EndsWith('=') ? string.Empty : "Usually session strings end with '='\n";
                 await BotHelper.SendTextMessageAsync(
-                    chatId, $"❌ Authentication failed: {result.ErrorMessage}",
+                    chatId, errorMessage + $"❌ Authentication failed: {result.ErrorMessage}",
                     botClient, logger, cancellationToken);
                 await MenuManager.ShowMainMenuAsync(user, chatId, botClient, logger, cancellationToken);
                 return;
-            }//when cancelling is authenticated is FALSE 
+            } 
 
             await userService.SetUserAuthenticatedAsync(telegramUserId, true);
             await userService.SetUserStateAsync(user.TelegramUserId, UserState.Idle);
