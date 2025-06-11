@@ -238,7 +238,20 @@ class ClientManager:
             logger.error(f'Failed to enable all chats: {e}')
             return {'Success': False, 'ErrorMessage': f'Error adding chats to user: {e}'}
 
+    async def remove_chats(self, user_id, removed_chats):
+        try:
+            user = self.clients[user_id].user
 
+            for removed_chat_id in removed_chats:
+                for user_chat in user.chats:
+                    if user_chat.telegram_chat_id == removed_chat_id:
+                        user.chats.remove(user_chat)
+                        break
+
+            return {'Success': True}
+        except Exception as e:
+            logger.error(f'Failed to enable all chats: {e}')
+            return {'Success': False, 'ErrorMessage': f'Error removing chats for user: {e}'}
 
 
 

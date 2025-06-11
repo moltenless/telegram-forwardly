@@ -401,8 +401,9 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
             {
                 await BotHelper.SendTextMessageAsync(
                     message.Chat.Id,
-                    "Chats successfully added!\n" +
-                    "Now, please add some keywords to filter messages in chats.",
+                    "Chats successfully added!\n\n" +
+                    "Now, please add some keywords to filter messages in chats.\n" +
+                    "*Please click '📝 Keywords' in menu below*\nOr\n*Use /keywords*",
                     botClient, logger, cancellationToken);
                 await MenuManager.ShowMainMenuAsync(
                     user, message.Chat.Id,
@@ -578,6 +579,7 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
                 return;
             }
             await userService.RemoveUserChatsAsync(user.TelegramUserId, removedChats);
+
             await BotHelper.SendTextMessageAsync(
                 message.Chat.Id,
                 "Chats successfully untracked!",
