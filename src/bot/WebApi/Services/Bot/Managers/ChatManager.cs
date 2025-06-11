@@ -13,6 +13,7 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
     public static class ChatManager
     {
         public static async Task RunChatMenuAsync(
+            bool editSourceMessage,
             BotUser user,
             Message message,
             IUserService userService,
@@ -47,14 +48,22 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
                     InlineKeyboardButton.WithCallbackData("🏠 Back to Menu", "back_to_menu")]
             ]);
 
-            await botClient.DeleteMessage(
-                        chatId: message.Chat.Id, message.MessageId, cancellationToken);
-            await BotHelper.SendTextMessageAsync(
-                message.Chat.Id, "Selected chats:",
-                botClient, logger, cancellationToken);
-            await BotHelper.SendTextMessageAsync(
-                message.Chat.Id, startPage, botClient,
-                logger, cancellationToken, replyMarkup: keyboard);
+            if (editSourceMessage)
+            {
+                await botClient.EditMessageText(
+                    message.Chat.Id, 
+                    message.MessageId,
+                    BotHelper.DefaultEscapeMarkdownV2(startPage),
+                    parseMode: ParseMode.MarkdownV2,
+                    replyMarkup: keyboard, cancellationToken: cancellationToken);
+            }
+            else
+            {
+                await BotHelper.SendTextMessageAsync(
+                    message.Chat.Id, startPage,
+                    botClient, logger, cancellationToken,
+                    replyMarkup: keyboard);
+            }
         }
 
         public static async Task AskToEnableAllChatsAsync(
@@ -113,7 +122,7 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
 
             await userService.SetUserAllChatsEnabledAsync(user.TelegramUserId, (bool)enableAllChats);
 
-            await RunChatMenuAsync(user, message, userService, userbotApiService,
+            await RunChatMenuAsync(false, user, message, userService, userbotApiService,
                 botClient, logger, cancellationToken);
         }
 
@@ -252,7 +261,7 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
                     : chatIdWithPrefix;
 
                 sb.Append($"> *[{BotHelper.RemoveSpecialChars(chat.Title)}](https://t.me/c/{chatId}/1000000)*\n" +
-                    $"{i}   id: `{chatIdWithPrefix}`\n");
+                    $"{i}   id: `{chatIdWithPrefix} `\n");
             }
 
             return sb.ToString();
@@ -445,14 +454,10 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
                     message.Chat.Id,
                     "Chats successfully added!",
                     botClient, logger, cancellationToken);
-                await RunChatMenuAsync(user, message, userService, userbotApiService,
+                await RunChatMenuAsync(false, user, message, userService, userbotApiService,
                     botClient, logger, cancellationToken);
             }
         }
-
-
-
-
 
 
         public static async Task StartChatDeletionAsync(
@@ -618,7 +623,7 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
             await userService.SetUserStateAsync(user.TelegramUserId, UserState.Idle);
 
             user = await userService.GetUserAsync(user.TelegramUserId);
-            await RunChatMenuAsync(user, message, userService, userbotApiService,
+            await RunChatMenuAsync(false, user, message, userService, userbotApiService,
                 botClient, logger, cancellationToken);
         }
     }

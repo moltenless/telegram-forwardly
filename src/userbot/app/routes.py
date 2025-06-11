@@ -170,6 +170,55 @@ async def remove_chats():
         }), 500
 
 
+@api_bp.route('/user/keywords/add', methods=['POST'])
+async def add_keywords():
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        keywords = data.get('keywords')
+
+        result = event_loop_manager.run_coroutine(
+            current_app.client_manager.add_keywords(user_id, keywords)
+        )
+
+        if result.get('Success') is True:
+            return jsonify(result), 200
+        else:
+            return jsonify(result), 500
+
+    except Exception as e:
+        return jsonify({
+            'Success': False,
+            'ErrorMessage': f'Error adding keywords to user: {e}'
+        }), 500
+
+@api_bp.route('/user/keywords/remove', methods=['POST'])
+async def remove_keywords():
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        keywords_without_special_characters = data.get('keywordsWithoutSpecialCharacters')
+
+        result = event_loop_manager.run_coroutine(
+            current_app.client_manager.remove_keywords(
+                user_id,
+                keywords_without_special_characters)
+        )
+
+        if result.get('Success') is True:
+            return jsonify(result), 200
+        else:
+            return jsonify(result), 500
+
+    except Exception as e:
+        return jsonify({
+            'Success': False,
+            'ErrorMessage': f'Error removing keywords for user: {e}'
+        }), 500
+
+
+
+
 
 @api_bp.route('/user/update', methods=['POST'])
 def update_user():

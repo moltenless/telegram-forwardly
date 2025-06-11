@@ -211,6 +211,53 @@ namespace TelegramForwardly.WebApi.Services
         }
 
 
+        public async Task<FieldUpdateResult> AddKeywordsAsync(long telegramUserId, string[] keywords)
+        {
+            try
+            {
+                var request = JsonSerializer.Serialize(new { user_id = telegramUserId, keywords });
+                var content = new StringContent(request, Encoding.UTF8, "application/json");
+                var response = await httpClient.PostAsync("api/user/keywords/add", content);
+                var result = JsonSerializer.Deserialize<FieldUpdateResult>(
+                    await response.Content.ReadAsStringAsync());
+                return result!;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error adding keywords to user");
+                return new FieldUpdateResult
+                {
+                    Success = false,
+                    ErrorMessage = ex.Message
+                };
+            }
+        }
+
+        public async Task<FieldUpdateResult> RemoveKeywordsAsync(
+            long telegramUserId,
+            string[] keywordsWithoutSpecialCharacters)
+        {
+            try
+            {
+                var request = JsonSerializer.Serialize(new { user_id = telegramUserId, 
+                    keywordsWithoutSpecialCharacters });
+                var content = new StringContent(request, Encoding.UTF8, "application/json");
+                var response = await httpClient.PostAsync("api/user/keywords/remove", content);
+                var result = JsonSerializer.Deserialize<FieldUpdateResult>(
+                    await response.Content.ReadAsStringAsync());
+                return result!;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error removing keywords from user");
+                return new FieldUpdateResult
+                {
+                    Success = false,
+                    ErrorMessage = ex.Message
+                };
+            }
+        }
+
 
         public Task<bool> DisableForwardlyAsync(long telegramUserId)
         {

@@ -15,6 +15,10 @@ namespace TelegramForwardly.WebApi.Services.Interfaces
         Task<UserChatsResponse> AddChatsAsync(long telegramUserId, List<long> addedChats);
         Task<FieldUpdateResult> RemoveChatsAsync(long telegramUserId, List<long> removedChats);
 
+        Task<FieldUpdateResult> AddKeywordsAsync(long telegramUserId, string[] keywords);
+        Task<FieldUpdateResult> RemoveKeywordsAsync(long telegramUserId, 
+            string[] keywordsWithoutSpecialCharacters);
+
 
         Task<bool> EnableForwardlyAsync(long telegramUserId);
         Task<bool> DisableForwardlyAsync(long telegramUserId);

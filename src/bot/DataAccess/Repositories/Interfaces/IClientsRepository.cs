@@ -31,9 +31,13 @@ namespace TelegramForwardly.DataAccess.Repositories.Interfaces
         Task<HashSet<Chat>> GetClientChatsAsync(long telegramUserId);
         Task AddChatAsync(Client client, long telegramChatId, string title);
         Task RemoveChatAsync(Client client, long chatId);
-        Task UpdateClientDateAsync(Client client);
 
         Task<HashSet<Keyword>> GetClientKeywordsAsync(long telegramUserId);
+        Task AddKeywordAsync(Client client, string keyword);
+        Task RemoveKeywordAsync(Client client, string keywordWithoutSpecialCharacters, 
+            Func<string, string> specialCharactersRemover);
 
+
+        Task UpdateClientDateAsync(Client client);
     }
 }

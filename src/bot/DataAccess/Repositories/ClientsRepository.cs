@@ -190,6 +190,33 @@ namespace TelegramForwardly.DataAccess.Repositories
             return [.. client.Keywords];
         }
 
+        public async Task AddKeywordAsync(Client client, string keyword)
+        {
+            if (client.Keywords.Any(k => k.Value == keyword)) return;
+            var newKeyword = new Keyword
+            {
+                TelegramUserId = client.TelegramUserId,
+                Value = keyword,
+            };
+            context.Keywords.Add(newKeyword);
+            await context.SaveChangesAsync();
+        }
+
+        public async Task RemoveKeywordAsync(Client client, string keywordWithoutSpecialCharacters,
+            Func<string, string> specialCharactersRemover)
+        {
+            var clientKeywords = await context.Keywords.Where(k =>
+                k.TelegramUserId == client.TelegramUserId).ToListAsync();
+
+            var keywordEntity = clientKeywords.FirstOrDefault(
+                k => k.Value == keywordWithoutSpecialCharacters
+                || specialCharactersRemover(k.Value) == keywordWithoutSpecialCharacters);
+
+            if (keywordEntity == null) return;
+
+            context.Keywords.Remove(keywordEntity);
+            await context.SaveChangesAsync();
+        }
 
 
 

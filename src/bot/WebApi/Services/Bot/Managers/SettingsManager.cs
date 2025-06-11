@@ -85,7 +85,7 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
 
             response += user.Chats.Count == 0 ?
                 "\n\n_Now it is time to choose from what chats you want to extract messages with specific keywords_:\n" +
-               "*Please click '💬 Chats' in menu below*\nOr\n*Use /chats*" : string.Empty;
+               "*Please click '💬 Chats' in menu below*\nOr\n*Use /chats*\n_There you can also enable incoming messages tracking from all of your chats_" : string.Empty;
             await BotHelper.SendTextMessageAsync(
                 message.Chat.Id, response,
                 botClient, logger, cancellationToken);

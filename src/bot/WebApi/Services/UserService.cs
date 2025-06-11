@@ -140,6 +140,29 @@ namespace TelegramForwardly.WebApi.Services
             return [.. keywords.Select(Keyword.FromEntity)];
         }
 
+        public async Task AddUserKeywordsAsync(long telegramUserId, string[] keywords)
+        {
+            var client = await clientsRepository.GetClientAsync(telegramUserId);
+            foreach (var keyword in keywords)
+            {
+                if (string.IsNullOrWhiteSpace(keyword))
+                    continue;
+                await clientsRepository.AddKeywordAsync(client, keyword);
+            }   
+        }
+
+        public async Task RemoveKeywordsAsync(
+            long telegramUserId, 
+            string[] keywordsWithoutSpecialCharacters,
+            Func<string, string> specialCharactersRemover)
+        {
+            var client = await clientsRepository.GetClientAsync(telegramUserId);
+            foreach (var keywordWithoutSpecialCharacters in keywordsWithoutSpecialCharacters)
+                await clientsRepository.RemoveKeywordAsync(client, 
+                    keywordWithoutSpecialCharacters,
+                    specialCharactersRemover);
+        }
+
 
 
 

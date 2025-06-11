@@ -16,6 +16,7 @@ namespace TelegramForwardly.WebApi.Models.Dtos
         AwaitingForumGroup,      
         AwaitingGroupingType,
         AwaitingDeleteConfirmation,
-        AwaitingRemoveChats
+        AwaitingRemoveChats,
+        AwaitingRemoveKeywords
     }
 }

@@ -31,7 +31,8 @@ namespace TelegramForwardly.DataAccess.Context
                 new ClientCurrentState { Id = 9L, Value = "AwaitingForumGroup", },
                 new ClientCurrentState { Id = 10L, Value = "AwaitingGroupingType", },
                 new ClientCurrentState { Id = 11L, Value = "AwaitingDeleteConfirmation" },
-                new ClientCurrentState { Id = 12L, Value = "AwaitingRemoveChats" }
+                new ClientCurrentState { Id = 12L, Value = "AwaitingRemoveChats" },
+                new ClientCurrentState { Id = 13L, Value = "AwaitingRemoveKeywords" }
             );
         }
     }

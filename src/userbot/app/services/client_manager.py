@@ -7,7 +7,7 @@ from telethon.sessions import StringSession
 from telethon.tl.functions.channels import GetParticipantRequest
 from telethon.tl.types import ChannelParticipantCreator, User, ChatForbidden, ChannelForbidden
 
-from app.models import BotUser, UserClient, GroupingMode, Chat
+from app.models import BotUser, UserClient, GroupingMode, Chat, Keyword
 from app.services.telegram_api_service import TelegramApiService
 from app.utils import log_error, log_info
 
@@ -235,7 +235,7 @@ class ClientManager:
 
             return {'Success': True, 'Chats': chat_infos}
         except Exception as e:
-            logger.error(f'Failed to enable all chats: {e}')
+            logger.error(f'Error adding chats to user: {e}')
             return {'Success': False, 'ErrorMessage': f'Error adding chats to user: {e}'}
 
     async def remove_chats(self, user_id, removed_chats):
@@ -250,10 +250,51 @@ class ClientManager:
 
             return {'Success': True}
         except Exception as e:
-            logger.error(f'Failed to enable all chats: {e}')
+            logger.error(f'Error removing chats for user: {e}')
             return {'Success': False, 'ErrorMessage': f'Error removing chats for user: {e}'}
 
 
+    async def add_keywords(self, user_id, keywords):
+        try:
+            user = self.clients[user_id].user
+
+            for keyword in keywords:
+                try:
+                    if keyword in user.keywords: continue
+                    user.keywords.append(
+                        Keyword(telegram_user_id=user_id,
+                                value=keyword,
+                                id = -1))
+                except: continue
+
+            return {'Success': True}
+        except Exception as e:
+            logger.error(f'Error adding keywords to user: {e}')
+            return {'Success': False, 'ErrorMessage': f'Error adding keywords to user: {e}'}
+
+    async def remove_keywords(self, user_id, keywords_without_special_characters):
+        try:
+            user = self.clients[user_id].user
+
+            for keyword in keywords_without_special_characters:
+                for user_keyword in user.keywords:
+                    if (user_keyword.value == keyword
+                            or self.remove_special_chars(user_keyword.value)
+                            == keywords_without_special_characters):
+                        user.keywords.remove(user_keyword)
+                        break
+
+            return {'Success': True}
+        except Exception as e:
+            logger.error(f'Error removing keywords for user: {e}')
+            return {'Success': False, 'ErrorMessage': f'Error removing removing for user: {e}'}
+
+    def remove_special_chars(self, input_str: str) -> str:
+        special_chars = {'\\', '_', '*', '[', ']', '(', ')', '~', '`', '>', '<',
+                         '#', '+', '-', '=', '|', '{', '}', '.',
+                         '!'}
+        # special_chars = {'_', '*', '[', ']', '(', ')', '`', '|'}
+        return ''.join(c for c in input_str if c not in special_chars)
 
     async def update_user(self, user_data: BotUser) -> Dict[str, Any]:
         """Update user configuration and reconnect if necessary"""

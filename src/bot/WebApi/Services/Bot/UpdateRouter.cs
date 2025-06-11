@@ -50,13 +50,13 @@ namespace TelegramForwardly.WebApi.Services.Bot
 
                 case "/chats":
                     await ChatManager.RunChatMenuAsync(
-                        user, message, userService, userbotApiService,
+                        false, user, message, userService, userbotApiService,
                         botClient, logger, cancellationToken);
                     break;
 
                 case "/keywords":
                     await KeywordManager.EnterKeywordsAsync(
-                        user, message,
+                        false, user, message,
                         userService, botClient, logger, cancellationToken);
                     break;
 
@@ -106,13 +106,13 @@ namespace TelegramForwardly.WebApi.Services.Bot
 
                 case "chats":
                     await ChatManager.RunChatMenuAsync(
-                        user, callbackQuery.Message!, userService, userbotApiService,
+                        true, user, callbackQuery.Message!, userService, userbotApiService,
                         botClient, logger, cancellationToken);
                     break;
 
                 case "keywords":
                     await KeywordManager.EnterKeywordsAsync(
-                        user, callbackQuery.Message!,
+                        true, user, callbackQuery.Message!,
                         userService, botClient, logger, cancellationToken);
                     break;
 
@@ -122,6 +122,7 @@ namespace TelegramForwardly.WebApi.Services.Bot
                 case "help":
                     break;
 
+                // Chats menu buttons
                 case "chat_view_page_back":
                     await ChatManager.TurnViewPageBackAsync(
                         user, callbackQuery,
@@ -188,11 +189,52 @@ namespace TelegramForwardly.WebApi.Services.Bot
                     break;
 
                 case "back_to_chat_menu":
-                    await botClient.DeleteMessage(
-                        chatId: callbackQuery.Message!.Chat.Id, callbackQuery.Message.MessageId, cancellationToken);
                     await ChatManager.RunChatMenuAsync(
-                        user, callbackQuery.Message!,
+                        true, user, callbackQuery.Message!,
                         userService, userbotApiService,
+                        botClient, logger, cancellationToken);
+                    break;
+
+                ////////keywords menu buttons
+                case "keyword_view_page_back":
+                    await KeywordManager.TurnViewPageBackAsync(
+                        user, callbackQuery,
+                        userService, botClient, logger, cancellationToken);
+                    break;
+
+                case "keyword_view_page_forward":
+                    await KeywordManager.TurnViewPageForwardAsync(
+                        user, callbackQuery,
+                        userService, botClient, logger, cancellationToken);
+                    break;
+
+                case "add_keyword":
+                    await KeywordManager.StartKeywordAdditionAsync(
+                        user, callbackQuery, userService, userbotApiService,
+                        botClient, logger, cancellationToken);
+                    break;
+
+                case "remove_keyword":
+                    await KeywordManager.StartKeywordDeletionAsync(
+                        user, callbackQuery, userService, userbotApiService,
+                        botClient, logger, cancellationToken);
+                    break;
+
+                case "keyword_deletion_page_back":
+                    await KeywordManager.TurnDeletePageBackAsync(
+                        user, callbackQuery, userService, userbotApiService,
+                        botClient, logger, cancellationToken);
+                    break;
+
+                case "keyword_deletion_page_forward":
+                    await KeywordManager.TurnDeletePageForwardAsync(
+                        user, callbackQuery, userService, userbotApiService,
+                        botClient, logger, cancellationToken);
+                    break;
+
+                case "back_to_keyword_menu":
+                    await KeywordManager.EnterKeywordsAsync(
+                        true, user, callbackQuery.Message!, userService,
                         botClient, logger, cancellationToken);
                     break;
             }
@@ -252,6 +294,15 @@ namespace TelegramForwardly.WebApi.Services.Bot
                     break;
 
                 case UserState.AwaitingKeywords:
+                    await KeywordManager.HandleKeywordAdditionAsync(
+                        user, message, userService, userbotApiService,
+                        botClient, logger, cancellationToken);
+                    break;
+
+                case UserState.AwaitingRemoveKeywords:
+                    await KeywordManager.HandleKeywordDeletionAsync(
+                        user, message, userService, userbotApiService,
+                        botClient, logger, cancellationToken);
                     break;
 
                 case UserState.AwaitingForumGroup:
