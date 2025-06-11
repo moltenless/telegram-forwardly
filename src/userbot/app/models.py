@@ -8,14 +8,15 @@ class UserState(Enum):
     AWAITING_PHONE_NUMBER = "AwaitingPhoneNumber"
     AWAITING_API_ID = "AwaitingApiId"
     AWAITING_API_HASH = "AwaitingApiHash"
-    AWAITING_VERIFICATION_CODE = "AwaitingVerificationCode"
-    AWAITING_PASSWORD = "AwaitingPassword"
+    AWAITING_SESSION_STRING = "AwaitingSessionString"
     AWAITING_ENABLE_ALL_CHATS = "AwaitingEnableAllChats"
     AWAITING_CHATS = "AwaitingChats"
     AWAITING_KEYWORDS = "AwaitingKeywords"
     AWAITING_FORUM_GROUP = "AwaitingForumGroup"
     AWAITING_GROUPING_TYPE = "AwaitingGroupingType"
-    AWAITING_ENABLE_LOGGING_TOPIC = "AwaitingEnableLoggingTopic"
+    AWAITING_DELETE_CONFIRMATION = "AwaitingDeleteConfirmation"
+    AWAITING_REMOVE_CHATS = "AwaitingRemoveChats"
+    AWAITING_REMOVE_KEYWORDS = "AwaitingRemoveKeywords"
 
 class GroupingMode(Enum):
     BY_KEYWORD = "ByKeyword"
@@ -32,6 +33,7 @@ class Chat:
     id: int
     telegram_user_id: int
     telegram_chat_id: int
+    title: str
 
 @dataclass
 class BotUser:
@@ -46,10 +48,10 @@ class BotUser:
     user_name: Optional[str] = None
     first_name: Optional[str] = None
     forum_supergroup_id: Optional[int] = None
-    logging_topic_enabled: Optional[bool] = None
     topic_grouping: Optional[GroupingMode] = None
     forwardly_enabled: Optional[bool] = None
     all_chats_filtering_enabled: Optional[bool] = None
+
     keywords: List[Keyword] = field(default_factory=list)
     chats: List[Chat] = field(default_factory=list)
     

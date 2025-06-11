@@ -1,5 +1,5 @@
 telethon
-Flask
+flask[async]
 requests
 python-dotenv
 asyncio
