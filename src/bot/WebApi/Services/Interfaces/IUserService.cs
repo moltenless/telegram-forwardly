@@ -37,5 +37,10 @@ namespace TelegramForwardly.WebApi.Services.Interfaces
         Task AddChatAsync(long telegramUserId, long telegramChatId);
         Task RemoveChatAsync(long telegramUserId, long telegramChatId);
         Task RemoveUserChatsAsync(long telegramUserId, List<long> removedChats);
+
+        Task<HashSet<Keyword>> GetUserKeywordsAsync(long telegramUserId);
+
+
+        Task UpdateUserDateAsync(long telegramUserId);
     }
 }

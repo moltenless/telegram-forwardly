@@ -48,14 +48,18 @@ public class BotService(
         var user = await userService.GetOrCreateUserAsync(
             message.From!.Id, UserState.Idle, message.From!.Username, message.From!.FirstName);
 
+        //////
+        await userService.UpdateUserDateAsync(user.TelegramUserId);
+        //////
+
         var messageText = message.Text ?? string.Empty;
 
         if (messageText.StartsWith('/'))
         {
             await UpdateRouter.RouteCommandAsync(
                 user, message,
-                userService,
-                botClient, logger,
+                userService, userbotApiService,
+                botClient, logger, 
                 cancellationToken);
             return;
         }
@@ -71,6 +75,10 @@ public class BotService(
     {
         var user = await userService.GetOrCreateUserAsync(
             callbackQuery.From!.Id, UserState.Idle, callbackQuery.From!.Username, callbackQuery.From!.FirstName);
+
+        //////
+        await userService.UpdateUserDateAsync(user.TelegramUserId);
+        //////
 
         await botClient.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: cancellationToken);
 

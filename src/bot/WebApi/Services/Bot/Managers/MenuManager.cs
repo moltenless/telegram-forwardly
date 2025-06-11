@@ -87,32 +87,5 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
                 botClient, logger,
                 cancellationToken);
         }
-
-        public static async Task EnterChatsAsync(
-            BotUser user, 
-            long chatId,
-            IUserService userService, 
-            ITelegramBotClient botClient,
-            ILogger logger, 
-            CancellationToken cancellationToken)
-        {
-            if (!(bool)user.IsAuthenticated!)
-            {
-                await BotHelper.SendTextMessageAsync(chatId,
-                    "⚠️ Setup your credentials first with /setup or via button in menu.\n\n",
-                    botClient, logger,
-                    cancellationToken);
-                return;
-            }
-
-            await userService.SetUserStateAsync(user.TelegramUserId, UserState.AwaitingEnableAllChats);
-            await BotHelper.SendTextMessageAsync(
-                chatId,
-                "We recommend you to *select only those chats* where you expect to encounter specific keywords. To do so, *send me _'next'_*.\n\n" +
-                "Alternatively, If you want to automatically search and sort messages _from all chats, send me *'all'*_.\n" +
-                "However, *last approach is not recommended*, as it may lead to server overload and cause a mess in your forum",
-                botClient, logger,
-                cancellationToken);
-        }
     }
 }

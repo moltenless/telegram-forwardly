@@ -12,6 +12,7 @@ namespace TelegramForwardly.WebApi.Services.Bot
         public static async Task RouteCommandAsync(BotUser user,
             Message message,
             IUserService userService,
+            IUserbotApiService userbotApiService,
             ITelegramBotClient botClient,
             ILogger logger,
             CancellationToken cancellationToken)
@@ -48,12 +49,15 @@ namespace TelegramForwardly.WebApi.Services.Bot
                     break;
 
                 case "/chats":
-                    await MenuManager.EnterChatsAsync(
-                        user, message.Chat.Id,
-                        userService, botClient, logger, cancellationToken);
+                    await ChatManager.RunChatMenuAsync(
+                        user, message, userService, userbotApiService,
+                        botClient, logger, cancellationToken);
                     break;
 
                 case "/keywords":
+                    await KeywordManager.EnterKeywordsAsync(
+                        user, message,
+                        userService, botClient, logger, cancellationToken);
                     break;
 
                 case "/status":
@@ -101,12 +105,15 @@ namespace TelegramForwardly.WebApi.Services.Bot
                     break;
 
                 case "chats":
-                    await MenuManager.EnterChatsAsync(
-                        user, callbackQuery.Message!.Chat.Id,
-                        userService, botClient, logger, cancellationToken);
+                    await ChatManager.RunChatMenuAsync(
+                        user, callbackQuery.Message!, userService, userbotApiService,
+                        botClient, logger, cancellationToken);
                     break;
 
                 case "keywords":
+                    await KeywordManager.EnterKeywordsAsync(
+                        user, callbackQuery.Message!,
+                        userService, botClient, logger, cancellationToken);
                     break;
 
                 case "status":
@@ -115,13 +122,13 @@ namespace TelegramForwardly.WebApi.Services.Bot
                 case "help":
                     break;
 
-                case "view_page_back":
+                case "chat_view_page_back":
                     await ChatManager.TurnViewPageBackAsync(
                         user, callbackQuery,
                         userService, botClient, logger, cancellationToken);
                     break;
 
-                case "view_page_forward":
+                case "chat_view_page_forward":
                     await ChatManager.TurnViewPageForwardAsync(
                         user, callbackQuery,
                         userService, botClient, logger, cancellationToken);
@@ -133,13 +140,13 @@ namespace TelegramForwardly.WebApi.Services.Bot
                         botClient, logger, cancellationToken);
                     break;
 
-                case "addition_page_back":
+                case "chat_addition_page_back":
                     await ChatManager.TurnAddPageBackAsync(
-                        user, callbackQuery, userService, userbotApiService, 
+                        user, callbackQuery, userService, userbotApiService,
                         botClient, logger, cancellationToken);
                     break;
 
-                case "addition_page_forward":
+                case "chat_addition_page_forward":
                     await ChatManager.TurnAddPageForwardAsync(
                         user, callbackQuery, userService, userbotApiService,
                         botClient, logger, cancellationToken);
@@ -151,15 +158,21 @@ namespace TelegramForwardly.WebApi.Services.Bot
                         botClient, logger, cancellationToken);
                     break;
 
-                case "deletion_page_back":
+                case "chat_deletion_page_back":
                     await ChatManager.TurnDeletePageBackAsync(
                         user, callbackQuery, userService, userbotApiService,
                         botClient, logger, cancellationToken);
                     break;
 
-                case "deletion_page_forward":
+                case "chat_deletion_page_forward":
                     await ChatManager.TurnDeletePageForwardAsync(
                         user, callbackQuery, userService, userbotApiService,
+                        botClient, logger, cancellationToken);
+                    break;
+
+                case "enable_all_chats":
+                    await ChatManager.AskToEnableAllChatsAsync(
+                        user, callbackQuery.Message!, userService,
                         botClient, logger, cancellationToken);
                     break;
 
@@ -175,7 +188,6 @@ namespace TelegramForwardly.WebApi.Services.Bot
                     break;
 
                 case "back_to_chat_menu":
-                    await userService.SetUserStateAsync(user.TelegramUserId, UserState.Idle);
                     await botClient.DeleteMessage(
                         chatId: callbackQuery.Message!.Chat.Id, callbackQuery.Message.MessageId, cancellationToken);
                     await ChatManager.RunChatMenuAsync(

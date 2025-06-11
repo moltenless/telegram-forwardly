@@ -3,6 +3,7 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
+using TelegramForwardly.DataAccess.Entities;
 using TelegramForwardly.WebApi.Models.Dtos;
 using TelegramForwardly.WebApi.Models.Responses;
 using TelegramForwardly.WebApi.Services.Interfaces;
@@ -11,6 +12,69 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
 {
     public static class ChatManager
     {
+        public static async Task RunChatMenuAsync(
+            BotUser user,
+            Message message,
+            IUserService userService,
+            IUserbotApiService userbotApiService,
+            ITelegramBotClient botClient,
+            ILogger logger,
+            CancellationToken cancellationToken)
+        {
+            if (!(bool)user.IsAuthenticated!)
+            {
+                await BotHelper.SendTextMessageAsync(message.Chat.Id,
+                    "⚠️ Setup your credentials first with /setup or via button in menu.\n\n",
+                    botClient, logger,
+                    cancellationToken);
+                return;
+            }
+
+            await userService.SetUserStateAsync(user.TelegramUserId, UserState.Idle);
+
+            var chats = await userService.GetUserChatsAsync(user.TelegramUserId);
+            IEnumerable<ChatInfo> chatInfos = chats.Select(c =>
+                new ChatInfo { Id = c.TelegramChatId, Title = c.Title });
+            var startPage = GetChatPage(chatInfos, startWith: 1, itemsCount: 10);
+
+            var keyboard = new InlineKeyboardMarkup(
+            [
+                [InlineKeyboardButton.WithCallbackData("⬅️ Page Back", "chat_view_page_back"),
+                    InlineKeyboardButton.WithCallbackData("Page Forward ➡️", "chat_view_page_forward")],
+                [ InlineKeyboardButton.WithCallbackData("➕ Add Chat", "add_chat"),
+                    InlineKeyboardButton.WithCallbackData("🗑️ Remove Chat", "remove_chat") ],
+                [ InlineKeyboardButton.WithCallbackData("🌐 Track All Chats", "enable_all_chats"),
+                    InlineKeyboardButton.WithCallbackData("🏠 Back to Menu", "back_to_menu")]
+            ]);
+
+            await botClient.DeleteMessage(
+                        chatId: message.Chat.Id, message.MessageId, cancellationToken);
+            await BotHelper.SendTextMessageAsync(
+                message.Chat.Id, "Selected chats:",
+                botClient, logger, cancellationToken);
+            await BotHelper.SendTextMessageAsync(
+                message.Chat.Id, startPage, botClient,
+                logger, cancellationToken, replyMarkup: keyboard);
+        }
+
+        public static async Task AskToEnableAllChatsAsync(
+            BotUser user,
+            Message message,
+            IUserService userService,
+            ITelegramBotClient botClient,
+            ILogger logger,
+            CancellationToken cancellationToken)
+        {
+            await userService.SetUserStateAsync(user.TelegramUserId, UserState.AwaitingEnableAllChats);
+            await BotHelper.SendTextMessageAsync(
+                message.Chat.Id,
+                "We recommend you to *select only those chats* where you expect to encounter specific keywords. To do so, *send me _'next'_*.\n\n" +
+                "Alternatively, If you want to automatically search and sort messages _from all chats, send me *'all'*_.\n" +
+                "However, *last approach is not recommended*, as it may lead to server overload and cause a mess in your forum",
+                botClient, logger,
+                cancellationToken);
+        }
+
         public static async Task HandleAllChatsToggleAsync(
             BotUser user,
             Message message,
@@ -48,41 +112,9 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
             }
 
             await userService.SetUserAllChatsEnabledAsync(user.TelegramUserId, (bool)enableAllChats);
-            await userService.SetUserStateAsync(user.TelegramUserId, UserState.Idle);
 
             await RunChatMenuAsync(user, message, userService, userbotApiService,
                 botClient, logger, cancellationToken);
-        }
-
-        public static async Task RunChatMenuAsync(
-            BotUser user,
-            Message message,
-            IUserService userService,
-            IUserbotApiService userbotApiService,
-            ITelegramBotClient botClient,
-            ILogger logger,
-            CancellationToken cancellationToken)
-        {
-            var chats = await userService.GetUserChatsAsync(user.TelegramUserId);
-            IEnumerable<ChatInfo> chatInfos = chats.Select(c =>
-                new ChatInfo { Id = c.TelegramChatId, Title = c.Title });
-            var startPage = GetChatPage(chatInfos, startWith: 1, itemsCount: 10);
-
-            var keyboard = new InlineKeyboardMarkup(
-            [
-                [InlineKeyboardButton.WithCallbackData("⬅️ Page Back", "view_page_back"),
-                    InlineKeyboardButton.WithCallbackData("Page Forward ➡️", "view_page_forward")],
-                [ InlineKeyboardButton.WithCallbackData("➕ Add Chat", "add_chat"),
-                    InlineKeyboardButton.WithCallbackData("🗑️ Remove Chat", "remove_chat") ],
-                [ InlineKeyboardButton.WithCallbackData("🏠 Back to Menu", "back_to_menu") ]
-            ]);
-
-            await BotHelper.SendTextMessageAsync(
-                message.Chat.Id, "Selected chats:",
-                botClient, logger, cancellationToken);
-            await BotHelper.SendTextMessageAsync(
-                message.Chat.Id, startPage, botClient,
-                logger, cancellationToken, replyMarkup: keyboard);
         }
 
         public static async Task StartChatAdditionAsync(
@@ -109,8 +141,8 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
 
             var keyboard = new InlineKeyboardMarkup(
             [
-                [InlineKeyboardButton.WithCallbackData("⬅️ Page Back", "addition_page_back"),
-                    InlineKeyboardButton.WithCallbackData("Page Forward ➡️", "addition_page_forward")],
+                [InlineKeyboardButton.WithCallbackData("⬅️ Page Back", "chat_addition_page_back"),
+                    InlineKeyboardButton.WithCallbackData("Page Forward ➡️", "chat_addition_page_forward")],
                 [ InlineKeyboardButton.WithCallbackData("💬 Back to Chat Menu", "back_to_chat_menu")]]);
 
             await botClient.EditMessageText(
@@ -129,8 +161,6 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
 
             await userService.SetUserStateAsync(user.TelegramUserId, UserState.AwaitingChats);
         }
-
-
 
         public static async Task TurnViewPageBackAsync(
             BotUser user,
@@ -441,8 +471,8 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
 
             var keyboard = new InlineKeyboardMarkup(
             [
-                [InlineKeyboardButton.WithCallbackData("⬅️ Page Back", "deletion_page_back"),
-                    InlineKeyboardButton.WithCallbackData("Page Forward ➡️", "deletion_page_forward")],
+                [InlineKeyboardButton.WithCallbackData("⬅️ Page Back", "chat_deletion_page_back"),
+                    InlineKeyboardButton.WithCallbackData("Page Forward ➡️", "chat_deletion_page_forward")],
                 [ InlineKeyboardButton.WithCallbackData("💬 Back to Chat Menu", "back_to_chat_menu")]]);
 
             await botClient.EditMessageText(

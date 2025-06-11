@@ -115,8 +115,7 @@ namespace TelegramForwardly.WebApi.Services
 
         public async Task<HashSet<Chat>> GetUserChatsAsync(long telegramUserId)
         {
-            HashSet<DataAccess.Entities.Chat> chats =
-                    await clientsRepository.GetClientChatsAsync(telegramUserId);
+            var chats = await clientsRepository.GetClientChatsAsync(telegramUserId);
             return [.. chats.Select(Chat.FromEntity)];
         }
 
@@ -132,6 +131,13 @@ namespace TelegramForwardly.WebApi.Services
             var client = await clientsRepository.GetClientAsync(telegramUserId);
             foreach (var chatId in removedChats)
                 await clientsRepository.RemoveChatAsync(client, chatId);
+        }
+
+
+        public async Task<HashSet<Keyword>> GetUserKeywordsAsync(long telegramUserId)
+        {
+            var keywords = await clientsRepository.GetClientKeywordsAsync(telegramUserId);
+            return [.. keywords.Select(Keyword.FromEntity)];
         }
 
 
@@ -164,6 +170,14 @@ namespace TelegramForwardly.WebApi.Services
 
         public async Task RemoveUserKeywordAsync(long telegramUserId, string keyword)
         {
+        }
+
+
+
+        public async Task UpdateUserDateAsync(long telegramUserId)
+        {
+            var client = await clientsRepository.GetClientAsync(telegramUserId);
+            await clientsRepository.UpdateClientDateAsync(client);
         }
     }
 }
