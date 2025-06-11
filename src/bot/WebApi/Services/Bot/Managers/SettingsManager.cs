@@ -1,0 +1,98 @@
+﻿using Telegram.Bot;
+using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
+using TelegramForwardly.WebApi.Models.Dtos;
+using TelegramForwardly.WebApi.Models.Responses;
+using TelegramForwardly.WebApi.Services.Interfaces;
+
+namespace TelegramForwardly.WebApi.Services.Bot.Managers
+{
+    public static class SettingsManager
+    {
+        public static async Task HandleTopicGroupId(
+            BotUser user,
+            Message message,
+            IUserService userService,
+            IUserbotApiService userbotApiService,
+            ITelegramBotClient botClient,
+            ILogger logger,
+            CancellationToken cancellationToken)
+        {
+            long forumId = long.Parse(message.Text!);
+
+            FieldUpdateResult result = await userbotApiService.UpdateUserForumAsync(user.TelegramUserId, forumId);
+            if (!result.Success)
+            {
+                await BotHelper.SendTextMessageAsync(
+                    message.Chat.Id,
+                    $"Failed to set forum/group ID: {result.ErrorMessage}",
+                    botClient, logger, cancellationToken, parseMode: ParseMode.None);
+                return;
+            }
+
+            await userService.UpdateUserForumIdAsync(user.TelegramUserId, forumId);
+            await userService.SetUserStateAsync(user.TelegramUserId, UserState.AwaitingGroupingType);
+
+            await BotHelper.SendTextMessageAsync(
+                message.Chat.Id,
+                "Please select the grouping/sorting type of filtered messages: \nBy keywords (default) - send '1'\nBy chat titles - send '2'",
+                botClient, logger, cancellationToken, parseMode: ParseMode.None);
+        }
+
+        public static async Task HandleGroupingTypeInputAsync(
+            BotUser user,
+            Message message,
+            IUserService userService,
+            IUserbotApiService userbotApiService,
+            ITelegramBotClient botClient,
+            ILogger logger,
+            CancellationToken cancellationToken)
+        {
+            GroupingMode mode;
+            string response;
+            if (message.Text == "1")
+            {
+                mode = GroupingMode.ByKeyword;
+                response = "You have selected grouping by keywords.";
+            }
+            else if (message.Text == "2")
+            {
+                mode = GroupingMode.ByChat;
+                response = "You have selected grouping by chat titles.";
+            }
+            else
+            {
+                await BotHelper.SendTextMessageAsync(// if something null go to chats settings
+                    message.Chat.Id,
+                    "Invalid input. Please send '1' for keywords grouping or '2' for chat titles grouping.",
+                    botClient, logger, cancellationToken);
+                return;
+            }
+
+            var result = await userbotApiService.UpdateUserGroupingAsync(user.TelegramUserId, mode);
+
+            if (!result.Success)
+            {
+                await BotHelper.SendTextMessageAsync(
+                    message.Chat.Id,
+                    $"Failed to set grouping mode: {result.ErrorMessage}",
+                    botClient, logger, cancellationToken, parseMode: ParseMode.None);
+                return;
+            }
+
+            await userService.SetUserGroupingModeAsync(user.TelegramUserId, mode);
+            await userService.SetUserStateAsync(user.TelegramUserId, UserState.Idle);
+
+            response += user.Chats.Count == 0 ?
+                "\n\n_Now it is time to choose from what chats you want to extract messages with specific keywords_:\n" +
+               "*Please click '💬 Chats' in menu below*\nOr\n*Use /chats*\n_There you can also enable incoming messages tracking from all of your chats_" : string.Empty;
+            await BotHelper.SendTextMessageAsync(
+                message.Chat.Id, response,
+                botClient, logger, cancellationToken);
+
+            await MenuManager.ShowMainMenuAsync(
+                user, message.Chat.Id,
+                botClient, logger, cancellationToken);
+        }
+    }
+}

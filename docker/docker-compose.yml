@@ -1,0 +1,85 @@
+name: telegram-forwardly
+
+services:
+
+    db:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        container_name: forwardly-db
+        environment:
+            - ACCEPT_EULA=Y
+            - MSSQL_SA_PASSWORD=${MSSQL_SA_PASSWORD}
+        volumes:
+            - forwardly_db_data:/var/opt/mssql
+        ports:
+            - "1433:1433"
+        restart: unless-stopped
+        networks:
+            - forwardly-network
+
+    bot:
+        build:
+            context: ..
+            dockerfile: src/bot/WebApi/Dockerfile
+        container_name: forwardly-bot
+        environment:
+            - ASPNETCORE_HTTP_PORTS=8080
+            - ASPNETCORE_URLS=http://+:8080
+            - ConnectionStrings__DefaultConnection=Server=db,1433;Database=telegram_forwardly;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;
+            - TelegramBot__BotToken=${TELEGRAM_BOT_TOKEN}
+            - TelegramBot__UseWebhook=false
+            - TelegramBot__WebhookUrl=https://telegram-forwardly.com
+            - TelegramBot__UserbotApiBaseUrl=http://userbot:5000
+            - TelegramBot__AuthApiBaseUrl=http://auth:8000
+        volumes:
+            - ../storage/logs:/app/logs
+        ports:
+            - "8080:8080"
+        depends_on:
+            - db
+        restart: unless-stopped
+        networks:
+            - forwardly-network
+        
+    userbot:
+        build:
+            context: ..
+            dockerfile: src/userbot/Dockerfile
+        container_name: forwardly-userbot
+        environment:
+            - TELEGRAM_BOT_API_URL=http://bot:8080/api
+            - SECRET_KEY=${USERBOT_SECRET_KEY}
+            - FLASK_DEBUG=False
+            - USERS_UPDATE_INTERVAL_MINUTES=30
+            - LOG_LEVEL=INFO
+            - PYTHONPATH=/app
+            - FLASK_APP=main.py
+        volumes:
+            - ../storage/logs:/app/logs
+        ports:
+            - "5000:5000"
+        depends_on:
+            - bot
+        restart: unless-stopped
+        networks:
+            - forwardly-network
+
+    auth:
+        build:
+            context: ..
+            dockerfile: src/auth/Dockerfile
+        container_name: forwardly-auth
+        environment:
+            - TELEGRAM_BOT_API_URL=http://bot:8080/api
+        ports:
+            - "8000:8000"
+        networks:
+            - forwardly-network
+
+volumes:
+    forwardly_db_data:
+        name: forwardly_db_data
+    
+networks:
+    forwardly-network:
+        name: forwardly-network
+        driver: bridge

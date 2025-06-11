@@ -1,0 +1,7 @@
+telethon
+flask[async]
+requests
+python-dotenv
+asyncio
+aiohttp
+APScheduler
