@@ -35,7 +35,7 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
 
             await BotHelper.SendTextMessageAsync(
                 message.Chat.Id,
-                "Please select the grouping/sorting type of filtered messages: \nBy keywords (default) - send '1'\nBy chat titles - send '2'",
+                "Please select the grouping/sorting type of filtered messages: \nBy keywords - send '1'\nBy chat titles - send '2'",
                 botClient, logger, cancellationToken, parseMode: ParseMode.None);
         }
 

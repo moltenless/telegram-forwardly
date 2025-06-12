@@ -48,9 +48,12 @@ public class BotService(
         var user = await userService.GetOrCreateUserAsync(
             message.From!.Id, UserState.Idle, message.From!.Username, message.From!.FirstName);
 
-        //////
+        ///////////////////////////////////////////////////////////////
         await userService.UpdateUserDateAsync(user.TelegramUserId);
-        //////
+
+
+        ////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////
 
         var messageText = message.Text ?? string.Empty;
 

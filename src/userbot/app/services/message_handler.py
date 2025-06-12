@@ -7,7 +7,6 @@ from telethon.tl.functions.channels import GetForumTopicsRequest, CreateForumTop
 from telethon.tl.types import Message
 from app.models import UserClient, GroupingMode
 from app.services.telegram_api_service import TelegramApiService
-from app.utils import log_error, log_info
 
 logger = logging.getLogger(__name__)
 
@@ -21,30 +20,41 @@ class MessageHandler:
             # me = await user_client.client.get_me()
             # await user_client.client.send_message(entity=me, message=f"somebody wrote: {event.message.text}")
             # return None
+
             source_chat = await event.get_chat()
 
-            if source_chat.id == user_client.user.forum_supergroup_id:
+            if (source_chat.id == user_client.user.forum_supergroup_id or
+                '-100' + str(source_chat.id) == str(user_client.user.forum_supergroup_id)):
                 return
             if user_client.user.forwardly_enabled is None or user_client.user.forwardly_enabled is False:
-                logger.warning(f"text: '{event.message.text}' has been filtered on 'forwardly enabled' stage")
                 return
             if not user_client.user.forum_supergroup_id:
-                logger.warning(f"text: '{event.message.text}' has been filtered on 'forum supergroup id' stage")
                 return
             if ((not user_client.user.chats or len(user_client.user.chats) == 0)
                     and not user_client.user.all_chats_filtering_enabled):
-                logger.warning(f"text: '{event.message.text}' has been filtered on 'chats' stage")
                 return
             if not user_client.user.keywords or len(user_client.user.keywords) == 0:
-                logger.warning(f"text: '{event.message.text}' has been filtered on 'keywords' stage")
                 return
             if not self._is_chat_monitored(source_chat.id, user_client):
-                logger.warning(f"text: '{event.message.text}' has been filtered on 'chats is monitored' stage")
                 return
-            if not self._message_contains_keywords(event.message, user_client.user.keywords):
-                logger.warning(f"text: '{event.message.text}' has been filtered on 'message contains keywords' stage")
+            detected_kws = self._message_contains_keywords(event.message, user_client.user.keywords)
+            if detected_kws is None or len(detected_kws) == 0:
                 return
-            await self._forward_message(event.message, source_chat.id, user_client)
+
+            sender = await event.get_sender()
+            event_data = {
+                'text': event.message.text,
+                'detected_kws': detected_kws,
+                'date_time' : event.message.date,
+                'source_chat_id' : source_chat.id,
+                'source_chat_title' : source_chat.title if hasattr(source_chat, 'title') else f'Chat {source_chat.id}',
+                'message_id' : event.message.id,
+                'user_id' : sender.id,
+                'username' : sender.username,
+                'first_name' : sender.first_name if hasattr(sender, 'first_name') else ''
+            }
+
+            await self._forward_message(event_data, user_client)
 
         except Exception as e:
             logger.error(f"Error handling message for user {user_client.user.telegram_user_id}: {e}")
@@ -52,24 +62,21 @@ class MessageHandler:
     def _is_chat_monitored(self, chat_id: int, user_client: UserClient) -> bool:
         if user_client.user.all_chats_filtering_enabled:
             return True
-        logger.info(f"inside chat monitored:\n\nchat_id(from event) is '{chat_id}\n'")
         monitored_chat_ids = [chat.telegram_chat_id for chat in user_client.user.chats]
-        logger.info(f"meanwhile monitored chats of that user is \n{monitored_chat_ids}\n")
         return chat_id in monitored_chat_ids
 
-    def _message_contains_keywords(self, message: Message, keywords: List) -> bool:
+    def _message_contains_keywords(self, message: Message, keywords: List) -> List[str]:
         if not keywords or not message.text:
-            return False
+            return []
         message_text = message.text.lower()
         keyword_values = [kw.value.lower() for kw in keywords]
-        return any(keyword in message_text for keyword in keyword_values)
+        return [keyword for keyword in keyword_values if keyword in message_text]
 
-    async def _forward_message(self, message: Message, source_chat_id: int, user_client: UserClient):
+    async def _forward_message(self, event_data, user_client: UserClient):
         try:
-            chat = await user_client.client.get_entity(source_chat_id)
-            chat_title = getattr(chat, 'title', f'Chat {source_chat_id}')
-
-            topic_name = self._get_topic_name(message, chat_title, user_client)
+            topic_name = self._get_topic_name(event_data.get('source_chat_title'),
+                                              (event_data.get('detected_kws'))[0],
+                                              user_client)
 
             topic_id = await self._get_or_create_topic(
                 user_client.client,
@@ -77,7 +84,12 @@ class MessageHandler:
                 topic_name
             )
 
-            final_text = f'{message.from_id.user_id} said: {message.text}'
+            final_text = (f"{event_data.get('text')}\n\n"
+                          f"Link to message: https://t.me/c/{event_data.get('source_chat_id')}/{event_data.get('message_id')}\n"
+                          f"Detected keywords: {', '.join(event_data.get('detected_kws'))}\n"
+                          f"From chat: {event_data.get('source_chat_title')}\n"
+                          f"Message by: {event_data.get('first_name')} {'@' + event_data.get('username') if event_data.get('username') else ''}\n"
+                          f"Time: {event_data.get('date_time').strftime('%H:%M | %d.%m ')}")
 
             await user_client.client.send_message(
                 entity=user_client.user.forum_supergroup_id,
@@ -86,18 +98,13 @@ class MessageHandler:
             )
 
         except Exception as e:
-            log_error(f"Failed to forward message for user {user_client.user.telegram_user_id}", e)
+            logger.error(f"Failed to forward message for user {user_client.user.telegram_user_id}", e)
 
-    def _get_topic_name(self, message: Message, chat_title: str, user_client: UserClient) -> str:
+    def _get_topic_name(self, chat_title: str, first_detected_kw: str, user_client: UserClient) -> str:
         if user_client.user.topic_grouping == GroupingMode.BY_CHAT:
             return chat_title
         else:
-            if message.text:
-                message_text = message.text.lower()
-                for keyword in user_client.user.keywords:
-                    if keyword.value.lower() in message_text:
-                        return keyword.value.capitalize()
-            return "General"
+            return first_detected_kw.capitalize()
 
     async def _get_or_create_topic(self, client: TelegramClient, forum_id: int, topic_name: str) -> Optional[int]:
         try:
@@ -124,10 +131,16 @@ class MessageHandler:
 
     async def _find_topic_by_title(self, client: TelegramClient, forum_id: int, topic_title: str) -> Optional[int]:
         try:
+            try:
+                forum = await client.get_entity(forum_id)
+            except Exception as e:
+                logger.error(f"Failed to get forum entity {forum_id}: {e}")
+                return None
+
             for attempt in range(3):
                 try:
                     result = await client(GetForumTopicsRequest(
-                        channel=forum_id,
+                        channel=forum,
                         offset_date=None,
                         offset_id=0,
                         offset_topic=0,
@@ -138,7 +151,6 @@ class MessageHandler:
                         for topic in result.topics:
                             if hasattr(topic, 'title') and hasattr(topic, 'id'):
                                 if topic.title.lower() == topic_title.lower():
-                                    logger.info(f"Found existing topic '{topic_title}' with ID {topic.id}")
                                     return topic.id
 
                     return None
@@ -168,10 +180,16 @@ class MessageHandler:
 
     async def _create_topic(self, client: TelegramClient, forum_id: int, topic_name: str) -> Optional[int]:
         try:
+            try:
+                forum = await client.get_entity(forum_id)
+            except Exception as e:
+                logger.error(f"Failed to get forum entity {forum_id}: {e}")
+                return None
+
             for attempt in range(3):
                 try:
                     result = await client(CreateForumTopicRequest(
-                        channel=forum_id,
+                        channel=forum,
                         title=topic_name,
                         icon_color=None,
                         icon_emoji_id=None,
@@ -182,7 +200,6 @@ class MessageHandler:
                         for update in result.updates:
                             if hasattr(update, 'message') and hasattr(update.message, 'id'):
                                 topic_id = update.message.id
-                                logger.info(f"Created topic '{topic_name}' with ID {topic_id} in forum {forum_id}")
                                 return topic_id
 
                     logger.error(f"Unexpected result format when creating topic '{topic_name}'")
