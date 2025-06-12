@@ -22,7 +22,11 @@ class MessageHandler:
             # return None
 
             source_chat = await event.get_chat()
+            sender = await event.get_sender()
 
+            if sender.id == user_client.user.telegram_user_id:
+                return
+            ######################## if sender isn't forwardly bot!!!!!!!!!!
             if (source_chat.id == user_client.user.forum_supergroup_id or
                 '-100' + str(source_chat.id) == str(user_client.user.forum_supergroup_id)):
                 return
@@ -41,7 +45,6 @@ class MessageHandler:
             if detected_kws is None or len(detected_kws) == 0:
                 return
 
-            sender = await event.get_sender()
             event_data = {
                 'text': event.message.text,
                 'detected_kws': detected_kws,
