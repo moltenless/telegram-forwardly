@@ -25,7 +25,7 @@ namespace TelegramForwardly.DataAccess.Repositories
                     FirstName = firstNameIfNew,
                     RegistrationDataTime = DateTime.UtcNow,
                     IsAuthenticated = false,
-                    ForwardlyEnabled = false,
+                    ForwardlyEnabled = true,
                     TopicGrouping = "ByKeyword",
                     AllChatsFilteringEnabled = false,
                 };
