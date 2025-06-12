@@ -1,6 +1,9 @@
+import asyncio
 import logging
 from typing import Optional, List
-from telethon import events
+from telethon import events, TelegramClient
+from telethon.errors import FloodWaitError
+from telethon.tl.functions.channels import GetForumTopicsRequest, CreateForumTopicRequest
 from telethon.tl.types import Message
 from app.models import UserClient, GroupingMode
 from app.services.telegram_api_service import TelegramApiService
@@ -10,97 +13,75 @@ logger = logging.getLogger(__name__)
 
 
 class MessageHandler:
-    """Handles incoming Telegram messages and forwards them"""
-
     def __init__(self):
         self.telegram_api = TelegramApiService()
 
     async def handle_message(self, event: events.NewMessage.Event, user_client: UserClient):
-        """Handle incoming message from user's monitored chats"""
         try:
-            if not user_client.user.forwardly_enabled:
+            # me = await user_client.client.get_me()
+            # await user_client.client.send_message(entity=me, message=f"somebody wrote: {event.message.text}")
+            # return None
+
+            if user_client.user.forwardly_enabled is None or user_client.user.forwardly_enabled is False:
+                return
+            if not user_client.user.forum_supergroup_id:
+                return
+            if ((not user_client.user.chats or len(user_client.user.chats) == 0)
+                    and not user_client.user.all_chats_filtering_enabled):
+                return
+            if not user_client.user.keywords or len(user_client.user.keywords) == 0:
+                return
+            if not self._is_chat_monitored(event.chat_id, user_client):
+                return
+            if not self._message_contains_keywords(event.message, user_client.user.keywords):
                 return
 
-            #if not forumsupergroupid - return
-
-            #     monitored_chat_ids = [chat.telegram_chat_id for chat in user_client.user.chats]
-            #
-            #     if not monitored_chat_ids and not user_client.user.all_chats_filtering_enabled:
-            #         return
-
-            #if there isn't single keyword - return
-
-            message = event.message
-            chat_id = event.chat_id
-
-            # Check if this chat should be monitored
-            if not self._is_chat_monitored(chat_id, user_client):
-                return
-
-            # Check if message contains keywords
-            if not self._message_contains_keywords(message, user_client.user.keywords):
-                return
-
-            # Forward the message
-            await self._forward_message(message, chat_id, user_client)
+            await self._forward_message(event.message, event.chat_id, user_client)
 
         except Exception as e:
-            log_error(f"Error handling message for user {user_client.user.telegram_user_id}", e)
+            logger.error(f"Error handling message for user {user_client.user.telegram_user_id}: {e}")
 
     def _is_chat_monitored(self, chat_id: int, user_client: UserClient) -> bool:
-        """Check if chat should be monitored"""
         if user_client.user.all_chats_filtering_enabled:
             return True
-
         monitored_chat_ids = [chat.telegram_chat_id for chat in user_client.user.chats]
         return chat_id in monitored_chat_ids
 
     def _message_contains_keywords(self, message: Message, keywords: List) -> bool:
-        """Check if message contains any of the keywords"""
         if not keywords or not message.text:
             return False
-
         message_text = message.text.lower()
         keyword_values = [kw.value.lower() for kw in keywords]
-
         return any(keyword in message_text for keyword in keyword_values)
 
     async def _forward_message(self, message: Message, source_chat_id: int, user_client: UserClient):
         try:
-            # Get chat info for topic name
             chat = await user_client.client.get_entity(source_chat_id)
             chat_title = getattr(chat, 'title', f'Chat {source_chat_id}')
 
-            # Determine topic based on grouping mode
             topic_name = self._get_topic_name(message, chat_title, user_client)
 
-            # Create or get topic ID
             topic_id = await self._get_or_create_topic(
                 user_client.client,
                 user_client.user.forum_supergroup_id,
                 topic_name
             )
 
-            if topic_id:
-                # Forward message to topic
-                await user_client.client.forward_messages(
-                    entity=user_client.user.forum_supergroup_id,
-                    messages=message,
-                    from_peer=source_chat_id,
-                    reply_to=topic_id
-                )
+            output = f'{message.from_id} said: {message.text}'
 
-                log_info(f"Forwarded message to topic '{topic_name}' for user {user_client.user.telegram_user_id}")
+            await user_client.client.send_message(
+                entity=user_client.user.forum_supergroup_id,
+                message=output,
+                reply_to=topic_id
+            )
 
         except Exception as e:
             log_error(f"Failed to forward message for user {user_client.user.telegram_user_id}", e)
 
     def _get_topic_name(self, message: Message, chat_title: str, user_client: UserClient) -> str:
-        """Get topic name based on grouping mode"""
         if user_client.user.topic_grouping == GroupingMode.BY_CHAT:
             return chat_title
-        else:  # BY_KEYWORDS or default
-            # Find matching keyword
+        else:
             if message.text:
                 message_text = message.text.lower()
                 for keyword in user_client.user.keywords:
@@ -108,14 +89,115 @@ class MessageHandler:
                         return keyword.value.capitalize()
             return "General"
 
-    async def _get_or_create_topic(self, client, forum_id: int, topic_name: str) -> Optional[int]:
-        """Get existing topic or create new one"""
+    async def _get_or_create_topic(self, client: TelegramClient, forum_id: int, topic_name: str) -> Optional[int]:
         try:
-            # This is a simplified implementation
-            # In a real scenario, you'd need to track topics or use Telegram's topic API
-            # For now, we'll use a basic message reply approach
-            return None  # Placeholder - implement topic creation logic
+            topic_name = self._sanitize_topic_name(topic_name)
+
+            existing_topic_id = await self._find_topic_by_title(client, forum_id, topic_name)
+            if existing_topic_id:
+                return existing_topic_id
+
+            return await self._create_topic(client, forum_id, topic_name)
 
         except Exception as e:
-            log_error(f"Failed to get/create topic '{topic_name}'", e)
+            logger.error(f"Error in get_or_create_topic for forum {forum_id}, topic '{topic_name}': {e}")
+            return None
+
+    def _sanitize_topic_name(self, topic_name: str) -> str:
+        topic_name = topic_name.strip()
+        if len(topic_name) >= 100:
+            topic_name = topic_name[:96] + "..."
+        if len(topic_name) == 0:
+            topic_name = "General"
+
+        return topic_name
+
+    async def _find_topic_by_title(self, client: TelegramClient, forum_id: int, topic_title: str) -> Optional[int]:
+        try:
+            for attempt in range(3):
+                try:
+                    result = await client(GetForumTopicsRequest(
+                        channel=forum_id,
+                        offset_date=None,
+                        offset_id=0,
+                        offset_topic=0,
+                        limit=150
+                    ))
+
+                    if hasattr(result, 'topics'):
+                        for topic in result.topics:
+                            if hasattr(topic, 'title') and hasattr(topic, 'id'):
+                                if topic.title.lower() == topic_title.lower():
+                                    logger.info(f"Found existing topic '{topic_title}' with ID {topic.id}")
+                                    return topic.id
+
+                    return None
+
+                except FloodWaitError as e:
+                    if attempt < 2:
+                        logger.warning(f"FloodWait when searching topics, waiting {e.seconds} seconds")
+                        await asyncio.sleep(e.seconds)
+                        continue
+                    else:
+                        logger.error(f"FloodWait exceeded max retries when searching topics")
+                        return None
+
+                except Exception as e:
+                    logger.error(f"Error searching topics (attempt {attempt + 1}): {e}")
+                    if attempt < 2:
+                        await asyncio.sleep(2 ** attempt)
+                        continue
+                    else:
+                        return None
+
+            return None
+
+        except Exception as e:
+            logger.error(f"Failed to search for topic '{topic_title}' in forum {forum_id}: {e}")
+            return None
+
+    async def _create_topic(self, client: TelegramClient, forum_id: int, topic_name: str) -> Optional[int]:
+        try:
+            for attempt in range(3):
+                try:
+                    result = await client(CreateForumTopicRequest(
+                        channel=forum_id,
+                        title=topic_name,
+                        icon_color=None,  # Let Telegram choose color
+                        icon_emoji_id=None,  # No custom emoji
+                        random_id=client._get_random_id(),
+                        send_as=None
+                    ))
+
+                    if hasattr(result, 'updates'):
+                        for update in result.updates:
+                            if hasattr(update, 'message') and hasattr(update.message, 'id'):
+                                topic_id = update.message.id
+                                logger.info(f"Created topic '{topic_name}' with ID {topic_id} in forum {forum_id}")
+                                return topic_id
+
+                    logger.error(f"Unexpected result format when creating topic '{topic_name}'")
+                    return None
+
+                except FloodWaitError as e:
+                    if attempt < 2:
+                        logger.warning(f"FloodWait when creating topic, waiting {e.seconds} seconds")
+                        await asyncio.sleep(e.seconds)
+                        continue
+                    else:
+                        logger.error(f"FloodWait exceeded max retries when creating topic")
+                        return None
+
+                except Exception as e:
+                    logger.error(f"Error creating topic '{topic_name}' (attempt {attempt + 1}): {e}")
+                    if attempt < 2:
+                        await asyncio.sleep(2 ** attempt)
+                        continue
+                    else:
+                        return None
+
+            return None
+
+        except Exception as e:
+            logger.error(f"Failed to create topic '{topic_name}' in forum {forum_id}: {e}")
             return None
