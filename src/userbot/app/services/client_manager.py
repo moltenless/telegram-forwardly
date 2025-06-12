@@ -239,12 +239,12 @@ class ClientManager:
 
                     chat_infos.append({
                         'Id': chat_id,
-                        'Title': entity.title
+                        'Title': entity.title[:99]
                     })
 
                     user.chats.append(Chat(telegram_user_id=user_id,
                                            telegram_chat_id=chat_id,
-                                           title=entity.title,
+                                           title=entity.title[:99],
                                            id = -1))
                 except: continue
 

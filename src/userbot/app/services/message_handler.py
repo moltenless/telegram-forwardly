@@ -21,22 +21,30 @@ class MessageHandler:
             # me = await user_client.client.get_me()
             # await user_client.client.send_message(entity=me, message=f"somebody wrote: {event.message.text}")
             # return None
+            source_chat = await event.get_chat()
 
+            if source_chat.id == user_client.user.forum_supergroup_id:
+                return
             if user_client.user.forwardly_enabled is None or user_client.user.forwardly_enabled is False:
+                logger.warning(f"text: '{event.message.text}' has been filtered on 'forwardly enabled' stage")
                 return
             if not user_client.user.forum_supergroup_id:
+                logger.warning(f"text: '{event.message.text}' has been filtered on 'forum supergroup id' stage")
                 return
             if ((not user_client.user.chats or len(user_client.user.chats) == 0)
                     and not user_client.user.all_chats_filtering_enabled):
+                logger.warning(f"text: '{event.message.text}' has been filtered on 'chats' stage")
                 return
             if not user_client.user.keywords or len(user_client.user.keywords) == 0:
+                logger.warning(f"text: '{event.message.text}' has been filtered on 'keywords' stage")
                 return
-            if not self._is_chat_monitored(event.chat_id, user_client):
+            if not self._is_chat_monitored(source_chat.id, user_client):
+                logger.warning(f"text: '{event.message.text}' has been filtered on 'chats is monitored' stage")
                 return
             if not self._message_contains_keywords(event.message, user_client.user.keywords):
+                logger.warning(f"text: '{event.message.text}' has been filtered on 'message contains keywords' stage")
                 return
-
-            await self._forward_message(event.message, event.chat_id, user_client)
+            await self._forward_message(event.message, source_chat.id, user_client)
 
         except Exception as e:
             logger.error(f"Error handling message for user {user_client.user.telegram_user_id}: {e}")
@@ -44,7 +52,9 @@ class MessageHandler:
     def _is_chat_monitored(self, chat_id: int, user_client: UserClient) -> bool:
         if user_client.user.all_chats_filtering_enabled:
             return True
+        logger.info(f"inside chat monitored:\n\nchat_id(from event) is '{chat_id}\n'")
         monitored_chat_ids = [chat.telegram_chat_id for chat in user_client.user.chats]
+        logger.info(f"meanwhile monitored chats of that user is \n{monitored_chat_ids}\n")
         return chat_id in monitored_chat_ids
 
     def _message_contains_keywords(self, message: Message, keywords: List) -> bool:
@@ -67,11 +77,11 @@ class MessageHandler:
                 topic_name
             )
 
-            output = f'{message.from_id} said: {message.text}'
+            final_text = f'{message.from_id.user_id} said: {message.text}'
 
             await user_client.client.send_message(
                 entity=user_client.user.forum_supergroup_id,
-                message=output,
+                message=final_text,
                 reply_to=topic_id
             )
 
@@ -163,9 +173,8 @@ class MessageHandler:
                     result = await client(CreateForumTopicRequest(
                         channel=forum_id,
                         title=topic_name,
-                        icon_color=None,  # Let Telegram choose color
-                        icon_emoji_id=None,  # No custom emoji
-                        random_id=client._get_random_id(),
+                        icon_color=None,
+                        icon_emoji_id=None,
                         send_as=None
                     ))
 
