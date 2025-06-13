@@ -45,8 +45,7 @@ namespace TelegramForwardly.WebApi.Services.Bot
 
                 case "/settings":
                     await MenuManager.EnterSettingsAsync(
-                        user, message.Chat.Id,
-                        userService, botClient, logger, cancellationToken);
+                        false, message, botClient, logger, cancellationToken);
                     break;
 
                 case "/chats":
@@ -62,9 +61,19 @@ namespace TelegramForwardly.WebApi.Services.Bot
                     break;
 
                 case "/status":
+
+                    break;
+
+                case "/forwardly_enabled":
+                    await userService.ToggleForwardlyEnabledAsync(user.TelegramUserId, user.ForwardlyEnabled!.Value);
+                    user = await userService.GetUserAsync(user.TelegramUserId);
+                    await MenuManager.ShowMainMenuAsync(
+                        user, message.Chat.Id,
+                        botClient, logger, cancellationToken);
                     break;
 
                 case "/help":
+
                     break;
 
                 case "/delete":
@@ -101,8 +110,24 @@ namespace TelegramForwardly.WebApi.Services.Bot
 
                 case "settings":
                     await MenuManager.EnterSettingsAsync(
-                        user, callbackQuery.Message!.Chat.Id,
-                        userService, botClient, logger, cancellationToken);
+                        true, callbackQuery.Message!, botClient, logger, cancellationToken);
+                    break;
+
+                case "set_forum":
+                    await userService.SetUserStateAsync(user.TelegramUserId, UserState.AwaitingForumGroup);
+                    await BotHelper.SendTextMessageAsync(
+                        callbackQuery.Message!.Chat.Id,
+                        BotHelper.GetSettingsMessage(),
+                        botClient, logger,
+                        cancellationToken);
+                    break;
+
+                case "set_grouping":
+                    await userService.SetUserStateAsync(user.TelegramUserId, UserState.AwaitingGroupingType);
+                    await BotHelper.SendTextMessageAsync(
+                        callbackQuery.Message!.Chat.Id,
+                        "Please select the grouping/sorting mode of filtered messages: \n- Group by chat titles - send '1'\n- Group by keywords - send '2'",
+                        botClient, logger, cancellationToken);
                     break;
 
                 case "chats":
@@ -118,9 +143,23 @@ namespace TelegramForwardly.WebApi.Services.Bot
                     break;
 
                 case "status":
+
+                    break;
+
+                case "forwardly_enabled":
+                    await userService.ToggleForwardlyEnabledAsync(user.TelegramUserId, user.ForwardlyEnabled!.Value);
+                    user = await userService.GetUserAsync(user.TelegramUserId);
+                    await botClient.EditMessageText(
+                        chatId: callbackQuery.Message!.Chat.Id,
+                        messageId: callbackQuery.Message.MessageId,
+                        text: BotHelper.DefaultEscapeMarkdownV2(BotHelper.GetMenuText(user)),
+                        parseMode: ParseMode.MarkdownV2,
+                        replyMarkup: BotHelper.GetMenuKeyboard(user.ForwardlyEnabled!.Value),
+                        cancellationToken: cancellationToken);
                     break;
 
                 case "help":
+
                     break;
 
                 // Chats menu buttons
@@ -184,8 +223,8 @@ namespace TelegramForwardly.WebApi.Services.Bot
                         chatId: callbackQuery.Message!.Chat.Id,
                         messageId: callbackQuery.Message.MessageId,
                         text: BotHelper.DefaultEscapeMarkdownV2(BotHelper.GetMenuText(user)),
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.MarkdownV2,
-                        replyMarkup: BotHelper.GetMenuKeyboard(),
+                        parseMode: ParseMode.MarkdownV2,
+                        replyMarkup: BotHelper.GetMenuKeyboard(user.ForwardlyEnabled!.Value),
                         cancellationToken: cancellationToken);
                     break;
 

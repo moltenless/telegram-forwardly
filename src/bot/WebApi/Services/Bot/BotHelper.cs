@@ -136,13 +136,13 @@ namespace TelegramForwardly.WebApi.Services.Bot
 
         public static string GetSettingsMessage()
             => "*Now, create your own group in Telegram* - so I can set this group as your forum supergroup with topics where messages will be forwarded.\n\n" +
-               "1. Create a new group in Telegram.\n" +
+               "1. Create a new group in Telegram. Call it something like 'Forwardly'\n" +
                "2. Go to group settings and click on 'Topics' section.\n" +
                "3. Enable this option and choose style of topic layout you prefer. Select 'List' for now. Save the changes.\n" +
-               "4. Then, here in the chat with this bot click on 'Add to Group'. Select your recently created group. It will immediately send there a message with the group ID.\n" +
+               "4. Then, here in this chat with me click on 'Add to Group'. Select your recently created group. It will immediately send there a message with the group ID.\n" +
                "5. Please, copy the group id - *it looks like '-100XXXXXXXXX' - and send it to me here*";
 
-        public static InlineKeyboardMarkup GetMenuKeyboard()
+        public static InlineKeyboardMarkup GetMenuKeyboard(bool forwardlyEnabled)
             => new([
             [
                 InlineKeyboardButton.WithCallbackData("🔑 Setup credentials", "setup"),
@@ -154,6 +154,7 @@ namespace TelegramForwardly.WebApi.Services.Bot
             ],
             [
                 InlineKeyboardButton.WithCallbackData("📊 Status", "status"),
+                InlineKeyboardButton.WithCallbackData(forwardlyEnabled ? "⏸️ Pause forwarding" : "▶️ Resume forwarding", "forwardly_enabled"),
                 InlineKeyboardButton.WithCallbackData("❓ Help", "help")
             ]
             ]);

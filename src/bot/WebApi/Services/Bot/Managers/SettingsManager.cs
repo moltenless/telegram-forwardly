@@ -31,12 +31,9 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
             }
 
             await userService.UpdateUserForumIdAsync(user.TelegramUserId, forumId);
-            await userService.SetUserStateAsync(user.TelegramUserId, UserState.AwaitingGroupingType);
 
-            await BotHelper.SendTextMessageAsync(
-                message.Chat.Id,
-                "Please select the grouping/sorting type of filtered messages: \nBy keywords - send '1'\nBy chat titles - send '2'",
-                botClient, logger, cancellationToken, parseMode: ParseMode.None);
+            await BotHelper.SendTextMessageAsync(message.Chat.Id, "Set grouping mode:", botClient, logger, cancellationToken);
+            await MenuManager.EnterSettingsAsync(false, message, botClient, logger, cancellationToken);
         }
 
         public static async Task HandleGroupingTypeInputAsync(
@@ -50,21 +47,21 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
         {
             GroupingMode mode;
             string response;
-            if (message.Text == "1")
+            if (message.Text == "2")
             {
                 mode = GroupingMode.ByKeyword;
                 response = "You have selected grouping by keywords.";
             }
-            else if (message.Text == "2")
+            else if (message.Text == "1")
             {
                 mode = GroupingMode.ByChat;
                 response = "You have selected grouping by chat titles.";
             }
             else
             {
-                await BotHelper.SendTextMessageAsync(// if something null go to chats settings
+                await BotHelper.SendTextMessageAsync(
                     message.Chat.Id,
-                    "Invalid input. Please send '1' for keywords grouping or '2' for chat titles grouping.",
+                    "Invalid input. Please send '1' for chat titles grouping or '2' for keywords grouping.",
                     botClient, logger, cancellationToken);
                 return;
             }

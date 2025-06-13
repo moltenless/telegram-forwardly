@@ -52,9 +52,6 @@ namespace TelegramForwardly.WebApi.Services
                 cancellationToken: stoppingToken
             );
 
-
-            await botClient.SendMessage(-1002852167117, "Haha", cancellationToken: stoppingToken);
-
             logger.LogInformation("Telegram bot polling started successfully");
 
             try

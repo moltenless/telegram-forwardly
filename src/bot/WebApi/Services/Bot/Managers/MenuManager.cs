@@ -1,5 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Telegram.Bot;
+using Telegram.Bot.Types;
+using Telegram.Bot.Types.ReplyMarkups;
 using TelegramForwardly.WebApi.Models.Dtos;
 using TelegramForwardly.WebApi.Services.Interfaces;
 
@@ -18,7 +20,7 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
                 chatId, BotHelper.GetMenuText(user),
                 botClient, logger,
                 cancellationToken,
-                BotHelper.GetMenuKeyboard());
+                BotHelper.GetMenuKeyboard(user.ForwardlyEnabled!.Value));
         }
 
         public static async Task EnterSetupAsync(
@@ -51,21 +53,32 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
                 BotHelper.GetPhoneKeyboard());
         }
 
+
         public static async Task EnterSettingsAsync(
-            BotUser user,
-            long chatId,
-            IUserService userService,
+            bool editSourceMessage,
+            Message message,
             ITelegramBotClient botClient,
             ILogger logger,
             CancellationToken cancellationToken)
         {
-            await userService.SetUserStateAsync(user.TelegramUserId, UserState.AwaitingForumGroup);
-
-            await BotHelper.SendTextMessageAsync(
-                chatId, 
-                BotHelper.GetSettingsMessage(),
-                botClient, logger,
-                cancellationToken);
+            var keyboard = new InlineKeyboardMarkup(
+            [
+                [InlineKeyboardButton.WithCallbackData("👥 Set group for forwarding", "set_forum")],
+                [InlineKeyboardButton.WithCallbackData("🗂️ Set grouping mode", "set_grouping")],
+                [InlineKeyboardButton.WithCallbackData("🏠 Back to Menu", "back_to_menu")]
+            ]);
+            if (editSourceMessage)
+            {
+                await botClient.EditMessageText(
+                    message.Chat.Id, message.MessageId, BotHelper.DefaultEscapeMarkdownV2("Choose an option:"),
+                    replyMarkup: keyboard, cancellationToken: cancellationToken);
+            }
+            else
+            {
+                await BotHelper.SendTextMessageAsync(
+                    message.Chat.Id, "Choose an option:", botClient, logger, 
+                    replyMarkup: keyboard, cancellationToken: cancellationToken);
+            }
         }
 
         public static async Task AskToDeleteData(
