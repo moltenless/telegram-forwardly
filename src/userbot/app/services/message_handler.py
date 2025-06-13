@@ -1,6 +1,8 @@
 import asyncio
 import logging
 from typing import Optional, List
+
+import unicodedata
 from telethon import events, TelegramClient
 from telethon.errors import FloodWaitError
 from telethon.tl.functions.channels import GetForumTopicsRequest, CreateForumTopicRequest
@@ -87,12 +89,18 @@ class MessageHandler:
                 topic_name
             )
 
-            final_text = (f"{event_data.get('text')}\n\n"
-                          f"Link to message: https://t.me/c/{event_data.get('source_chat_id')}/{event_data.get('message_id')}\n"
+            body = f"{event_data.get('text')}"
+            footer = (f"\n\nLink to message: https://t.me/c/{event_data.get('source_chat_id')}/{event_data.get('message_id')}\n"
                           f"Detected keywords: {', '.join(event_data.get('detected_kws'))}\n"
                           f"From chat: {event_data.get('source_chat_title')}\n"
                           f"Message by: {event_data.get('first_name')} {'@' + event_data.get('username') if event_data.get('username') else ''}\n"
                           f"Time: {event_data.get('date_time').strftime('%H:%M | %d.%m ')}")
+
+            len_delta = len(body+footer) - 4096
+            if len_delta <= 0:
+                final_text = body + footer
+            else:
+                final_text = body[:len(body) - len_delta - 3] + '...' + footer
 
             await user_client.client.send_message(
                 entity=user_client.user.forum_supergroup_id,
@@ -132,6 +140,9 @@ class MessageHandler:
 
         return topic_name
 
+    def _normalize(self, s: str) -> str:
+        return unicodedata.normalize('NFC', s.strip()).casefold()
+
     async def _find_topic_by_title(self, client: TelegramClient, forum_id: int, topic_title: str) -> Optional[int]:
         try:
             try:
@@ -154,6 +165,8 @@ class MessageHandler:
                         for topic in result.topics:
                             if hasattr(topic, 'title') and hasattr(topic, 'id'):
                                 if topic.title.lower() == topic_title.lower():
+                                    return topic.id
+                                if self._normalize(topic.title) == self._normalize(topic_title):
                                     return topic.id
 
                     return None

@@ -1,26 +1,23 @@
 ﻿using Telegram.Bot;
 using Telegram.Bot.Types;
-using TelegramForwardly.WebApi.Services.Interfaces;
-using TelegramForwardly.WebApi.Models.Dtos;
 using Telegram.Bot.Types.Enums;
+using TelegramForwardly.WebApi.Models.Dtos;
 using TelegramForwardly.WebApi.Services.Bot;
+using TelegramForwardly.WebApi.Services.Bot.Managers;
+using TelegramForwardly.WebApi.Services.Interfaces;
 
 namespace TelegramForwardly.WebApi.Services;
 
 public class BotService(
     ITelegramBotClient botClient,
     IUserService userService,
-
     IUserbotApiService userbotApiService,
-
     ILogger<BotService> logger
     ) : IBotService
 {
     private readonly ITelegramBotClient botClient = botClient;
     private readonly IUserService userService = userService;
-
     private readonly IUserbotApiService userbotApiService = userbotApiService;
-
     private readonly ILogger logger = logger;
 
     public async Task HandleUpdateAsync(Update update, CancellationToken cancellationToken)
@@ -29,7 +26,7 @@ public class BotService(
         {
             var handler = update.Type switch
             {
-                UpdateType.Message => HandleMessageAsync(update.Message!, cancellationToken),
+                UpdateType.Message => HandleMessageAsync(update, cancellationToken),
                 UpdateType.CallbackQuery => HandleCallbackQueryAsync(update.CallbackQuery!, cancellationToken),
                 _ => Task.CompletedTask
             };
@@ -43,8 +40,18 @@ public class BotService(
         }
     }
 
-    private async Task HandleMessageAsync(Message message, CancellationToken cancellationToken)
+    private async Task HandleMessageAsync(Update update, CancellationToken cancellationToken)
     {
+        Message message = update.Message!;
+        if (message.Type == MessageType.NewChatMembers && message.NewChatMembers![0].Id == botClient.BotId)
+        {
+            await SettingsManager.HandleBotJoinedGroupAsync(
+                message.Chat, botClient, logger, cancellationToken);
+            return;
+        }
+        if (message.Type != MessageType.Text)
+            return;
+
         var user = await userService.GetOrCreateUserAsync(
             message.From!.Id, UserState.Idle, message.From!.Username, message.From!.FirstName);
 
@@ -79,9 +86,10 @@ public class BotService(
         var user = await userService.GetOrCreateUserAsync(
             callbackQuery.From!.Id, UserState.Idle, callbackQuery.From!.Username, callbackQuery.From!.FirstName);
 
-        //////
+        ////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////
         await userService.UpdateUserDateAsync(user.TelegramUserId);
-        //////
+        //////////////////////////////////////////////////////////////////////
 
         await botClient.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: cancellationToken);
 

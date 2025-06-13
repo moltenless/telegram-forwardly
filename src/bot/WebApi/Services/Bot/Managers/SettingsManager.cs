@@ -85,7 +85,7 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
 
             response += user.Chats.Count == 0 ?
                 "\n\n_Now it is time to choose from what chats you want to extract messages with specific keywords_:\n" +
-               "*Please click '💬 Chats' in menu below*\nOr\n*Use /chats*\n_There you can also enable incoming messages tracking from all of your chats_" : string.Empty;
+               "*Please click '💬 Chats' in menu below*\nOr\n*Use /chats*\n_There you can also enable tracking of incoming messages from all of your chats_" : string.Empty;
             await BotHelper.SendTextMessageAsync(
                 message.Chat.Id, response,
                 botClient, logger, cancellationToken);
@@ -93,6 +93,36 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
             await MenuManager.ShowMainMenuAsync(
                 user, message.Chat.Id,
                 botClient, logger, cancellationToken);
+        }
+
+
+        public static async Task HandleBotJoinedGroupAsync(
+            Telegram.Bot.Types.Chat chat,
+            ITelegramBotClient botClient,
+            ILogger logger,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                if (chat.Type == ChatType.Supergroup && chat.IsForum)
+                {
+                    var message = $"🤖 Bot successfully added to forum!\n\n" +
+                     $"📋 Copy this forum ID: `{chat.Id}` and paste it back to the chat with 'Forwardly' bot";
+                    await BotHelper.SendTextMessageAsync(
+                        chat.Id, message, botClient,
+                        logger, cancellationToken);
+                }
+                else
+                {
+                    await BotHelper.SendTextMessageAsync(
+                        chat.Id, "Bot added but this group doesn't seem to be forum group with topics enabled.", 
+                        botClient, logger, cancellationToken);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to send welcome message to forum {ChatId}", chat.Id);
+            }
         }
     }
 }

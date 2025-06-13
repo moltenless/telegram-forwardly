@@ -138,10 +138,9 @@ namespace TelegramForwardly.WebApi.Services.Bot
             => "*Now, create your own group in Telegram* - so I can set this group as your forum supergroup with topics where messages will be forwarded.\n\n" +
                "1. Create a new group in Telegram.\n" +
                "2. Go to group settings and click on 'Topics' section.\n" +
-               "3. Enable this option and choose style of topic layout you prefer. Select 'Tabs' for now. Save the changes.\n" +
-               "4. Then, click on 'Add member' and add @getidsbot. It will immediately send you a message with the group ID.\n" +
-               "5. Please, copy the group id - *it looks like '-100XXXXXXXXX' - and send it to me here*\n" +
-               "6. Remove @getidsbot from the group members.";
+               "3. Enable this option and choose style of topic layout you prefer. Select 'List' for now. Save the changes.\n" +
+               "4. Then, here in the chat with this bot click on 'Add to Group'. Select your recently created group. It will immediately send there a message with the group ID.\n" +
+               "5. Please, copy the group id - *it looks like '-100XXXXXXXXX' - and send it to me here*";
 
         public static InlineKeyboardMarkup GetMenuKeyboard()
             => new([
