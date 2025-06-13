@@ -64,12 +64,10 @@ namespace TelegramForwardly.WebApi.Services.Bot
 
                     break;
 
-                case "/forwardly_enabled":
-                    await userService.ToggleForwardlyEnabledAsync(user.TelegramUserId, user.ForwardlyEnabled!.Value);
-                    user = await userService.GetUserAsync(user.TelegramUserId);
-                    await MenuManager.ShowMainMenuAsync(
-                        user, message.Chat.Id,
-                        botClient, logger, cancellationToken);
+                case "/toggle":
+                    await SettingsManager.ToggleForwardlyAsync(
+                        false, user, message, userService,
+                        userbotApiService, botClient, logger, cancellationToken);
                     break;
 
                 case "/help":
@@ -147,15 +145,9 @@ namespace TelegramForwardly.WebApi.Services.Bot
                     break;
 
                 case "forwardly_enabled":
-                    await userService.ToggleForwardlyEnabledAsync(user.TelegramUserId, user.ForwardlyEnabled!.Value);
-                    user = await userService.GetUserAsync(user.TelegramUserId);
-                    await botClient.EditMessageText(
-                        chatId: callbackQuery.Message!.Chat.Id,
-                        messageId: callbackQuery.Message.MessageId,
-                        text: BotHelper.DefaultEscapeMarkdownV2(BotHelper.GetMenuText(user)),
-                        parseMode: ParseMode.MarkdownV2,
-                        replyMarkup: BotHelper.GetMenuKeyboard(user.ForwardlyEnabled!.Value),
-                        cancellationToken: cancellationToken);
+                    await SettingsManager.ToggleForwardlyAsync(
+                        true, user, callbackQuery.Message!, userService,
+                        userbotApiService, botClient, logger, cancellationToken);
                     break;
 
                 case "help":
@@ -346,7 +338,7 @@ namespace TelegramForwardly.WebApi.Services.Bot
                     break;
 
                 case UserState.AwaitingForumGroup:
-                    await SettingsManager.HandleTopicGroupId(
+                    await SettingsManager.HandleTopicGroupIdAsync(
                         user, message, userService, userbotApiService,
                         botClient, logger, cancellationToken);
                     break;

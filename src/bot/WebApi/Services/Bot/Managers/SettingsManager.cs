@@ -9,7 +9,7 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
 {
     public static class SettingsManager
     {
-        public static async Task HandleTopicGroupId(
+        public static async Task HandleTopicGroupIdAsync(
             BotUser user,
             Message message,
             IUserService userService,
@@ -112,7 +112,7 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
                 else
                 {
                     await BotHelper.SendTextMessageAsync(
-                        chat.Id, "Bot added but this group doesn't seem to be forum group with topics enabled.", 
+                        chat.Id, "Bot added but this group doesn't seem to be forum group with topics enabled.",
                         botClient, logger, cancellationToken);
                 }
             }
@@ -120,6 +120,44 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
             {
                 logger.LogError(ex, "Failed to send welcome message to forum {ChatId}", chat.Id);
             }
+        }
+
+
+        public static async Task ToggleForwardlyAsync(
+            bool editSourceMessage,
+            BotUser user,
+            Message message,
+            IUserService userService,
+            IUserbotApiService userbotApiService,
+            ITelegramBotClient botClient,
+            ILogger logger,
+            CancellationToken cancellationToken)
+        {
+            FieldUpdateResult result = await userbotApiService.UpdateForwardlyEnabledAsync(user.TelegramUserId, !user.ForwardlyEnabled!.Value);
+            if (!result.Success)
+            {
+                await BotHelper.SendTextMessageAsync(
+                    message.Chat.Id,
+                    $"Failed to toggle forwarding: {result.ErrorMessage}",
+                    botClient, logger, cancellationToken);
+                return;
+            }
+
+            await userService.ToggleForwardlyEnabledAsync(user.TelegramUserId, !user.ForwardlyEnabled!.Value);
+            user = await userService.GetUserAsync(user.TelegramUserId);
+
+            if (editSourceMessage)
+                await botClient.EditMessageText(
+                    chatId: message.Chat.Id,
+                    messageId: message.MessageId,
+                    text: BotHelper.DefaultEscapeMarkdownV2(BotHelper.GetMenuText(user)),
+                    parseMode: ParseMode.MarkdownV2,
+                    replyMarkup: BotHelper.GetMenuKeyboard(user.ForwardlyEnabled!.Value),
+                    cancellationToken: cancellationToken);
+            else
+                await MenuManager.ShowMainMenuAsync(
+                    user, message.Chat.Id,
+                    botClient, logger, cancellationToken);
         }
     }
 }

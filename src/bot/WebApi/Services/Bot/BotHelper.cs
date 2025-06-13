@@ -154,8 +154,10 @@ namespace TelegramForwardly.WebApi.Services.Bot
             ],
             [
                 InlineKeyboardButton.WithCallbackData("📊 Status", "status"),
-                InlineKeyboardButton.WithCallbackData(forwardlyEnabled ? "⏸️ Pause forwarding" : "▶️ Resume forwarding", "forwardly_enabled"),
                 InlineKeyboardButton.WithCallbackData("❓ Help", "help")
+            ],
+            [
+                InlineKeyboardButton.WithCallbackData(forwardlyEnabled ? "⏸️ Pause forwarding" : "▶️ Resume forwarding", "forwardly_enabled")
             ]
             ]);
 

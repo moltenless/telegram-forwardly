@@ -311,70 +311,11 @@ class ClientManager:
         # special_chars = {'_', '*', '[', ']', '(', ')', '`', '|'}
         return ''.join(c for c in input_str if c not in special_chars)
 
-    # async def update_user(self, user_data: BotUser) -> Dict[str, Any]:
-    #     """Update user configuration and reconnect if necessary"""
-    #     try:
-    #         user_id = user_data.telegram_user_id
-    #
-    #         # If user already exists, disconnect old client
-    #         if user_id in self.clients:
-    #             await self._disconnect_client(user_id)
-    #
-    #         # If user is authenticated, create new connection
-    #         if user_data.is_authenticated and user_data.session_string:
-    #             success = await self._create_and_connect_client(user_data)
-    #             if success:
-    #                 return {'success': True, 'message': 'User updated and connected'}
-    #             else:
-    #                 return {'success': False, 'error': 'Failed to connect client'}
-    #
-    #         return {'success': True, 'message': 'User updated'}
-    #
-    #     except Exception as e:
-    #         log_error(f"Failed to update user {user_data.telegram_user_id}", e)
-    #         return {'success': False, 'error': str(e)}
-    #
-    # async def remove_user(self, user_id: int) -> Dict[str, Any]:
-    #     """Remove user and disconnect client"""
-    #     try:
-    #         await self._disconnect_client(user_id)
-    #         log_info(f"Removed user {user_id}")
-    #         return {'success': True, 'message': 'User removed'}
-    #
-    #     except Exception as e:
-    #         log_error(f"Failed to remove user {user_id}", e)
-    #         return {'success': False, 'error': str(e)}
-    #
-    # async def _disconnect_client(self, user_id: int):
-    #     """Disconnect client for user"""
-    #     if user_id in self.clients:
-    #         user_client = self.clients[user_id]
-    #         if user_client.client and user_client.is_connected:
-    #             await user_client.client.disconnect()
-    #         del self.clients[user_id]
-    #
-    #         # Report disconnection to bot API
-    #         await self.telegram_api.report_user_status(user_id, False)
-    #
-    # def get_all_users_status(self) -> Dict[str, Any]:
-    #     """Get status of all connected users"""
-    #     return {
-    #         'connected_users': len(self.clients),
-    #         'users': [
-    #             {
-    #                 'user_id': user_id,
-    #                 'is_connected': client.is_connected,
-    #                 'last_error': client.last_error
-    #             }
-    #             for user_id, client in self.clients.items()
-    #         ]
-    #     }
-
-    # async def start_message_handling(self):
-    #     """Start message handling for all connected clients"""
-    #     log_info("Starting message handling for all clients...")
-    #
-    #     # All clients are already set up with message handlers
-    #     # This method can be used for additional setup if needed
-    #     pass
+    async def toggle_forwarding(self, user_id, value):
+        try:
+            self.clients[user_id].user.forwardly_enabled = value
+            return {'Success': True}
+        except Exception as e:
+            logger.error(f'Failed to toggle forwarding: {e}')
+            return {'Success': False, 'ErrorMessage': f'Failed to toggle forwarding: {e}'}
 
