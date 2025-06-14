@@ -147,5 +147,40 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
                     message.Chat.Id, status, botClient, logger, cancellationToken, keyboard);
             }
         }
+
+        public static async Task EnterHelpAsync(
+           bool editSourceMessage,
+           Message message,
+           ITelegramBotClient botClient,
+           ILogger logger,
+           CancellationToken cancellationToken)
+        {
+            string help = "If you need help you can contact developer @moltenless\n\n" +
+                "Available commands:\n" +
+                "/menu - Main menu\n" +
+                "/setup - Authentication - credentials setup\n" +
+                "/settings - Forwarding settings - forum registration and settings grouping mode\n" +
+                "/chats - Manage chats to be checked for keywords\n" +
+                "/keywords - Manage keywords to be looked for in chats\n" +
+                "/status - Check your bot account status\n" +
+                "/toggle - Pause or Resume forwarding\n" +
+                "/delete - Clear all your account information from bot and remove your sensitive data out of bot database\n" +
+                "/help - Get help with bot\n";
+
+            var keyboard = new InlineKeyboardMarkup(
+            [[InlineKeyboardButton.WithCallbackData("🏠 Back to Menu", "back_to_menu")]]);
+
+            if (editSourceMessage)
+            {
+                await botClient.EditMessageText(
+                    message.Chat.Id, message.MessageId, BotHelper.DefaultEscapeMarkdownV2(help),
+                    replyMarkup: keyboard, parseMode: ParseMode.MarkdownV2, cancellationToken: cancellationToken);
+            }
+            else
+            {
+                await BotHelper.SendTextMessageAsync(
+                    message.Chat.Id, help, botClient, logger, cancellationToken, keyboard);
+            }
+        }
     }
 }

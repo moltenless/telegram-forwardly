@@ -73,7 +73,9 @@ namespace TelegramForwardly.WebApi.Services.Bot
                     break;
 
                 case "/help":
-
+                    await MenuManager.EnterHelpAsync(
+                        false, message, botClient,
+                        logger, cancellationToken);
                     break;
 
                 case "/delete":
@@ -155,7 +157,9 @@ namespace TelegramForwardly.WebApi.Services.Bot
                     break;
 
                 case "help":
-
+                    await MenuManager.EnterHelpAsync(
+                        true, callbackQuery.Message!, botClient,
+                        logger, cancellationToken);
                     break;
 
                 // Chats menu buttons
