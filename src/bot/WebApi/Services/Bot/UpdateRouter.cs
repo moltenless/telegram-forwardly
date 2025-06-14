@@ -61,7 +61,9 @@ namespace TelegramForwardly.WebApi.Services.Bot
                     break;
 
                 case "/status":
-
+                    await MenuManager.EnterStatusAsync(
+                        false, message, user,
+                        botClient, logger, cancellationToken);
                     break;
 
                 case "/toggle":
@@ -141,7 +143,9 @@ namespace TelegramForwardly.WebApi.Services.Bot
                     break;
 
                 case "status":
-
+                    await MenuManager.EnterStatusAsync(
+                        true, callbackQuery.Message!, user,
+                        botClient, logger, cancellationToken);
                     break;
 
                 case "forwardly_enabled":

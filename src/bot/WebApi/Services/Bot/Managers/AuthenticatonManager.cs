@@ -110,7 +110,7 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
 
                 string errorMessage = user.SessionString!.Trim().EndsWith('=') ? string.Empty : "Usually session strings end with '='\n";
                 await BotHelper.SendTextMessageAsync(
-                    chatId, errorMessage + $"❌ Authentication failed: {result.ErrorMessage}",
+                    chatId, errorMessage + $"❌ Authentication failed: {result.ErrorMessage}. Make sure that new active session appear in Telegram Settings -> Privacy and Security.",
                     botClient, logger, cancellationToken);
                 await MenuManager.ShowMainMenuAsync(user, chatId, botClient, logger, cancellationToken);
                 return;

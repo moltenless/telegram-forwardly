@@ -25,7 +25,9 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
             {
                 await BotHelper.SendTextMessageAsync(
                     message.Chat.Id,
-                    $"Failed to set forum/group ID: {result.ErrorMessage}",
+                    !user.IsAuthenticated!.Value 
+                    ? $"Authenticate first. - `menu -> setup credentials`.\nFailed to set forum/group ID: {result.ErrorMessage}"
+                    : $"Failed to set forum/group ID: {result.ErrorMessage}",
                     botClient, logger, cancellationToken, parseMode: ParseMode.None);
                 return;
             }

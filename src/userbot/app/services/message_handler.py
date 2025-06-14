@@ -52,7 +52,8 @@ class MessageHandler:
                 'detected_kws': detected_kws,
                 'date_time' : event.message.date,
                 'source_chat_id' : source_chat.id,
-                'source_chat_title' : source_chat.title if hasattr(source_chat, 'title') else f'Chat {source_chat.id}',
+                'source_chat_title' : source_chat.title if hasattr(source_chat, 'title')
+                    else source_chat.first_name if source_chat.first_name else f'Chat {source_chat.id}',
                 'message_id' : event.message.id,
                 'user_id' : sender.id,
                 'username' : sender.username,
@@ -92,7 +93,7 @@ class MessageHandler:
             body = f"{event_data.get('text')}"
             footer = (f"\n\nLink to message: https://t.me/c/{event_data.get('source_chat_id')}/{event_data.get('message_id')}\n"
                           f"Detected keywords: {', '.join(event_data.get('detected_kws'))}\n"
-                          f"From chat: {event_data.get('source_chat_title')}\n"
+                          f"From chat: {event_data.get('source_chat_title')[:25]}\n"
                           f"Message by: {event_data.get('first_name')} {'@' + event_data.get('username') if event_data.get('username') else ''}\n"
                           f"Time: {event_data.get('date_time').strftime('%H:%M | %d.%m ')}")
 
