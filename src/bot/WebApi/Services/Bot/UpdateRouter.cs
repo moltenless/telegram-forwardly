@@ -1,5 +1,6 @@
 ﻿using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 using TelegramForwardly.DataAccess.Entities;
 using TelegramForwardly.WebApi.Models.Dtos;
 using TelegramForwardly.WebApi.Services.Bot.Managers;
@@ -44,8 +45,7 @@ namespace TelegramForwardly.WebApi.Services.Bot
 
                 case "/settings":
                     await MenuManager.EnterSettingsAsync(
-                        user, message.Chat.Id,
-                        userService, botClient, logger, cancellationToken);
+                        false, message, botClient, logger, cancellationToken);
                     break;
 
                 case "/chats":
@@ -61,9 +61,21 @@ namespace TelegramForwardly.WebApi.Services.Bot
                     break;
 
                 case "/status":
+                    await MenuManager.EnterStatusAsync(
+                        false, message, user,
+                        botClient, logger, cancellationToken);
+                    break;
+
+                case "/toggle":
+                    await SettingsManager.ToggleForwardlyAsync(
+                        false, user, message, userService,
+                        userbotApiService, botClient, logger, cancellationToken);
                     break;
 
                 case "/help":
+                    await MenuManager.EnterHelpAsync(
+                        false, message, botClient,
+                        logger, cancellationToken);
                     break;
 
                 case "/delete":
@@ -100,8 +112,24 @@ namespace TelegramForwardly.WebApi.Services.Bot
 
                 case "settings":
                     await MenuManager.EnterSettingsAsync(
-                        user, callbackQuery.Message!.Chat.Id,
-                        userService, botClient, logger, cancellationToken);
+                        true, callbackQuery.Message!, botClient, logger, cancellationToken);
+                    break;
+
+                case "set_forum":
+                    await userService.SetUserStateAsync(user.TelegramUserId, UserState.AwaitingForumGroup);
+                    await BotHelper.SendTextMessageAsync(
+                        callbackQuery.Message!.Chat.Id,
+                        BotHelper.GetSettingsMessage(user.ForumSupergroupId),
+                        botClient, logger,
+                        cancellationToken);
+                    break;
+
+                case "set_grouping":
+                    await userService.SetUserStateAsync(user.TelegramUserId, UserState.AwaitingGroupingType);
+                    await BotHelper.SendTextMessageAsync(
+                        callbackQuery.Message!.Chat.Id,
+                        "Please select the grouping/sorting mode of filtered messages: \n- Group by chat titles - send '1'\n- Group by keywords - send '2'",
+                        botClient, logger, cancellationToken);
                     break;
 
                 case "chats":
@@ -117,9 +145,21 @@ namespace TelegramForwardly.WebApi.Services.Bot
                     break;
 
                 case "status":
+                    await MenuManager.EnterStatusAsync(
+                        true, callbackQuery.Message!, user,
+                        botClient, logger, cancellationToken);
+                    break;
+
+                case "forwardly_enabled":
+                    await SettingsManager.ToggleForwardlyAsync(
+                        true, user, callbackQuery.Message!, userService,
+                        userbotApiService, botClient, logger, cancellationToken);
                     break;
 
                 case "help":
+                    await MenuManager.EnterHelpAsync(
+                        true, callbackQuery.Message!, botClient,
+                        logger, cancellationToken);
                     break;
 
                 // Chats menu buttons
@@ -183,8 +223,8 @@ namespace TelegramForwardly.WebApi.Services.Bot
                         chatId: callbackQuery.Message!.Chat.Id,
                         messageId: callbackQuery.Message.MessageId,
                         text: BotHelper.DefaultEscapeMarkdownV2(BotHelper.GetMenuText(user)),
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.MarkdownV2,
-                        replyMarkup: BotHelper.GetMenuKeyboard(),
+                        parseMode: ParseMode.MarkdownV2,
+                        replyMarkup: BotHelper.GetMenuKeyboard(user.ForwardlyEnabled!.Value),
                         cancellationToken: cancellationToken);
                     break;
 
@@ -306,7 +346,7 @@ namespace TelegramForwardly.WebApi.Services.Bot
                     break;
 
                 case UserState.AwaitingForumGroup:
-                    await SettingsManager.HandleTopicGroupId(
+                    await SettingsManager.HandleTopicGroupIdAsync(
                         user, message, userService, userbotApiService,
                         botClient, logger, cancellationToken);
                     break;

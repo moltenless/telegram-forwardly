@@ -33,11 +33,24 @@ class TelegramApiService:
             return users
 
         except requests.RequestException as e:
-            log_error("Failed to get users from Telegram Bot API", e)
+            logger.error("Failed to get users from Telegram Bot API", e)
             return []
         except Exception as e:
-            log_error("Unexpected error getting users", e)
+            logger.error("Unexpected error getting users", e)
             return []
+
+    async def send_message_to_topic(self, message_data):
+        try:
+            url = f"{self.base_url}/message/send"
+            response = self.session.post(url, json=message_data)
+            response.raise_for_status()
+            if response.status_code != 200:
+                logger.error("Failed to send the message to forum topic from Telegram Bot API. Status code is not 200!")
+
+        except requests.RequestException as e:
+            logger.error("Failed to send the message to forum topic from Telegram Bot API", e)
+        except Exception as e:
+            logger.error("Unexpected error sending message to forum topic", e)
 
     async def update_user_session(self, user_id: int, session_string: str) -> bool:
         try:
@@ -54,20 +67,7 @@ class TelegramApiService:
             log_error(f"Failed to update session for user {user_id}", e)
             return False
 
-    async def report_user_status(self, user_id: int, is_connected: bool, error_message: Optional[str] = None):
-        """Report user connection status to Telegram Bot API"""
-        try:
-            url = f"{self.base_url}/users/{user_id}/status"
-            data = {
-                "is_connected": is_connected,
-                "error_message": error_message
-            }
 
-            response = self.session.put(url, json=data)
-            response.raise_for_status()
-
-        except requests.RequestException as e:
-            log_error(f"Failed to report status for user {user_id}", e)
 
 
     async def check_telegram_bot_health(self, url: str):

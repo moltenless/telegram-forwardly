@@ -8,15 +8,11 @@ namespace TelegramForwardly.WebApi.Services
 {
     public class UserService(
         IClientsRepository clientsRepository,
-        IClientCurrentStatesRepository statesRepository,
-
-        ILogger<UserService> logger
+        IClientCurrentStatesRepository statesRepository
         ) : IUserService
     {
         private readonly IClientsRepository clientsRepository = clientsRepository;
         private readonly IClientCurrentStatesRepository statesRepository = statesRepository;
-
-        private readonly ILogger<UserService> logger = logger;
 
         public async Task<BotUser> GetOrCreateUserAsync(long telegramUserId,
             UserState initialStateIfNew,
@@ -164,43 +160,16 @@ namespace TelegramForwardly.WebApi.Services
         }
 
 
-
-
-
-
-
-        public async Task AddChatAsync(long telegramUserId, long telegramChatId)
-        {
-        }
-
-        public async Task AddUserKeywordAsync(long telegramUserId, string keyword)
-        {
-        }
-
-        public async Task<IEnumerable<Chat>> GetChatsAsync(long telegramUserId)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<IEnumerable<Keyword>> GetKeywordsAsync(long telegramUserId)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task RemoveChatAsync(long telegramUserId, long telegramChatId)
-        {
-        }
-
-        public async Task RemoveUserKeywordAsync(long telegramUserId, string keyword)
-        {
-        }
-
-
-
         public async Task UpdateUserDateAsync(long telegramUserId)
         {
             var client = await clientsRepository.GetClientAsync(telegramUserId);
             await clientsRepository.UpdateClientDateAsync(client);
+        }
+
+        public async Task ToggleForwardlyEnabledAsync(long telegramUserId, bool value)
+        {
+            var client = await clientsRepository.GetClientAsync(telegramUserId);
+            await clientsRepository.SetClientForwardlyEnabledAsync(client, value);
         }
     }
 }

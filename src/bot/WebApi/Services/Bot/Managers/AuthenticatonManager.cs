@@ -26,7 +26,7 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
 
             await BotHelper.SendTextMessageAsync(
                 message.Chat.Id,
-                BotHelper.GetApiIdMessage(phone!),
+                BotHelper.GetApiIdMessage(user.ApiId),
                 botClient, logger,
                 cancellationToken,
                 new ReplyKeyboardRemove());
@@ -46,7 +46,7 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
 
             await BotHelper.SendTextMessageAsync(
                 message.Chat.Id,
-                BotHelper.GetApiHashMessage(),
+                BotHelper.GetApiHashMessage(user.ApiHash),
                 botClient, logger,
                 cancellationToken);
         }
@@ -65,7 +65,7 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
 
             await BotHelper.SendTextMessageAsync(
                 message.Chat.Id,
-                BotHelper.GetSessionStringMessage(),
+                BotHelper.GetSessionStringMessage(user.SessionString),
                 botClient, logger,
                 cancellationToken);
         }
@@ -107,12 +107,14 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
                 await userService.SetUserAuthenticatedAsync(telegramUserId, false);
                 await userService.SetUserStateAsync(user.TelegramUserId, UserState.Idle);
                 user = await userService.GetUserAsync(telegramUserId);
+
+                string errorMessage = user.SessionString!.Trim().EndsWith('=') ? string.Empty : "Usually session strings end with '='\n";
                 await BotHelper.SendTextMessageAsync(
-                    chatId, $"❌ Authentication failed: {result.ErrorMessage}",
+                    chatId, errorMessage + $"❌ Authentication failed: {result.ErrorMessage}. Make sure that new active session appear in Telegram Settings -> Privacy and Security.",
                     botClient, logger, cancellationToken);
                 await MenuManager.ShowMainMenuAsync(user, chatId, botClient, logger, cancellationToken);
                 return;
-            }//when cancelling is authenticated is FALSE 
+            } 
 
             await userService.SetUserAuthenticatedAsync(telegramUserId, true);
             await userService.SetUserStateAsync(user.TelegramUserId, UserState.Idle);

@@ -25,8 +25,8 @@ namespace TelegramForwardly.DataAccess.Repositories
                     FirstName = firstNameIfNew,
                     RegistrationDataTime = DateTime.UtcNow,
                     IsAuthenticated = false,
-                    ForwardlyEnabled = false,
-                    TopicGrouping = "ByKeyword",
+                    ForwardlyEnabled = true,
+                    TopicGrouping = "ByChat",
                     AllChatsFilteringEnabled = false,
                 };
 
@@ -218,12 +218,16 @@ namespace TelegramForwardly.DataAccess.Repositories
             await context.SaveChangesAsync();
         }
 
-
-
-
         public async Task UpdateClientDateAsync(Client client)
         {
             client.RegistrationDataTime = DateTime.UtcNow;
+            await context.SaveChangesAsync();
+        }
+
+        public async Task SetClientForwardlyEnabledAsync(Client client, bool value)
+        {
+            if (client.ForwardlyEnabled == value) return;
+            client.ForwardlyEnabled = value;
             await context.SaveChangesAsync();
         }
     }

@@ -19,8 +19,9 @@ namespace TelegramForwardly.WebApi.Services.Interfaces
         Task<FieldUpdateResult> RemoveKeywordsAsync(long telegramUserId, 
             string[] keywordsWithoutSpecialCharacters);
 
-
         Task<bool> EnableForwardlyAsync(long telegramUserId);
         Task<bool> DisableForwardlyAsync(long telegramUserId);
+
+        Task<FieldUpdateResult> UpdateForwardlyEnabledAsync(long telegramUserId, bool value);
     }
 }
