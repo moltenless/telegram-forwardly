@@ -8,7 +8,6 @@ from telethon.errors import FloodWaitError
 from telethon.tl.functions.channels import GetForumTopicsRequest, CreateForumTopicRequest
 from telethon.tl.types import Message
 
-from app import ClientManager
 from app.models import UserClient, GroupingMode
 from app.services.telegram_api_service import TelegramApiService
 
@@ -16,8 +15,9 @@ logger = logging.getLogger(__name__)
 
 
 class MessageHandler:
-    def __init__(self):
+    def __init__(self, remove_special_chars):
         self.telegram_api = TelegramApiService()
+        self.remove_special_chars = remove_special_chars
 
     async def handle_message(self, event: events.NewMessage.Event, user_client: UserClient):
         try:
@@ -92,7 +92,7 @@ class MessageHandler:
                 topic_name
             )
 
-            body = f"{ClientManager.remove_special_chars(event_data.get('text'))}"
+            body = f"{self.remove_special_chars(event_data.get('text'))}"
             footer = (f"\n\nLink to message: https://t.me/c/{event_data.get('source_chat_id')}/{event_data.get('message_id')}\n"
                           f"Detected keywords: {', '.join(event_data.get('detected_kws'))}\n" 
                           f"From chat: {event_data.get('source_chat_title')[:25]}\n"

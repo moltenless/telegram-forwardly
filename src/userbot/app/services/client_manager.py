@@ -19,7 +19,7 @@ class ClientManager:
     def __init__(self):
         self.clients: Dict[int, UserClient] = {}
         self.telegram_api = TelegramApiService()
-        self.message_handler = MessageHandler()
+        self.message_handler = MessageHandler(self.remove_special_chars)
 
     async def launch_clients_from_database(self):
         await self._disconnect_and_clear_all_clients()
@@ -304,8 +304,7 @@ class ClientManager:
             logger.error(f'Error removing keywords for user: {e}')
             return {'Success': False, 'ErrorMessage': f'Error removing removing for user: {e}'}
 
-    @staticmethod
-    def remove_special_chars(input_str: str) -> str:
+    def remove_special_chars(self, input_str: str) -> str:
         special_chars = {'\\', '_', '*', '[', ']', '(', ')', '~', '`', '>', '<',
                          '#', '+', '-', '=', '|', '{', '}', '.',
                          '!'}
