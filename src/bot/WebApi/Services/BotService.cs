@@ -126,9 +126,10 @@ public class BotService(
 
     public async Task SendMessageAsync(long userId, long forumId, long topicId, string message)
     {
+        string normalizedMessage = BotHelper.DefaultEscapeMarkdownV2(message);
         try
         {
-            await botClient.SendMessage(forumId, BotHelper.DefaultEscapeMarkdownV2(message), ParseMode.MarkdownV2, messageThreadId: (int)forumId );
+            await botClient.SendMessage(forumId, normalizedMessage, ParseMode.MarkdownV2, messageThreadId: (int)topicId );
             logger.LogInformation("Bot sent the message to forum topic {Forum}", forumId);
         }
         catch (ApiRequestException ex) when (ex.ErrorCode == 429)
@@ -145,7 +146,7 @@ public class BotService(
         {
             logger.LogError(ex, "Error sending message to forum topic.");
             await BotHelper.SendTextMessageAsync(userId,
-                        $"An error occurred while sending filtered message to your forum topic. Here is details: {ex.Message}",
+                        $"An error occurred while sending filtered message to your forum topic. Here is details: {ex.Message}\n\nReal message caused the problem:\n{normalizedMessage}",
                         botClient, logger, CancellationToken.None);
             throw;
         }
