@@ -216,52 +216,25 @@ async def remove_keywords():
             'ErrorMessage': f'Error removing keywords for user: {e}'
         }), 500
 
-
-
-
-
-@api_bp.route('/user/update', methods=['POST'])
-def update_user():
+@api_bp.route('/user/forwardly', methods=['POST'])
+def toggle_forwarding():
     try:
         data = request.get_json()
-        user_data = parse_user_from_api(data)
+        user_id = data.get('user_id')
+        value = data.get('value')
 
         result = event_loop_manager.run_coroutine(
-            current_app.client_manager.update_user(user_data)
+            current_app.client_manager.toggle_forwarding(user_id, value)
         )
 
-        return jsonify(result)
+        if result.get('Success') is True:
+            return jsonify(result), 200
+        else:
+            return jsonify(result), 500
 
     except Exception as e:
-        log_error("Error updating user", e, {'telegram_user_id': request.get_json().get('telegram_user_id')})
-        return jsonify({'error': str(e)}), 500
+        return jsonify({"Success": False,
+                        "ErrorMessage": f"Failed to toggle forwarding: {e}"}), 500
 
 
-@api_bp.route('/user/remove', methods=['POST'])
-def remove_user():
-    try:
-        data = request.get_json()
-        telegram_user_id = data.get('telegram_user_id')
 
-        if not telegram_user_id:
-            return jsonify({'error': 'Missing telegram_user_id'}), 400
-
-        result = event_loop_manager.run_coroutine(
-            current_app.client_manager.remove_user(telegram_user_id)
-        )
-
-        return jsonify(result)
-
-    except Exception as e:
-        log_error("Error removing user", e,
-                  {'telegram_user_id': request.get_json().get('telegram_user_id')})
-        return jsonify({'error': str(e)}), 500
-
-@api_bp.route('/users/status', methods=['GET'])
-def get_users_status():
-    try:
-        status = current_app.client_manager.get_all_users_status()
-        return jsonify(status)
-    except Exception as e:
-        log_error("Error getting users status", e)
-        return jsonify({'error': str(e)}), 500

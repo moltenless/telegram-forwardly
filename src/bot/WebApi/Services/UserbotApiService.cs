@@ -258,6 +258,28 @@ namespace TelegramForwardly.WebApi.Services
             }
         }
 
+        public async Task<FieldUpdateResult> UpdateForwardlyEnabledAsync(long telegramUserId, bool value)
+        {
+            try
+            {
+                var request = JsonSerializer.Serialize(new { user_id = telegramUserId, value });
+                var content = new StringContent(request, Encoding.UTF8, "application/json");
+
+                var response = await httpClient.PostAsync("api/user/forwardly", content);
+                var result = JsonSerializer.Deserialize<FieldUpdateResult>(
+                    await response.Content.ReadAsStringAsync());
+                return result!;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error updating forwardly enabled");
+                return new FieldUpdateResult
+                {
+                    Success = false,
+                    ErrorMessage = ex.Message
+                };
+            }
+        }
 
         public Task<bool> DisableForwardlyAsync(long telegramUserId)
         {

@@ -1,13 +1,14 @@
 import logging
 from typing import Dict, Any, List
 
-from telethon import TelegramClient
+from telethon import TelegramClient, events
 from telethon.errors import UserNotParticipantError
 from telethon.sessions import StringSession
 from telethon.tl.functions.channels import GetParticipantRequest
 from telethon.tl.types import ChannelParticipantCreator, User, ChatForbidden, ChannelForbidden
 
 from app.models import BotUser, UserClient, GroupingMode, Chat, Keyword
+from app.services.message_handler import MessageHandler
 from app.services.telegram_api_service import TelegramApiService
 from app.utils import log_error, log_info
 
@@ -18,7 +19,7 @@ class ClientManager:
     def __init__(self):
         self.clients: Dict[int, UserClient] = {}
         self.telegram_api = TelegramApiService()
-        # self.message_handler = MessageHandler()
+        self.message_handler = MessageHandler(self.remove_special_chars)
 
     async def launch_clients_from_database(self):
         await self._disconnect_and_clear_all_clients()
@@ -100,16 +101,19 @@ class ClientManager:
             return False
 
     async def _setup_message_handler(self, user_client: UserClient):
-        # try:
-        #     @user_client.client.on(events.NewMessage)
-        #     async def handle_new_message(event):
-        #         await self.message_handler.handle_message(event, user_client)
-        #
-        #     log_info(f"Set up message handler for user {user_client.user.telegram_user_id}")
-        #
-        # except Exception as e:
-        #     log_error(f"Failed to setup message handler for user {user_client.user.telegram_user_id}", e)
-        logger.info('Here I must subscribe client to handle new messages')
+        try:
+            @user_client.client.on(events.NewMessage)
+            async def handle_new_message(event):
+                await self.message_handler.handle_message(event, user_client)
+
+            logger.info(f"Set up message handler for user {user_client.user.telegram_user_id}")
+
+        except Exception as e:
+            logger.error(f"Failed to setup message handler for user {user_client.user.telegram_user_id}", e)
+
+
+
+
 
     async def check_and_update_forum(self, user_id, forum_id):
         try:
@@ -224,12 +228,12 @@ class ClientManager:
 
                     chat_infos.append({
                         'Id': chat_id,
-                        'Title': entity.title
+                        'Title': entity.title[:99]
                     })
 
                     user.chats.append(Chat(telegram_user_id=user_id,
                                            telegram_chat_id=chat_id,
-                                           title=entity.title,
+                                           title=entity.title[:99],
                                            id = -1))
                 except: continue
 
@@ -296,70 +300,11 @@ class ClientManager:
         # special_chars = {'_', '*', '[', ']', '(', ')', '`', '|'}
         return ''.join(c for c in input_str if c not in special_chars)
 
-    async def update_user(self, user_data: BotUser) -> Dict[str, Any]:
-        """Update user configuration and reconnect if necessary"""
+    async def toggle_forwarding(self, user_id, value):
         try:
-            user_id = user_data.telegram_user_id
-
-            # If user already exists, disconnect old client
-            if user_id in self.clients:
-                await self._disconnect_client(user_id)
-
-            # If user is authenticated, create new connection
-            if user_data.is_authenticated and user_data.session_string:
-                success = await self._create_and_connect_client(user_data)
-                if success:
-                    return {'success': True, 'message': 'User updated and connected'}
-                else:
-                    return {'success': False, 'error': 'Failed to connect client'}
-
-            return {'success': True, 'message': 'User updated'}
-
+            self.clients[user_id].user.forwardly_enabled = value
+            return {'Success': True}
         except Exception as e:
-            log_error(f"Failed to update user {user_data.telegram_user_id}", e)
-            return {'success': False, 'error': str(e)}
-
-    async def remove_user(self, user_id: int) -> Dict[str, Any]:
-        """Remove user and disconnect client"""
-        try:
-            await self._disconnect_client(user_id)
-            log_info(f"Removed user {user_id}")
-            return {'success': True, 'message': 'User removed'}
-
-        except Exception as e:
-            log_error(f"Failed to remove user {user_id}", e)
-            return {'success': False, 'error': str(e)}
-
-    async def _disconnect_client(self, user_id: int):
-        """Disconnect client for user"""
-        if user_id in self.clients:
-            user_client = self.clients[user_id]
-            if user_client.client and user_client.is_connected:
-                await user_client.client.disconnect()
-            del self.clients[user_id]
-
-            # Report disconnection to bot API
-            await self.telegram_api.report_user_status(user_id, False)
-
-    def get_all_users_status(self) -> Dict[str, Any]:
-        """Get status of all connected users"""
-        return {
-            'connected_users': len(self.clients),
-            'users': [
-                {
-                    'user_id': user_id,
-                    'is_connected': client.is_connected,
-                    'last_error': client.last_error
-                }
-                for user_id, client in self.clients.items()
-            ]
-        }
-
-    # async def start_message_handling(self):
-    #     """Start message handling for all connected clients"""
-    #     log_info("Starting message handling for all clients...")
-    #
-    #     # All clients are already set up with message handlers
-    #     # This method can be used for additional setup if needed
-    #     pass
+            logger.error(f'Failed to toggle forwarding: {e}')
+            return {'Success': False, 'ErrorMessage': f'Failed to toggle forwarding: {e}'}
 
