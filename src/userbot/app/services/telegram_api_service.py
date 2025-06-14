@@ -39,17 +39,10 @@ class TelegramApiService:
             logger.error("Unexpected error getting users", e)
             return []
 
-    async def send_message_to_topic(self, user_id, forum_id, topic_id, text_header, text_footer):
+    async def send_message_to_topic(self, message_data):
         try:
             url = f"{self.base_url}/message/send"
-            payload = {
-                'UserId': user_id,
-                'ForumId': forum_id,
-                'TopicId': topic_id,
-                'TextHeader': text_header,
-                'TextFooter': text_footer
-            }
-            response = self.session.post(url, json=payload)
+            response = self.session.post(url, json=message_data)
             response.raise_for_status()
             if response.status_code != 200:
                 logger.error("Failed to send the message to forum topic from Telegram Bot API. Status code is not 200!")

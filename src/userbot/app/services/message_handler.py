@@ -92,20 +92,21 @@ class MessageHandler:
                 topic_name
             )
 
-            text_header = f"{event_data.get('text')}"
-            text_footer = (f"\n\nLink to message: https://t.me/c/{event_data.get('source_chat_id')}/{event_data.get('message_id')}\n"
-                          f"Detected keywords: {', '.join(event_data.get('detected_kws'))}\n" 
-                          f"From chat: {event_data.get('source_chat_title')[:25]}\n"
-                          f"Message by: {event_data.get('first_name')} {'@' + event_data.get('username') if event_data.get('username') else ''}\n"
-                          f"Time: {event_data.get('date_time').strftime('%H:%M | %d.%m ')}")
+            message_data = {
+                'ForumOwnerId': user_client.user.telegram_user_id,
+                'ForumId': user_client.user.forum_supergroup_id,
+                'TopicId': topic_id,
+                'SourceText': event_data.get('text'),
+                'SourceMessageId': event_data.get('message_id'),
+                'SourceChatId': event_data.get('source_chat_id'),
+                'SourceChatTitle': event_data.get('source_chat_title'),
+                'FoundKeywords': event_data.get('detected_kws'),
+                'SenderFirstName': event_data.get('first_name'),
+                'SenderUsername': event_data.get('username'),
+                'DateTime': event_data.get('date_time')
+            }
 
-            await self.telegram_api.send_message_to_topic(
-                user_client.user.telegram_user_id,
-                user_client.user.forum_supergroup_id,
-                topic_id,
-                text_header,
-                text_footer
-            )
+            await self.telegram_api.send_message_to_topic(message_data)
 
         except Exception as e:
             logger.error(f"Failed to forward message for user {user_client.user.telegram_user_id}", e)

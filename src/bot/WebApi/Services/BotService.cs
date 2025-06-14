@@ -1,10 +1,12 @@
 ﻿using System;
+using System.IO;
 using System.Threading;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using TelegramForwardly.WebApi.Models.Dtos;
+using TelegramForwardly.WebApi.Models.Requests;
 using TelegramForwardly.WebApi.Services.Bot;
 using TelegramForwardly.WebApi.Services.Bot.Managers;
 using TelegramForwardly.WebApi.Services.Interfaces;
@@ -73,13 +75,13 @@ public class BotService(
             await UpdateRouter.RouteCommandAsync(
                 user, message,
                 userService, userbotApiService,
-                botClient, logger, 
+                botClient, logger,
                 cancellationToken);
             return;
         }
 
         await UpdateRouter.RouteUserInputAsync(
-            user, message, 
+            user, message,
             userService, userbotApiService,
             botClient, logger,
             cancellationToken);
@@ -98,7 +100,7 @@ public class BotService(
         await botClient.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: cancellationToken);
 
         await UpdateRouter.RouteCallbackQueryAsync(
-            user, callbackQuery, 
+            user, callbackQuery,
             userService, userbotApiService,
             botClient, logger,
             cancellationToken);
@@ -124,27 +126,41 @@ public class BotService(
         }
     }
 
-    public async Task SendMessageAsync(long userId, long forumId, long topicId, string message)
+    public async Task SendMessageAsync(SendMessageRequest request)
     {
-        string normalizedMessage = BotHelper.DefaultEscapeMarkdownV2(message);
+        string header = $"{request.SourceText}";
+        string footer = $"\n\nLink to message: https://t.me/c/{request.SourceChatId}/{request.SourceMessageId}\n" +
+                          $"Detected keywords: {string.Join(", ", request.FoundKeywords)}\n" +
+                          $"From chat: {request.SourceChatTitle.Take(25)}\n" +
+                          $"Message by: {request.SenderFirstName} {((request.SenderUsername is not null) ? ("@" + request.SenderUsername) : string.Empty)}\n" +
+                          $"Time: {request.DateTime:%H:%M | %d.%m}";
+
+        string finalText;
+        int lengthDelta = (header + footer).Length - 4096;
+        if (lengthDelta <= 0)
+            finalText = header + footer;
+        else
+            finalText = header.Take(header.Length - lengthDelta - 3) + "..." + footer;
+
+        string normalizedFinalText = BotHelper.DefaultEscapeMarkdownV2(finalText);
         try
         {
-            await botClient.SendMessage(forumId, normalizedMessage, ParseMode.MarkdownV2, messageThreadId: (int)topicId );
-            logger.LogInformation("Bot's been requested and it sent the message to forum: {Forum} topic: {Topic}", forumId, topicId);
+            await botClient.SendMessage(request.ForumId, finalText, ParseMode.None, messageThreadId: (int)request.TopicId);
+            logger.LogInformation("Bot's been requested and it sent the message to forum: {Forum} topic: {Topic}", request.ForumId, request.TopicId);
         }
         catch (ApiRequestException ex) when (ex.ErrorCode == 429)
         {
-            logger.LogError(ex, "ВНУТРИ АПИ ЕКПСПЕПШН НО КОГДА 429 Error sending message to forum topic.\n\nReal message caused the problem:\n{NormalizedMessage}", normalizedMessage);
+            logger.LogError(ex, "ВНУТРИ АПИ ЕКПСПЕПШН НО КОГДА 429 Error sending message to forum topic.\n\nReal message caused the problem:\n{NormalizedMessage}", finalText);
             throw;
         }
         catch (ApiRequestException ex)
         {
-            logger.LogError(ex, "ВНУТРИ АПИ ЕКСЕПШН Error sending message to forum topic.\n\nReal message caused the problem:\n{NormalizedMessage}", normalizedMessage);
+            logger.LogError(ex, "ВНУТРИ АПИ ЕКСЕПШН Error sending message to forum topic.\n\nReal message caused the problem:\n{NormalizedMessage}", finalText);
             throw;
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "ВНУТРИ ОБЩЕГО Error sending message to forum topic.\n\nReal message caused the problem:\n{NormalizedMessage}", normalizedMessage);
+            logger.LogError(ex, "ВНУТРИ ОБЩЕГО Error sending message to forum topic.\n\nReal message caused the problem:\n{NormalizedMessage}", finalText);
             //await BotHelper.SendTextMessageAsync(userId,
             //            $"An error occurred while sending filtered message to your forum topic. Here is details: {ex.Message}",
             //            botClient, logger, CancellationToken.None);

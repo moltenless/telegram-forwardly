@@ -20,7 +20,7 @@ namespace TelegramForwardly.WebApi.Controllers
         {
             try
             {
-                await botService.SendMessageAsync(request.UserId, request.ForumId, request.TopicId, request.TextHeader, request.TextFooter);
+                await botService.SendMessageAsync(request);
                 return Ok();
             }
             catch (Exception ex)
