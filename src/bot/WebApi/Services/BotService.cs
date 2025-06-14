@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
@@ -127,20 +128,24 @@ public class BotService(
     {
         try
         {
-            await botClient.SendMessage(forumId, BotHelper.DefaultEscapeMarkdownV2(message), ParseMode.MarkdownV2, new ReplyParameters { ChatId = forumId });
+            await botClient.SendMessage(forumId, BotHelper.DefaultEscapeMarkdownV2(message), ParseMode.MarkdownV2, messageThreadId: (int)forumId );
+            logger.LogInformation("Bot sent the message to forum topic {Forum}", forumId);
         }
         catch (ApiRequestException ex) when (ex.ErrorCode == 429)
         {
+            logger.LogError(ex, "Error sending message to forum topic.");
+            throw;
         }
         catch (ApiRequestException ex)
         {
-
+            logger.LogError(ex, "Error sending message to forum topic.");
+            throw;
         }
-        catch (Exception exception)
+        catch (Exception ex)
         {
-            logger.LogError(exception, "Error sending message to forum topic.");
+            logger.LogError(ex, "Error sending message to forum topic.");
             await BotHelper.SendTextMessageAsync(userId,
-                        $"An error occurred while sending filtered message to your forum topic. Here is details: {exception.Message}",
+                        $"An error occurred while sending filtered message to your forum topic. Here is details: {ex.Message}",
                         botClient, logger, CancellationToken.None);
             throw;
         }

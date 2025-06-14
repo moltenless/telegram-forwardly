@@ -49,6 +49,7 @@ class TelegramApiService:
                 'Message': message
             }
             response = self.session.post(url, json=payload)
+            logger.info(f'sent message from bot and received response {response}')
             response.raise_for_status()
 
         except requests.RequestException as e:
