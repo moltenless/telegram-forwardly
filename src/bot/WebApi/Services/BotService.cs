@@ -128,39 +128,40 @@ public class BotService(
 
     public async Task SendMessageAsync(SendMessageRequest request)
     {
-        string header = $"{request.SourceText}";
+        string header = $"{BotHelper.RemoveSpecialChars(request.SourceText)}";
         string footer = $"\n\nLink to message: https://t.me/c/{request.SourceChatId}/{request.SourceMessageId}\n" +
-                          $"Detected keywords: {string.Join(", ", request.FoundKeywords)}\n" +
-                          $"From chat: {request.SourceChatTitle.Take(25)}\n" +
-                          $"Message by: {request.SenderFirstName} {((request.SenderUsername is not null) ? ("@" + request.SenderUsername) : string.Empty)}\n" +
-                          $"Time: {request.DateTime:%H:%M | %d.%m}";
+                          $"Detected keywords: {BotHelper.RemoveSpecialChars(string.Join(", ", request.FoundKeywords))}\n" +
+                          $"From chat: {BotHelper.RemoveSpecialChars(request.SourceChatTitle[..Math.Min(request.SourceChatTitle.Length, 25)])}\n" +
+                          $"Message by: {BotHelper.RemoveSpecialChars(request.SenderFirstName is not null ? request.SenderFirstName : "")}" +
+                          $" {((request.SenderUsername is not null) ? ("@" + request.SenderUsername) : string.Empty)}\n" +
+                          $"Time: {request.DateTime}";
 
         string finalText;
         int lengthDelta = (header + footer).Length - 4096;
         if (lengthDelta <= 0)
             finalText = header + footer;
         else
-            finalText = header.Take(header.Length - lengthDelta - 3) + "..." + footer;
+            finalText = header[..Math.Min(header.Length, header.Length - lengthDelta - 3)] + "..." + footer;
 
-        string normalizedFinalText = BotHelper.DefaultEscapeMarkdownV2(finalText);
+        string normalizedFinalText = BotHelper.EscapeMarkdownV2InTopic(finalText);
         try
         {
-            await botClient.SendMessage(request.ForumId, finalText, ParseMode.None, messageThreadId: (int)request.TopicId);
+            await botClient.SendMessage(request.ForumId, normalizedFinalText, ParseMode.MarkdownV2, messageThreadId: (int)request.TopicId);
             logger.LogInformation("Bot's been requested and it sent the message to forum: {Forum} topic: {Topic}", request.ForumId, request.TopicId);
         }
         catch (ApiRequestException ex) when (ex.ErrorCode == 429)
         {
-            logger.LogError(ex, "ВНУТРИ АПИ ЕКПСПЕПШН НО КОГДА 429 Error sending message to forum topic.\n\nReal message caused the problem:\n{NormalizedMessage}", finalText);
+            logger.LogError(ex, "ВНУТРИ АПИ ЕКПСПЕПШН НО КОГДА 429 Error sending message to forum topic.\n\nReal message caused the problem:\n{NormalizedMessage}", normalizedFinalText);
             throw;
         }
         catch (ApiRequestException ex)
         {
-            logger.LogError(ex, "ВНУТРИ АПИ ЕКСЕПШН Error sending message to forum topic.\n\nReal message caused the problem:\n{NormalizedMessage}", finalText);
+            logger.LogError(ex, "ВНУТРИ АПИ ЕКСЕПШН Error sending message to forum topic.\n\nReal message caused the problem:\n{NormalizedMessage}", normalizedFinalText);
             throw;
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "ВНУТРИ ОБЩЕГО Error sending message to forum topic.\n\nReal message caused the problem:\n{NormalizedMessage}", finalText);
+            logger.LogError(ex, "ВНУТРИ ОБЩЕГО Error sending message to forum topic.\n\nReal message caused the problem:\n{NormalizedMessage}", normalizedFinalText);
             //await BotHelper.SendTextMessageAsync(userId,
             //            $"An error occurred while sending filtered message to your forum topic. Here is details: {ex.Message}",
             //            botClient, logger, CancellationToken.None);

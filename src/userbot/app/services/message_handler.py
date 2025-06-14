@@ -103,7 +103,7 @@ class MessageHandler:
                 'FoundKeywords': event_data.get('detected_kws'),
                 'SenderFirstName': event_data.get('first_name'),
                 'SenderUsername': event_data.get('username'),
-                'DateTime': event_data.get('date_time')
+                'DateTime': event_data.get('date_time').strftime('%H:%M | %d.%m')
             }
 
             await self.telegram_api.send_message_to_topic(message_data)

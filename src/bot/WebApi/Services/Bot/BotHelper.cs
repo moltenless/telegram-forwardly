@@ -56,6 +56,25 @@ namespace TelegramForwardly.WebApi.Services.Bot
             return builder.ToString();
         }
 
+        public static string EscapeMarkdownV2InTopic(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+                return text;
+
+            var specialChars = new[] { '\\', '_', /* '*', '[', ']', '(', ')',*/ '~', /*'`',*/ '>', '#', '+', '-', '=', '|', '{', '}', '.', '!' };
+
+            var builder = new StringBuilder();
+
+            foreach (var ch in text)
+            {
+                if (Array.IndexOf(specialChars, ch) != -1)
+                    builder.Append('\\');
+                builder.Append(ch);
+            }
+
+            return builder.ToString();
+        }
+
         public static string RemoveSpecialChars(string input)
         {
             var specialChars = new[] { '\\', '_', '*', '[', ']', '(', ')', '~', '`', '>', '<', '#', '+', '-', '=', '|', '{', '}', '.', '!' };

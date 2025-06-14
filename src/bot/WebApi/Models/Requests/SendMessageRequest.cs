@@ -12,6 +12,6 @@
         public string[] FoundKeywords { get; set; } = [];
         public string? SenderFirstName { get; set; }
         public string? SenderUsername { get; set; }
-        public DateTime DateTime { get; set; }
+        public string DateTime { get; set; } = null!;
     }
 }
