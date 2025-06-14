@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 using Telegram.Bot;
+using TelegramForwardly.WebApi.Models.Requests;
 using TelegramForwardly.WebApi.Services.Interfaces;
 
 namespace TelegramForwardly.WebApi.Controllers
@@ -15,11 +16,11 @@ namespace TelegramForwardly.WebApi.Controllers
         private readonly ILogger<UsersController> logger = logger;
 
         [HttpPost("send")]
-        public async Task<IActionResult> SendMessageAsync([FromBody] long userId, [FromBody] long forumId, [FromBody] long topicId, [FromBody] string message)
+        public async Task<IActionResult> SendMessageAsync([FromBody] SendMessageRequest request)
         {
             try
             {
-                await botService.SendMessageAsync(userId, forumId, topicId, message);
+                await botService.SendMessageAsync(request.UserId, request.ForumId, request.TopicId, request.Message);
                 return Ok();
             }
             catch (Exception ex)

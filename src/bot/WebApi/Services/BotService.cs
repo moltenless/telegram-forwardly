@@ -22,7 +22,7 @@ public class BotService(
     private readonly IUserbotApiService userbotApiService = userbotApiService;
     private readonly ILogger logger = logger;
 
-    public async Task HandleUpdateAsync(Update update, CancellationToken cancellationToken)
+    public async Task HandleUpdateAsync(Telegram.Bot.Types.Update update, CancellationToken cancellationToken)
     {
         try
         {
@@ -42,7 +42,7 @@ public class BotService(
         }
     }
 
-    private async Task HandleMessageAsync(Update update, CancellationToken cancellationToken)
+    private async Task HandleMessageAsync(Telegram.Bot.Types.Update update, CancellationToken cancellationToken)
     {
         Message message = update.Message!;
         if (message.Type == MessageType.NewChatMembers && message.NewChatMembers![0].Id == botClient.BotId)
@@ -102,7 +102,7 @@ public class BotService(
             cancellationToken);
     }
 
-    private async Task HandleErrorAsync(Update update, Exception exception, CancellationToken cancellationToken)
+    private async Task HandleErrorAsync(Telegram.Bot.Types.Update update, Exception exception, CancellationToken cancellationToken)
     {
         logger.LogError(exception, "An error occurred while handling update {UpdateId}", update.Id);
 

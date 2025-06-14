@@ -43,10 +43,10 @@ class TelegramApiService:
         try:
             url = f"{self.base_url}/message/send"
             payload = {
-                'userId': user_id,
-                'forumId': forum_id,
-                'topicId': topic_id,
-                'message': message
+                'UserId': user_id,
+                'ForumId': forum_id,
+                'TopicId': topic_id,
+                'Message': message
             }
             response = self.session.post(url, json=payload)
             response.raise_for_status()
