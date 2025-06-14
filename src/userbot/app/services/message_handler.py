@@ -103,10 +103,11 @@ class MessageHandler:
             else:
                 final_text = body[:len(body) - len_delta - 3] + '...' + footer
 
-            await user_client.client.send_message(
-                entity=user_client.user.forum_supergroup_id,
-                message=final_text,
-                reply_to=topic_id
+            await self.telegram_api.send_message_to_topic(
+                user_client.user.telegram_user_id,
+                user_client.user.forum_supergroup_id,
+                topic_id,
+                final_text
             )
 
         except Exception as e:

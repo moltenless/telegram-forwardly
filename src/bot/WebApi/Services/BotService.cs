@@ -1,10 +1,12 @@
-﻿using Telegram.Bot;
+﻿using System.Threading;
+using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using TelegramForwardly.WebApi.Models.Dtos;
 using TelegramForwardly.WebApi.Services.Bot;
 using TelegramForwardly.WebApi.Services.Bot.Managers;
 using TelegramForwardly.WebApi.Services.Interfaces;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace TelegramForwardly.WebApi.Services;
 
@@ -117,6 +119,22 @@ public class BotService(
             {
                 // Ignore errors when sending error messages
             }
+        }
+    }
+
+    public async Task SendMessageAsync(long userId, long forumId, long topicId, string message)
+    {
+        try
+        {
+            await botClient.SendMessage(forumId, BotHelper.DefaultEscapeMarkdownV2(message), ParseMode.MarkdownV2, new ReplyParameters { ChatId = forumId });
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Error sending message to forum topic.");
+            await BotHelper.SendTextMessageAsync(userId,
+                        $"An error occurred while sending filtered message to your forum topic. Here is details: {exception.Message}",
+                        botClient, logger, CancellationToken.None);
+            throw;
         }
     }
 }
