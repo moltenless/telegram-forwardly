@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using Telegram.Bot;
+using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using TelegramForwardly.WebApi.Models.Dtos;
@@ -127,6 +128,13 @@ public class BotService(
         try
         {
             await botClient.SendMessage(forumId, BotHelper.DefaultEscapeMarkdownV2(message), ParseMode.MarkdownV2, new ReplyParameters { ChatId = forumId });
+        }
+        catch (ApiRequestException ex) when (ex.ErrorCode == 429)
+        {
+        }
+        catch (ApiRequestException ex)
+        {
+
         }
         catch (Exception exception)
         {

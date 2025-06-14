@@ -7,6 +7,8 @@ from telethon import events, TelegramClient
 from telethon.errors import FloodWaitError
 from telethon.tl.functions.channels import GetForumTopicsRequest, CreateForumTopicRequest
 from telethon.tl.types import Message
+
+from app import ClientManager
 from app.models import UserClient, GroupingMode
 from app.services.telegram_api_service import TelegramApiService
 
@@ -90,9 +92,9 @@ class MessageHandler:
                 topic_name
             )
 
-            body = f"{event_data.get('text')}"
+            body = f"{ClientManager.remove_special_chars(event_data.get('text'))}"
             footer = (f"\n\nLink to message: https://t.me/c/{event_data.get('source_chat_id')}/{event_data.get('message_id')}\n"
-                          f"Detected keywords: {', '.join(event_data.get('detected_kws'))}\n"
+                          f"Detected keywords: {', '.join(event_data.get('detected_kws'))}\n" 
                           f"From chat: {event_data.get('source_chat_title')[:25]}\n"
                           f"Message by: {event_data.get('first_name')} {'@' + event_data.get('username') if event_data.get('username') else ''}\n"
                           f"Time: {event_data.get('date_time').strftime('%H:%M | %d.%m ')}")

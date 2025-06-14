@@ -304,7 +304,8 @@ class ClientManager:
             logger.error(f'Error removing keywords for user: {e}')
             return {'Success': False, 'ErrorMessage': f'Error removing removing for user: {e}'}
 
-    def remove_special_chars(self, input_str: str) -> str:
+    @staticmethod
+    def remove_special_chars(input_str: str) -> str:
         special_chars = {'\\', '_', '*', '[', ']', '(', ')', '~', '`', '>', '<',
                          '#', '+', '-', '=', '|', '{', '}', '.',
                          '!'}
