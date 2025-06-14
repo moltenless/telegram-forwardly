@@ -86,11 +86,12 @@ namespace TelegramForwardly.WebApi.Services.Bot
               "*To get started*, you need to set up *your account information* and Telegram API credentials.\n\n" +
               "To begin the configuration process:\n*Please click \'🔑 Setup credentials\' in menu below*\nOr\n*Use /setup*";
 
-        public static string GetSetupMessage()
+        public static string GetSetupMessage(string? phone)
             => "Let's get started with the phone number linked to your Telegram account:\n\n" +
-                             "*Please click \'Share phone number 📞🔢\' button below*\nOr\n*Enter manually in the format:* +1234567890 or 1234567890 with country code";
+               "*Please click \'Share phone number 📞🔢\' button below*\nOr\n*Enter manually in the format:* +1234567890 or 1234567890 with country code" +
+               (phone is not null ? $"\n\nLast time you entered `{phone}`" : string.Empty);
 
-        public static string GetApiIdMessage(string phone)
+        public static string GetApiIdMessage(string? apiId)
             => $"*Now, let's set up your Telegram API ID and API Hash:*\n\n" +
                 "You can get them from official Telegram website https://my.telegram.org\n" +
                 "1. There you will need to log in with your phone number and confirm with \'login code\' sent by Telegram.\n" +
@@ -102,14 +103,16 @@ namespace TelegramForwardly.WebApi.Services.Bot
                 "We don't use them for anything other than forwarding messages to your forum. " +
                 "Check out our open source code on [GitHub](https://github.com/moltenless/telegram-forwardly). " +
                 "You can always delete them in bot settings menu or revoke access to your app in Telegram settings._\n\n" +
-                "*First, please send me the App api-id:* it looks like '12345678'";
+                "*First, please send me the App api-id:* it looks like '12345678'" +
+                (apiId is not null ? $"\n\nLast time you entered `{apiId}`" : string.Empty);
 
-        public static string GetApiHashMessage()
+        public static string GetApiHashMessage(string? apiHash)
             => $"Perfect! Now, please send me your *App api-hash*.\n\n" +
                 "You can copy it in the same place where you got your App api-id. " +
-                "it looks like `0123456789abcdef0123456789abcdef`";
+                "it looks like `0123456789abcdef0123456789abcdef`" +
+                (apiHash is not null ? $"\n\nLast time you entered `{apiHash}`" : string.Empty);
 
-        public static string GetSessionStringMessage()
+        public static string GetSessionStringMessage(string? sessionString)
             => $"Awesome! Now, please send me your *Session String*.\n\n" +
                 "The safest way to get it is by using a transparent script in this " +
                 "[generator](https://colab.research.google.com/drive/1lxctt9F8QN0jbAcod12ljCo0QoW6MnYN?usp=sharing). " +
@@ -117,10 +120,10 @@ namespace TelegramForwardly.WebApi.Services.Bot
                 "👉 Open the link, sign in with your Google account " +
                 "and press ▶️‍ button at the top. Under the code you'll be asked to enter your API ID etc.\n" +
                 "After completing you will get _session string_. *Copy and paste it here.*\n\n" +
-
                 "_Alternatively, there's a third-party service that can generate session string more easily: " +
                 "[service](https://telegram.tools/session-string-generator#telethon) - choose 'User' as 'Account Type'.\n" +
-                "*However, it’s not officially verified and may pose a security risk. Use it at your own risk and discretion.*_\n\n";
+                "*However, it’s not officially verified and may pose a security risk. Use it at your own risk and discretion.*_" +
+                (sessionString is not null ? $"\n\nLast time you entered `{sessionString}`" : string.Empty);
 
         public static string GetPasswordMessage()
             => $"Great! If you have enabled 2FA protection for this account please enter password:\n\n" +
@@ -134,13 +137,15 @@ namespace TelegramForwardly.WebApi.Services.Bot
                "*Now let's set up forwarding details*:\n" +
                "*Please click '⚙️ Settings' in menu below*\nOr\n*Use /settings*";
 
-        public static string GetSettingsMessage()
+        public static string GetSettingsMessage(long? forumId)
             => "*Now, create your own group in Telegram* - so I can set this group as your forum supergroup with topics where messages will be forwarded.\n\n" +
                "1. Create a new group in Telegram. Call it something like 'Forwardly'\n" +
                "2. Go to group settings and click on 'Topics' section.\n" +
                "3. Enable this option and choose style of topic layout you prefer. Select 'List' for now. Save the changes.\n" +
                "4. Then, here in this chat with me click on 'Add to Group'. Select your recently created group. It will immediately send there a message with the group ID.\n" +
-               "5. Please, copy the group id - *it looks like '-100XXXXXXXXX' - and send it to me here*";
+               "5. Please, copy the group id - *it looks like '-100XXXXXXXXX' - and send it to me here*" +
+                (forumId is not null ? $"\n\nLast time you entered `{forumId}`" : string.Empty);
+
 
         public static InlineKeyboardMarkup GetMenuKeyboard(bool forwardlyEnabled)
             => new([
@@ -158,7 +163,7 @@ namespace TelegramForwardly.WebApi.Services.Bot
             ],
             [
                 InlineKeyboardButton.WithCallbackData(forwardlyEnabled ? "🟢 Pause forwarding" : "🔴 Resume forwarding", "forwardly_enabled")
-                //InlineKeyboardButton.WithCallbackData(forwardlyEnabled ? "⏸️ Pause forwarding" : "▶️ Resume forwarding", "forwardly_enabled")
+                //⏸️ ▶️ )
             ]
             ]);
 

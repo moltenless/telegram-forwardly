@@ -26,7 +26,7 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
 
             await BotHelper.SendTextMessageAsync(
                 message.Chat.Id,
-                BotHelper.GetApiIdMessage(phone!),
+                BotHelper.GetApiIdMessage(user.ApiId),
                 botClient, logger,
                 cancellationToken,
                 new ReplyKeyboardRemove());
@@ -46,7 +46,7 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
 
             await BotHelper.SendTextMessageAsync(
                 message.Chat.Id,
-                BotHelper.GetApiHashMessage(),
+                BotHelper.GetApiHashMessage(user.ApiHash),
                 botClient, logger,
                 cancellationToken);
         }
@@ -65,7 +65,7 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
 
             await BotHelper.SendTextMessageAsync(
                 message.Chat.Id,
-                BotHelper.GetSessionStringMessage(),
+                BotHelper.GetSessionStringMessage(user.SessionString),
                 botClient, logger,
                 cancellationToken);
         }

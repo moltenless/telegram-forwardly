@@ -119,7 +119,7 @@ namespace TelegramForwardly.WebApi.Services.Bot
                     await userService.SetUserStateAsync(user.TelegramUserId, UserState.AwaitingForumGroup);
                     await BotHelper.SendTextMessageAsync(
                         callbackQuery.Message!.Chat.Id,
-                        BotHelper.GetSettingsMessage(),
+                        BotHelper.GetSettingsMessage(user.ForumSupergroupId),
                         botClient, logger,
                         cancellationToken);
                     break;

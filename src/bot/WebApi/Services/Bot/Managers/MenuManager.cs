@@ -48,7 +48,7 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
 
             await BotHelper.SendTextMessageAsync(
                 chatId,
-                BotHelper.GetSetupMessage(),
+                BotHelper.GetSetupMessage(user.Phone),
                 botClient, logger,
                 cancellationToken,
                 BotHelper.GetPhoneKeyboard());

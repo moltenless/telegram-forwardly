@@ -49,7 +49,7 @@ public class BotService(
                 message.Chat, botClient, logger, cancellationToken);
             return;
         }
-        if (message.Type != MessageType.Text)
+        if (message.Type != MessageType.Text && message.Type != MessageType.Contact)
             return;
 
         var user = await userService.GetOrCreateUserAsync(
