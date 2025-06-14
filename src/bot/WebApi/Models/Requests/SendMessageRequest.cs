@@ -5,6 +5,7 @@
         public long UserId { get; set; }
         public long ForumId { get; set; }
         public long TopicId { get; set; }
-        public string Message { get; set; } = null!;
+        public string TextHeader { get; set; } = null!;
+        public string TextFooter { get; set; } = null!;
     }
 }

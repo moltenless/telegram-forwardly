@@ -61,17 +61,6 @@ class ClientManager:
     async def _launch_clients_from_users(self, users: List[BotUser]):
         try:
             for user in users:
-
-                #sjfklsdjklfjklosjdklfjklsdjfkljsdklfjklsdjfok
-
-
-
-
-                if not user.telegram_user_id == 587388238:
-                    continue
-
-
-                    #sdjfksjdlkfjskldjkfsdkljfklsdjklfjklsdjklfjksdjf
                 self.clients[user.telegram_user_id] = UserClient()
                 self.clients[user.telegram_user_id].user = user
                 await self._connect_client(user)

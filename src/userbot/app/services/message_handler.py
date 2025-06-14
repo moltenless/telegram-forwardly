@@ -92,24 +92,19 @@ class MessageHandler:
                 topic_name
             )
 
-            body = f"{self.remove_special_chars(event_data.get('text'))}"
-            footer = (f"\n\nLink to message: https://t.me/c/{event_data.get('source_chat_id')}/{event_data.get('message_id')}\n"
+            text_header = f"{event_data.get('text')}"
+            text_footer = (f"\n\nLink to message: https://t.me/c/{event_data.get('source_chat_id')}/{event_data.get('message_id')}\n"
                           f"Detected keywords: {', '.join(event_data.get('detected_kws'))}\n" 
                           f"From chat: {event_data.get('source_chat_title')[:25]}\n"
                           f"Message by: {event_data.get('first_name')} {'@' + event_data.get('username') if event_data.get('username') else ''}\n"
                           f"Time: {event_data.get('date_time').strftime('%H:%M | %d.%m ')}")
 
-            len_delta = len(body+footer) - 4096
-            if len_delta <= 0:
-                final_text = body + footer
-            else:
-                final_text = body[:len(body) - len_delta - 3] + '...' + footer
-
             await self.telegram_api.send_message_to_topic(
                 user_client.user.telegram_user_id,
                 user_client.user.forum_supergroup_id,
                 topic_id,
-                final_text
+                text_header,
+                text_footer
             )
 
         except Exception as e:

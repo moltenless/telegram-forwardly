@@ -10,22 +10,22 @@ namespace TelegramForwardly.WebApi.Controllers
     [Route("api/[controller]")]
     public class MessageController(
         IBotService botService,
-        ILogger<UsersController> logger) : ControllerBase
+        ILogger<MessageController> logger) : ControllerBase
     {
         private readonly IBotService botService = botService;
-        private readonly ILogger<UsersController> logger = logger;
+        private readonly ILogger<MessageController> logger = logger;
 
         [HttpPost("send")]
         public async Task<IActionResult> SendMessageAsync([FromBody] SendMessageRequest request)
         {
             try
             {
-                await botService.SendMessageAsync(request.UserId, request.ForumId, request.TopicId, request.Message);
+                await botService.SendMessageAsync(request.UserId, request.ForumId, request.TopicId, request.TextHeader, request.TextFooter);
                 return Ok();
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error retrieving all users");
+                logger.LogError(ex, "Error sending message to forum");
                 return StatusCode(500, $"Internal bot server error. Failed to send message to forum {ex.Message}");
             }
         }

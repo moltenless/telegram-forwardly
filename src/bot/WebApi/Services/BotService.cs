@@ -130,24 +130,24 @@ public class BotService(
         try
         {
             await botClient.SendMessage(forumId, normalizedMessage, ParseMode.MarkdownV2, messageThreadId: (int)topicId );
-            logger.LogInformation("Bot sent the message to forum topic {Forum}", forumId);
+            logger.LogInformation("Bot's been requested and it sent the message to forum: {Forum} topic: {Topic}", forumId, topicId);
         }
         catch (ApiRequestException ex) when (ex.ErrorCode == 429)
         {
-            logger.LogError(ex, "Error sending message to forum topic.");
+            logger.LogError(ex, "ВНУТРИ АПИ ЕКПСПЕПШН НО КОГДА 429 Error sending message to forum topic.\n\nReal message caused the problem:\n{NormalizedMessage}", normalizedMessage);
             throw;
         }
         catch (ApiRequestException ex)
         {
-            logger.LogError(ex, "Error sending message to forum topic.");
+            logger.LogError(ex, "ВНУТРИ АПИ ЕКСЕПШН Error sending message to forum topic.\n\nReal message caused the problem:\n{NormalizedMessage}", normalizedMessage);
             throw;
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error sending message to forum topic.");
-            await BotHelper.SendTextMessageAsync(userId,
-                        $"An error occurred while sending filtered message to your forum topic. Here is details: {ex.Message}\n\nReal message caused the problem:\n{normalizedMessage}",
-                        botClient, logger, CancellationToken.None);
+            logger.LogError(ex, "ВНУТРИ ОБЩЕГО Error sending message to forum topic.\n\nReal message caused the problem:\n{NormalizedMessage}", normalizedMessage);
+            //await BotHelper.SendTextMessageAsync(userId,
+            //            $"An error occurred while sending filtered message to your forum topic. Here is details: {ex.Message}",
+            //            botClient, logger, CancellationToken.None);
             throw;
         }
     }
