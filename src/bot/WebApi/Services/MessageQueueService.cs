@@ -25,8 +25,7 @@ namespace TelegramForwardly.WebApi.Services
             {
                 if (messageQueue.TryDequeue(out var request))
                 {
-                    logger.LogInformation("Processing job: {Start}",
-                        request.SourceText[..Math.Min(10, request.SourceText.Length)]);
+                    logger.LogInformation("Processing job: {Start}", request.SourceText[..Math.Min(10, request.SourceText.Length)]);
                     await ProcessJobAsync(request);
                 }
                 await Task.Delay(3000, stoppingToken);
@@ -45,7 +44,7 @@ namespace TelegramForwardly.WebApi.Services
                 {
                     string stressedSourceText = BotHelper.RemoveSpecialChars(request.SourceText);
                     foreach (var kw in request.FoundKeywords)
-                        stressedSourceText = stressedSourceText.Replace(BotHelper.RemoveSpecialChars(kw), $"*{BotHelper.RemoveSpecialChars(kw.ToUpper())}*");
+                        stressedSourceText = stressedSourceText.Replace(BotHelper.RemoveSpecialChars(kw), $"*{BotHelper.RemoveSpecialChars(kw.ToUpper())}*", StringComparison.InvariantCultureIgnoreCase);
                     stressedSourceText = stressedSourceText.Replace("\n", "\n> ");
 
                     string header = $"Found:\n> {stressedSourceText}";

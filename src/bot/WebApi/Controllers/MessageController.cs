@@ -19,6 +19,7 @@ namespace TelegramForwardly.WebApi.Controllers
             try
             {
                 messageQueue.Enqueue(request);
+                logger.LogInformation("message send request has been enqueued");
                 return Ok();
             }
             catch (Exception ex)

@@ -61,7 +61,7 @@ namespace TelegramForwardly.WebApi.Services.Bot
             if (string.IsNullOrEmpty(text))
                 return text;
 
-            var specialChars = new[] { '\\', '_', /* '*', '[', ']', '(', ')',*/ '~', /*'`', '>',*/ '#', '+', '-', '=', '|', '{', '}', '.', '!' };
+            var specialChars = new[] { '\\',  '_', /*'*', '[', ']', '(', ')', */'~', /*'`', '>',*/ '#', '+', '-', '=', '|', '{', '}', '.', '!' };
 
             var builder = new StringBuilder();
 
