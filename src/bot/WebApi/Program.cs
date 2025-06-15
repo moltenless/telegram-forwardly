@@ -1,13 +1,14 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using System.Text.Json;
+using System.Collections.Concurrent;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 using TelegramForwardly.DataAccess.Context;
 using TelegramForwardly.DataAccess.Repositories;
 using TelegramForwardly.DataAccess.Repositories.Interfaces;
 using TelegramForwardly.WebApi.Models.Dtos;
+using TelegramForwardly.WebApi.Models.Requests;
 using TelegramForwardly.WebApi.Services;
 using TelegramForwardly.WebApi.Services.Interfaces;
 
@@ -40,7 +41,9 @@ builder.Services.AddSingleton<ITelegramBotClient>(provider =>
 
     return new TelegramBotClient(botToken);
 });
-builder.Services.AddSingleton<IMessageQueueService, MessageQueueService>();
+
+builder.Services.AddSingleton<ConcurrentQueue<SendMessageRequest>>();
+builder.Services.AddHostedService<MessageQueueService>();
 
 builder.Services.AddScoped<IBotService, BotService>();
 builder.Services.AddScoped<IUserService, UserService>();

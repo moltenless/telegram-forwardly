@@ -1,26 +1,24 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System.Text.Json;
-using Telegram.Bot;
+using System.Collections.Concurrent;
 using TelegramForwardly.WebApi.Models.Requests;
-using TelegramForwardly.WebApi.Services.Interfaces;
 
 namespace TelegramForwardly.WebApi.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     public class MessageController(
-        IBotService botService,
+        ConcurrentQueue<SendMessageRequest> messageQueue,
         ILogger<MessageController> logger) : ControllerBase
     {
-        private readonly IBotService botService = botService;
+        private readonly ConcurrentQueue<SendMessageRequest> messageQueue = messageQueue;
         private readonly ILogger<MessageController> logger = logger;
 
         [HttpPost("send")]
-        public async Task<IActionResult> SendMessageAsync([FromBody] SendMessageRequest request)
+        public IActionResult SendMessageAsync([FromBody] SendMessageRequest request)
         {
             try
             {
-                await botService.SendMessageAsync(request);
+                messageQueue.Enqueue(request);
                 return Ok();
             }
             catch (Exception ex)
