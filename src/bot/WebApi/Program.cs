@@ -14,11 +14,6 @@ using TelegramForwardly.WebApi.Services.Interfaces;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
-//    .AddJsonOptions(options =>
-//    {
-//        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
-//        options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.SnakeCaseLower;
-//    });
 
 builder.Services.AddDbContext<ForwardlyContext>(options =>
     options.UseSqlServer(
@@ -45,6 +40,7 @@ builder.Services.AddSingleton<ITelegramBotClient>(provider =>
 
     return new TelegramBotClient(botToken);
 });
+builder.Services.AddSingleton<IMessageQueueService, MessageQueueService>();
 
 builder.Services.AddScoped<IBotService, BotService>();
 builder.Services.AddScoped<IUserService, UserService>();

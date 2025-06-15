@@ -30,7 +30,8 @@ class MessageHandler:
 
             if sender.id == user_client.user.telegram_user_id:
                 return
-            ######################## if sender isn't forwardly bot!!!!!!!!!!
+            if sender.id == 7815814849: #forwardly bot
+                return
             if (source_chat.id == user_client.user.forum_supergroup_id or
                 '-100' + str(source_chat.id) == str(user_client.user.forum_supergroup_id)):
                 return
@@ -101,6 +102,7 @@ class MessageHandler:
                 'SourceChatId': event_data.get('source_chat_id'),
                 'SourceChatTitle': event_data.get('source_chat_title'),
                 'FoundKeywords': event_data.get('detected_kws'),
+                'SenderId': event_data.get('user_id'),
                 'SenderFirstName': event_data.get('first_name'),
                 'SenderUsername': event_data.get('username'),
                 'DateTime': event_data.get('date_time').strftime('%H:%M | %d.%m')
