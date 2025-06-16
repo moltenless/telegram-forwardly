@@ -43,6 +43,7 @@ builder.Services.AddSingleton<ITelegramBotClient>(provider =>
 });
 
 builder.Services.AddSingleton<ConcurrentQueue<SendMessageRequest>>();
+builder.Services.AddSingleton<Dictionary<long, DateTime>>();
 builder.Services.AddHostedService<MessageQueueService>();
 
 builder.Services.AddScoped<IBotService, BotService>();

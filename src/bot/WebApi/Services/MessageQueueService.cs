@@ -29,9 +29,7 @@ namespace TelegramForwardly.WebApi.Services
                 {
                     try
                     {
-                        Stopwatch sw = Stopwatch.StartNew();
                         await ProcessJobAsync(request, stoppingToken);
-                        logger.LogInformation($"elapsed time of sending {sw.Elapsed.Milliseconds}");
                     }
                     catch (Exception ex)
                     {
@@ -52,10 +50,10 @@ namespace TelegramForwardly.WebApi.Services
 
             for (int i = 0; i < 3; i++)
             {
-                logger.LogInformation($"attempt to send: {i + 1}");
                 try
                 {
                     await botClient.SendMessage(request.ForumId, text, ParseMode.MarkdownV2, messageThreadId: (int)request.TopicId, cancellationToken: cancellationToken);
+                    logger.LogInformation($"sent at {i + 1} attempt");
                     return;
                 }
                 catch (ApiRequestException ex) when (ex.ErrorCode == 429)
