@@ -1,5 +1,6 @@
 ﻿using Azure.Core;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types.Enums;
@@ -26,10 +27,11 @@ namespace TelegramForwardly.WebApi.Services
             {
                 if (messageQueue.TryDequeue(out var request))
                 {
-                    logger.LogInformation("Processing job: {Start}", request.SourceText[..Math.Min(10, request.SourceText.Length)]);
                     try
                     {
+                        Stopwatch sw = Stopwatch.StartNew();
                         await ProcessJobAsync(request, stoppingToken);
+                        logger.LogInformation($"elapsed time of sending {sw.Elapsed.Milliseconds}");
                     }
                     catch (Exception ex)
                     {
@@ -54,7 +56,6 @@ namespace TelegramForwardly.WebApi.Services
                 try
                 {
                     await botClient.SendMessage(request.ForumId, text, ParseMode.MarkdownV2, messageThreadId: (int)request.TopicId, cancellationToken: cancellationToken);
-                    logger.LogInformation("Bot sent the message to forum: {Forum} topic: {Topic} after respective request to do so.", request.ForumId, request.TopicId);
                     return;
                 }
                 catch (ApiRequestException ex) when (ex.ErrorCode == 429)

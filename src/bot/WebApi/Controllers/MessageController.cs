@@ -18,8 +18,20 @@ namespace TelegramForwardly.WebApi.Controllers
         {
             try
             {
+                int userMessagesCountInQueue = messageQueue.Count(r => r.ForumOwnerId == request.ForumOwnerId);
+                if (userMessagesCountInQueue >= 20)  // these constants are strongly dependent on total bot supported user amount
+                {
+                    logger.LogWarning("Too many message requests for user {User} in general queue. The request will be truncated", request.ForumOwnerId);
+                    return Ok();
+                }
+                if (messageQueue.Count >= 100) // this condition hopefully never get satisfied
+                {
+                    logger.LogWarning("Too many total message requests for all users in general queue. The number exceeds 100. The request will be truncated");
+                    return Ok();
+                }
+
                 messageQueue.Enqueue(request);
-                logger.LogInformation("message send request has been enqueued");
+                logger.LogInformation("message send request has been enqueued. Queue total size is {Size}", messageQueue.Count);
                 return Ok();
             }
             catch (Exception ex)
