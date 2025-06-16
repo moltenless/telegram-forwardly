@@ -53,7 +53,6 @@ namespace TelegramForwardly.WebApi.Services
                 try
                 {
                     await botClient.SendMessage(request.ForumId, text, ParseMode.MarkdownV2, messageThreadId: (int)request.TopicId, cancellationToken: cancellationToken);
-                    logger.LogInformation($"sent at {i + 1} attempt");
                     return;
                 }
                 catch (ApiRequestException ex) when (ex.ErrorCode == 429)

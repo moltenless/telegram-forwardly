@@ -32,15 +32,11 @@ namespace TelegramForwardly.WebApi.Controllers
             {
                 if (queueOverloadLastTimes.TryGetValue(request.ForumOwnerId, out DateTime value)
                     && (DateTime.UtcNow - value).TotalSeconds <= 60)
-                {
-                    logger.LogInformation("ignored, not enqueued");
                     return Ok();
-                }
 
                 int userMessagesCountInQueue = messageQueue.Count(r => r.ForumOwnerId == request.ForumOwnerId);
                 if (userMessagesCountInQueue >= 20)  // these constants are strongly dependent on total bot supported user amount
                 {
-                    logger.LogWarning("Too many message requests for user {User} in general queue. The request will be truncated", request.ForumOwnerId);
                     using var scope = serviceProvider.CreateScope();
                     ITelegramBotClient botClient = scope.ServiceProvider.GetService<ITelegramBotClient>()!;
                     await BotHelper.SendTextMessageAsync(request.ForumOwnerId, "⚠️ Too many of your messages are being forwarded at once right now. " +
@@ -51,20 +47,6 @@ namespace TelegramForwardly.WebApi.Controllers
                     else
                         queueOverloadLastTimes.Add(request.ForumOwnerId, DateTime.UtcNow);
 
-                    //IUserbotApiService userbotApiService = scope.ServiceProvider.GetService<IUserbotApiService>()!;
-                    //logger.LogWarning("disabling has been requested");
-                    //FieldUpdateResult result = await userbotApiService.UpdateForwardlyEnabledAsync(request.ForumOwnerId, false);
-                    //logger.LogWarning("disabling completed!!!!!!");
-                    //if (!result.Success) throw new HttpRequestException("\n\nCRITICAL ERROR. Bot couldn't disable forwarding in userbot of user who has reached message limit in queue.\n\n");
-                    //IUserService userService = scope.ServiceProvider.GetService<IUserService>()!;
-                    //await userService.ToggleForwardlyEnabledAsync(request.ForumOwnerId, false);
-
-                    //await Task.Delay(60_000);
-
-                    //FieldUpdateResult result2 = await userbotApiService.UpdateForwardlyEnabledAsync(request.ForumOwnerId, true);
-                    //if (!result2.Success) throw new HttpRequestException("\n\nCRITICAL ERROR. Bot couldn't enable again forwarding in userbot of user who has reached message limit in queue.\n\n");
-                    //await userService.ToggleForwardlyEnabledAsync(request.ForumOwnerId, true);
-
                     return Ok();
                 }
                 if (messageQueue.Count >= 100) // this condition hopefully never gets satisfied
@@ -74,7 +56,6 @@ namespace TelegramForwardly.WebApi.Controllers
                 }
 
                 messageQueue.Enqueue(request);
-                logger.LogInformation("message send request has been enqueued. Queue total size is {Size}", messageQueue.Count);
                 return Ok();
             }
             catch (Exception ex)
