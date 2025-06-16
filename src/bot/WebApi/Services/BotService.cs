@@ -1,6 +1,7 @@
 ﻿using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using TelegramForwardly.DataAccess.Repositories;
 using TelegramForwardly.WebApi.Models.Dtos;
 using TelegramForwardly.WebApi.Services.Bot;
 using TelegramForwardly.WebApi.Services.Bot.Managers;
@@ -20,7 +21,7 @@ public class BotService(
     private readonly IUserbotApiService userbotApiService = userbotApiService;
     private readonly ILogger logger = logger;
 
-    public async Task HandleUpdateAsync(Telegram.Bot.Types.Update update, CancellationToken cancellationToken)
+    public async Task HandleUpdateAsync(Update update, CancellationToken cancellationToken)
     {
         try
         {
@@ -32,6 +33,19 @@ public class BotService(
             };
 
             await handler;
+        }
+        catch (ClientCreationDeniedException ex)
+        {
+            long userId = update.Type switch
+            {
+                UpdateType.Message => update.Message!.From!.Id,
+                UpdateType.CallbackQuery => update.CallbackQuery!.From!.Id,
+                _ => -1
+            };
+            logger.LogError(ex, "Client {Id} couldn't be created because all supported by bot clients are already registered", userId);
+            if (userId != -1)
+                await BotHelper.SendTextMessageAsync(userId, "You can't use this bot because it has reached the limit of supported users. " +
+                    "Please contact @moltenless to request access.", botClient, logger, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -54,13 +68,6 @@ public class BotService(
 
         var user = await userService.GetOrCreateUserAsync(
             message.From!.Id, UserState.Idle, message.From!.Username, message.From!.FirstName);
-
-        ///////////////////////////////////////////////////////////////
-        await userService.UpdateUserDateAsync(user.TelegramUserId);
-
-
-        ////////////////////////////////////////////////////////////////
-        ///////////////////////////////////////////////////////////////
 
         var messageText = message.Text ?? string.Empty;
 
@@ -85,11 +92,6 @@ public class BotService(
     {
         var user = await userService.GetOrCreateUserAsync(
             callbackQuery.From!.Id, UserState.Idle, callbackQuery.From!.Username, callbackQuery.From!.FirstName);
-
-        ////////////////////////////////////////////////////////////////////
-        //////////////////////////////////////////////////////////////////////
-        await userService.UpdateUserDateAsync(user.TelegramUserId);
-        //////////////////////////////////////////////////////////////////////
 
         await botClient.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: cancellationToken);
 

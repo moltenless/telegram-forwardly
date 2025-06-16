@@ -139,9 +139,9 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
             ILogger logger,
             CancellationToken cancellationToken)
         {
-            var conf = message.Text?.Trim().ToLowerInvariant();
+            var conf = message.Text?.Trim()!;
 
-            if (conf == "yes, I want this bot not to persist my data".ToLowerInvariant())
+            if (conf.Equals("yes, I want this bot not to persist my data", StringComparison.InvariantCultureIgnoreCase))
             {
                 FieldUpdateResult result = await userbotApiService.DeleteUserAsync(user.TelegramUserId);
                 if (!result.Success)
@@ -153,12 +153,10 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
                     return;
                 }
                 await userService.DeleteUserAsync(user.TelegramUserId);
-                user = await userService.GetOrCreateUserAsync(message.From!.Id, UserState.Idle, message.From!.Username, message.From!.FirstName);
                 await BotHelper.SendTextMessageAsync(
                     message.Chat.Id,
                     "Your data has been successfully deleted. You can set up the bot again with /setup.",
                     botClient, logger, cancellationToken);
-                await MenuManager.ShowMainMenuAsync(user, message.Chat.Id, botClient, logger, cancellationToken);
             }
             else
             {

@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using Telegram.Bot.Types;
 using TelegramForwardly.DataAccess.Repositories.Interfaces;
 using TelegramForwardly.WebApi.Models.Dtos;
 using TelegramForwardly.WebApi.Models.Responses;
@@ -25,12 +26,14 @@ namespace TelegramForwardly.WebApi.Services
             var client = await clientsRepository.GetOrCreateClientAsync(
                 telegramUserId, stateIfNew, userNameIfNew, firstNameIfNew);
 
+            await UpdateUserDateAsync(telegramUserId);
             return BotUser.FromEntity(client);
         }
 
         public async Task<BotUser> GetUserAsync(long telegramUserId)
         {
             var client = await clientsRepository.GetClientAsync(telegramUserId);
+            await UpdateUserDateAsync(telegramUserId);
             return BotUser.FromEntity(client);
         }
 
@@ -109,10 +112,10 @@ namespace TelegramForwardly.WebApi.Services
             await clientsRepository.SetClientAllChatsEnabledAsync(client, value: value);
         }
 
-        public async Task<HashSet<Chat>> GetUserChatsAsync(long telegramUserId)
+        public async Task<HashSet<Models.Dtos.Chat>> GetUserChatsAsync(long telegramUserId)
         {
             var chats = await clientsRepository.GetClientChatsAsync(telegramUserId);
-            return [.. chats.Select(Chat.FromEntity)];
+            return [.. chats.Select(Models.Dtos.Chat.FromEntity)];
         }
 
         public async Task AddUserChatsAsync(long telegramUserId, List<ChatInfo> chats)
