@@ -148,9 +148,11 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
                 {
                     await BotHelper.SendTextMessageAsync(
                         message.Chat.Id,
-                        $"Failed to delete user data: {result.ErrorMessage}",
+                        $"Despite your data will be cleared, couldn't delete your userbot possibly because you haven't authenticated yet. " +
+                        $"If another error occurred forwarding will be stopped soon: {result.ErrorMessage}",
                         botClient, logger, cancellationToken, parseMode: ParseMode.None);
-                    return;
+                    //return; If userbot doesn't persist authenticated user - delete user from db anyway.
+                    //If another harmful cause of error occurs - client in userbot will be cleared at first scheduler restart
                 }
                 await userService.DeleteUserAsync(user.TelegramUserId);
                 await BotHelper.SendTextMessageAsync(
