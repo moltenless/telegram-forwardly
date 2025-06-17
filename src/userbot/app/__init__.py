@@ -16,11 +16,11 @@ def create_app():
     client_manager = ClientManager()
     app.client_manager = client_manager
 
-    scheduler_service = SchedulerService(client_manager)
+    scheduler_service = SchedulerService(client_manager, event_loop_manager.loop)
     app.scheduler_service = scheduler_service
 
     event_loop_manager.run_coroutine(client_manager.telegram_api.periodic_health_check())
     event_loop_manager.run_coroutine(client_manager.launch_clients_from_database())
-    event_loop_manager.run_coroutine(scheduler_service.start())
+    scheduler_service.start()
 
     return app

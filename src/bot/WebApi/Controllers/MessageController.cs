@@ -1,14 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Collections.Concurrent;
-using System.Threading;
-using System.Threading.Tasks;
 using Telegram.Bot;
-using Telegram.Bot.Types;
 using TelegramForwardly.WebApi.Models.Requests;
-using TelegramForwardly.WebApi.Models.Responses;
-using TelegramForwardly.WebApi.Services;
 using TelegramForwardly.WebApi.Services.Bot;
-using TelegramForwardly.WebApi.Services.Interfaces;
 
 namespace TelegramForwardly.WebApi.Controllers
 {
