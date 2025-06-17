@@ -50,7 +50,7 @@ services:
             - TELEGRAM_BOT_API_URL=http://bot:8080/api
             - SECRET_KEY=${USERBOT_SECRET_KEY}
             - FLASK_DEBUG=False
-            - USERS_UPDATE_INTERVAL_MINUTES=2
+            - USERS_UPDATE_INTERVAL_MINUTES=30
             - LOG_LEVEL=INFO
             - PYTHONPATH=/app
             - FLASK_APP=main.py
