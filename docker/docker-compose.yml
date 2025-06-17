@@ -46,6 +46,7 @@ services:
             dockerfile: src/userbot/Dockerfile
         container_name: forwardly-userbot
         environment:
+            - FLASK_ENV=production
             - TELEGRAM_BOT_API_URL=http://bot:8080/api
             - SECRET_KEY=${USERBOT_SECRET_KEY}
             - FLASK_DEBUG=False

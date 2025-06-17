@@ -15,4 +15,5 @@ RUN mkdir -p /app/logs
 
 EXPOSE 5000
 
-CMD ["python", "main.py"]
+CMD ["hypercorn", "--bind", "0.0.0.0:5000", "--workers", "2", "main:app"]
+CMD ["gunicorn", "--config", "gunicorn.conf.py", "main:app"]
