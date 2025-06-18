@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using System.Text.Json;
+using TelegramForwardly.WebApi.Models.Dtos;
 using TelegramForwardly.WebApi.Services.Interfaces;
 
 namespace TelegramForwardly.WebApi.Controllers
@@ -8,14 +10,21 @@ namespace TelegramForwardly.WebApi.Controllers
     [Route("api/[controller]")]
     public class UsersController(
         IUserService userService,
+        IOptions<TelegramConfig> config,
         ILogger<UsersController> logger) : ControllerBase
     {
         private readonly IUserService userService = userService;
+        private readonly string apiKey = config.Value.ApiKey;
         private readonly ILogger<UsersController> logger = logger;
 
         [HttpGet("all")]
-        public async Task<IActionResult> GetAllUsers()
+        public async Task<IActionResult> GetAllUsers([FromHeader(Name = "X-Api-Key")] string apiKey)
         {
+            if (string.IsNullOrEmpty(apiKey) || apiKey != this.apiKey)
+            {
+                return Unauthorized("Invalid or missing API key");
+            }
+
             try
             {
                 var users = await userService.GetAllUsersAsync();
@@ -35,8 +44,13 @@ namespace TelegramForwardly.WebApi.Controllers
         }
 
         [HttpGet("all/authenticated")]
-        public async Task<IActionResult> GetAllAuthenticatedUsers()
+        public async Task<IActionResult> GetAllAuthenticatedUsers([FromHeader(Name = "X-Api-Key")] string apiKey)
         {
+            if (string.IsNullOrEmpty(apiKey) || apiKey != this.apiKey)
+            {
+                return Unauthorized("Invalid or missing API key");
+            }
+            
             try
             {
                 var users = await userService.GetAllAuthenticatedUsersAsync();
