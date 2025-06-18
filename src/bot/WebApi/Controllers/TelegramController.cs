@@ -23,8 +23,6 @@ namespace TelegramForwardly.WebApi.Controllers
         {
             try
             {
-                logger.LogInformation("Received update: {UpdateId}", update.Id);
-
                 using var scope = serviceProvider.CreateScope();
                 var botService = scope.ServiceProvider.GetRequiredService<IBotService>();
 
