@@ -129,7 +129,7 @@ def set_all_chats_enabled():
 
 @api_bp.route('/user/<int:user_id>/chats', methods=['GET'])
 @require_api_key
-async def get_user_chats(user_id):
+def get_user_chats(user_id):
     try:
         result = event_loop_manager.run_coroutine(
             current_app.client_manager.get_user_chats(user_id)
@@ -149,7 +149,7 @@ async def get_user_chats(user_id):
 
 @api_bp.route('/user/chats/add', methods=['POST'])
 @require_api_key
-async def add_chats():
+def add_chats():
     try:
         data = request.get_json()
         user_id = data.get('user_id')
@@ -172,7 +172,7 @@ async def add_chats():
 
 @api_bp.route('/user/chats/remove', methods=['POST'])
 @require_api_key
-async def remove_chats():
+def remove_chats():
     try:
         data = request.get_json()
         user_id = data.get('user_id')
@@ -196,7 +196,7 @@ async def remove_chats():
 
 @api_bp.route('/user/keywords/add', methods=['POST'])
 @require_api_key
-async def add_keywords():
+def add_keywords():
     try:
         data = request.get_json()
         user_id = data.get('user_id')
@@ -219,7 +219,7 @@ async def add_keywords():
 
 @api_bp.route('/user/keywords/remove', methods=['POST'])
 @require_api_key
-async def remove_keywords():
+def remove_keywords():
     try:
         data = request.get_json()
         user_id = data.get('user_id')
