@@ -33,8 +33,8 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
             }
 
             await userService.UpdateUserForumIdAsync(user.TelegramUserId, forumId);
-
-            await BotHelper.SendTextMessageAsync(message.Chat.Id, "Set grouping mode:", botClient, logger, cancellationToken);
+            await userService.SetUserStateAsync(user.TelegramUserId, UserState.Idle);
+            await BotHelper.SendTextMessageAsync(message.Chat.Id, "The group added. Set grouping mode:", botClient, logger, cancellationToken);
             await MenuManager.EnterSettingsAsync(false, message, botClient, logger, cancellationToken);
         }
 
