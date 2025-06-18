@@ -15,6 +15,11 @@ services:
         restart: unless-stopped
         networks:
             - forwardly-network
+        logging:
+            driver: "json-file"
+            options:
+                max-size: "10m"
+                max-file: "5"
 
     bot:
         build:
@@ -26,8 +31,8 @@ services:
             - ASPNETCORE_URLS=http://+:8080
             - ConnectionStrings__DefaultConnection=Server=db,1433;Database=telegram_forwardly;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;
             - TelegramBot__BotToken=${TELEGRAM_BOT_TOKEN}
-            - TelegramBot__UseWebhook=false
-            - TelegramBot__WebhookUrl=https://telegram-forwardly.com
+            - TelegramBot__UseWebhook=true
+            - TelegramBot__WebhookUrl=https://116e-80-253-55-45.ngrok-free.app
             - TelegramBot__UserbotApiBaseUrl=http://userbot:5000
             - TelegramBot__AuthApiBaseUrl=http://auth:8000
             - TelegramBot__ApiKey=${API_KEY}
@@ -40,6 +45,11 @@ services:
         restart: unless-stopped
         networks:
             - forwardly-network
+        logging:
+            driver: "json-file"
+            options:
+                max-size: "10m"
+                max-file: "5"
         
     userbot:
         build:
@@ -65,6 +75,11 @@ services:
         restart: unless-stopped
         networks:
             - forwardly-network
+        logging:
+            driver: "json-file"
+            options:
+                max-size: "10m"
+                max-file: "5"
 
     auth:
         build:
@@ -77,6 +92,11 @@ services:
             - "8000:8000"
         networks:
             - forwardly-network
+        logging:
+            driver: "json-file"
+            options:
+                max-size: "10m"
+                max-file: "5"
 
 volumes:
     forwardly_db_data:
