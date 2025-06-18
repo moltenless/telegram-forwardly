@@ -30,6 +30,7 @@ services:
             - TelegramBot__WebhookUrl=https://telegram-forwardly.com
             - TelegramBot__UserbotApiBaseUrl=http://userbot:5000
             - TelegramBot__AuthApiBaseUrl=http://auth:8000
+            - TelegramBot__ApiKey=${API_KEY}
         volumes:
             - ../storage/logs:/app/logs
         ports:

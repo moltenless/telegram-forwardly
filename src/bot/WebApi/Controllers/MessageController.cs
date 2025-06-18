@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 using Telegram.Bot;
+using TelegramForwardly.WebApi.Models.Dtos;
 using TelegramForwardly.WebApi.Models.Requests;
 using TelegramForwardly.WebApi.Services.Bot;
 
@@ -12,16 +14,23 @@ namespace TelegramForwardly.WebApi.Controllers
         ConcurrentQueue<SendMessageRequest> messageQueue,
         IServiceProvider serviceProvider,
         Dictionary<long, DateTime> queueOverloadLastTimes,
+        IOptions<TelegramConfig> config,
         ILogger<MessageController> logger) : ControllerBase
     {
         private readonly ConcurrentQueue<SendMessageRequest> messageQueue = messageQueue;
         private readonly IServiceProvider serviceProvider = serviceProvider;
         private readonly ILogger<MessageController> logger = logger;
+        private readonly string apiKey = config.Value.ApiKey;
         private readonly Dictionary<long, DateTime> queueOverloadLastTimes = queueOverloadLastTimes;
 
         [HttpPost("send")]
-        public async Task<IActionResult> SendMessageAsync([FromBody] SendMessageRequest request)
+        public async Task<IActionResult> SendMessageAsync([FromBody] SendMessageRequest request, [FromHeader(Name = "X-Api-Key")] string apiKey)
         {
+            if (string.IsNullOrEmpty(apiKey) || apiKey != this.apiKey)
+            {
+                return Unauthorized("Invalid or missing API key");
+            }
+
             try
             {
                 if (queueOverloadLastTimes.TryGetValue(request.ForumOwnerId, out DateTime value)
