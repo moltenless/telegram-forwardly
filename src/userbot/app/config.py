@@ -12,4 +12,6 @@ class Config:
     USERS_UPDATE_INTERVAL_MINUTES = int(os.getenv('USERS_UPDATE_INTERVAL_MINUTES'))
 
     LOG_LEVEL = os.getenv('LOG_LEVEL')
+
+    API_KEY = os.getenv('API_KEY')
     

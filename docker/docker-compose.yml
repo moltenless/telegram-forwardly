@@ -55,6 +55,7 @@ services:
             - LOG_LEVEL=INFO
             - PYTHONPATH=/app
             - FLASK_APP=main.py
+            - API_KEY=${API_KEY}
         volumes:
             - ../storage/logs:/app/logs
         ports:

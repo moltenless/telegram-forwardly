@@ -44,7 +44,7 @@ namespace TelegramForwardly.WebApi.Controllers
         {
             if (string.IsNullOrEmpty(apiKey) || apiKey != this.apiKey)
             {
-                return Unauthorized("Invalid or missing API key");
+                return Task.FromResult(HealthCheckResult.Unhealthy("Invalid or missing API key"));
             }
 
             return Task.FromResult(HealthCheckResult.Healthy("healthy"));
