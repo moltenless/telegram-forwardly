@@ -1,0 +1,17 @@
+bind = "0.0.0.0:5000"
+workers = 1
+keep_alive_timeout = 30
+timeout = 120
+max_requests = 2000
+max_requests_jitter = 200
+
+access_log_format = "%(h)s %(l)s %(u)s %(t)s \"%(r)s\" %(s)s %(b)s \"%(f)s\" \"%(a)s\" %(D)s"
+access_logfile = "-"
+error_logfile = "-"
+log_level = "info"
+
+worker_connections = 1000
+backlog = 2048
+
+ssl_handshake_timeout = 10
+websocket_ping_interval = 20

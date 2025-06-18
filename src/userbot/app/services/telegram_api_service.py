@@ -67,9 +67,6 @@ class TelegramApiService:
             log_error(f"Failed to update session for user {user_id}", e)
             return False
 
-
-
-
     async def check_telegram_bot_health(self, url: str):
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as resp:

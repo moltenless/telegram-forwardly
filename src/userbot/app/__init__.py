@@ -1,6 +1,4 @@
 from flask import Flask
-import asyncio
-import threading
 from app.config import Config
 from app.routes import api_bp
 from app.services.client_manager import ClientManager
@@ -13,19 +11,16 @@ def create_app():
     app.config.from_object(Config)
     app.register_blueprint(api_bp, url_prefix='/api')
 
+    event_loop_manager.start_loop()
+
     client_manager = ClientManager()
     app.client_manager = client_manager
 
-    # scheduler_service = SchedulerService(client_manager)
-    # app.scheduler_service = scheduler_service
+    scheduler_service = SchedulerService(client_manager, event_loop_manager.loop)
+    app.scheduler_service = scheduler_service
 
-    event_loop_manager.start_loop()
-
-    telegram_api_service = TelegramApiService()
-    event_loop_manager.run_coroutine(telegram_api_service.periodic_health_check())
-
+    event_loop_manager.run_coroutine(client_manager.telegram_api.periodic_health_check())
     event_loop_manager.run_coroutine(client_manager.launch_clients_from_database())
-    # event_loop_manager.run_coroutine(scheduler_service.start())
-    # event_loop_manager.run_coroutine(client_manager.start_message_handling())
+    scheduler_service.start()
 
     return app
