@@ -3,8 +3,7 @@ project_description.docx
 certs/
 aspnetapp.pfx
 
-certbot/etc/
-certbot/lib/
+certbot/
 
 storage/
 
