@@ -20,6 +20,8 @@ services:
             options:
                 max-size: "10m"
                 max-file: "5"
+        depends_on:
+            - bot
 
     db:
         image: mcr.microsoft.com/mssql/server:2022-latest
