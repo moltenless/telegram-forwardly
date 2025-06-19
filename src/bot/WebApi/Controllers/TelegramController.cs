@@ -38,14 +38,9 @@ namespace TelegramForwardly.WebApi.Controllers
         }
 
         [HttpGet("health")]
-        public Task<HealthCheckResult> Health([FromHeader(Name = "X-Api-Key")] string apiKey)
+        public Task<HealthCheckResult> Health()
         {
-            if (string.IsNullOrEmpty(apiKey) || apiKey != this.apiKey)
-            {
-                return Task.FromResult(HealthCheckResult.Unhealthy("Invalid or missing API key"));
-            }
-
-            return Task.FromResult(HealthCheckResult.Healthy("healthy"));
+            return Task.FromResult(HealthCheckResult.Healthy("Healthy. Welcome, stranger!"));
         }
     }
 }
