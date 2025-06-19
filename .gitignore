@@ -2,6 +2,10 @@ project_description.docx
 .env
 certs/
 aspnetapp.pfx
+
+certbot/etc/
+certbot/lib/
+
 storage/
 
 # Created by .ignore support plugin (hsz.mobi)
