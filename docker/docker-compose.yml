@@ -15,6 +15,11 @@ services:
         restart: unless-stopped
         networks:
             - forwardly-network
+        logging:
+            driver: "json-file"
+            options:
+                max-size: "10m"
+                max-file: "5"
 
     bot:
         build:
@@ -26,10 +31,11 @@ services:
             - ASPNETCORE_URLS=http://+:8080
             - ConnectionStrings__DefaultConnection=Server=db,1433;Database=telegram_forwardly;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;
             - TelegramBot__BotToken=${TELEGRAM_BOT_TOKEN}
-            - TelegramBot__UseWebhook=false
-            - TelegramBot__WebhookUrl=https://telegram-forwardly.com
+            - TelegramBot__UseWebhook=true
+            - TelegramBot__WebhookUrl=https://8359-80-253-55-45.ngrok-free.app
             - TelegramBot__UserbotApiBaseUrl=http://userbot:5000
             - TelegramBot__AuthApiBaseUrl=http://auth:8000
+            - TelegramBot__ApiKey=${API_KEY}
         volumes:
             - ../storage/logs:/app/logs
         ports:
@@ -39,6 +45,11 @@ services:
         restart: unless-stopped
         networks:
             - forwardly-network
+        logging:
+            driver: "json-file"
+            options:
+                max-size: "10m"
+                max-file: "5"
         
     userbot:
         build:
@@ -46,6 +57,7 @@ services:
             dockerfile: src/userbot/Dockerfile
         container_name: forwardly-userbot
         environment:
+            - FLASK_ENV=production
             - TELEGRAM_BOT_API_URL=http://bot:8080/api
             - SECRET_KEY=${USERBOT_SECRET_KEY}
             - FLASK_DEBUG=False
@@ -53,6 +65,7 @@ services:
             - LOG_LEVEL=INFO
             - PYTHONPATH=/app
             - FLASK_APP=main.py
+            - API_KEY=${API_KEY}
         volumes:
             - ../storage/logs:/app/logs
         ports:
@@ -62,18 +75,28 @@ services:
         restart: unless-stopped
         networks:
             - forwardly-network
+        logging:
+            driver: "json-file"
+            options:
+                max-size: "10m"
+                max-file: "5"
 
-    auth:
-        build:
-            context: ..
-            dockerfile: src/auth/Dockerfile
-        container_name: forwardly-auth
-        environment:
-            - TELEGRAM_BOT_API_URL=http://bot:8080/api
-        ports:
-            - "8000:8000"
-        networks:
-            - forwardly-network
+    # auth:
+    #     build:
+    #         context: ..
+    #         dockerfile: src/auth/Dockerfile
+    #     container_name: forwardly-auth
+    #     environment:
+    #         - TELEGRAM_BOT_API_URL=http://bot:8080/api
+    #     ports:
+    #         - "8000:8000"
+    #     networks:
+    #         - forwardly-network
+    #     logging:
+    #         driver: "json-file"
+    #         options:
+    #             max-size: "10m"
+    #             max-file: "5"
 
 volumes:
     forwardly_db_data:

@@ -1,11 +1,28 @@
+from functools import wraps
+
 from flask import Blueprint, request, jsonify, current_app
+
+from app import Config
 from app.async_loop_manager import event_loop_manager
-from app.utils import log_error, parse_user_from_api, logger
+from app.utils import parse_user_from_api, logger
 
 api_bp = Blueprint('api', __name__)
 
 
+def require_api_key(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        api_key = request.headers.get('X-Api-Key')
+        expected_api_key = Config.API_KEY
+        if not api_key or api_key != expected_api_key:
+            logger.error(f"Invalid or missing API key: {api_key}")
+            return jsonify({'Success': False, 'ErrorMessage': 'Invalid or missing API key'}), 401
+        return f(*args, **kwargs)
+    return decorated
+
+
 @api_bp.route('/user/launch', methods=['POST'])
+@require_api_key
 def launch_user():
     try:
         data = request.get_json()
@@ -26,6 +43,7 @@ def launch_user():
         return jsonify({'Success': False, 'ErrorMessage': 'Authentication failed.'}), 500
 
 @api_bp.route('/user/forum', methods=['POST'])
+@require_api_key
 def check_and_update_forum():
     try:
         data = request.get_json()
@@ -46,6 +64,7 @@ def check_and_update_forum():
                         "ErrorMessage": f"Failed to check and update forum id: {e}"}), 500
 
 @api_bp.route('/user/grouping', methods=['POST'])
+@require_api_key
 def update_grouping():
     try:
         data = request.get_json()
@@ -66,6 +85,7 @@ def update_grouping():
                         "ErrorMessage": f"Failed to update grouping type: {e}"}), 500
 
 @api_bp.route('/user/delete', methods=['POST'])
+@require_api_key
 def delete_user():
     try:
         data = request.get_json()
@@ -86,6 +106,7 @@ def delete_user():
 
 
 @api_bp.route('/user/chats/all', methods=['POST'])
+@require_api_key
 def set_all_chats_enabled():
     try:
         data = request.get_json()
@@ -107,7 +128,8 @@ def set_all_chats_enabled():
 
 
 @api_bp.route('/user/<int:user_id>/chats', methods=['GET'])
-async def get_user_chats(user_id):
+@require_api_key
+def get_user_chats(user_id):
     try:
         result = event_loop_manager.run_coroutine(
             current_app.client_manager.get_user_chats(user_id)
@@ -126,7 +148,8 @@ async def get_user_chats(user_id):
 
 
 @api_bp.route('/user/chats/add', methods=['POST'])
-async def add_chats():
+@require_api_key
+def add_chats():
     try:
         data = request.get_json()
         user_id = data.get('user_id')
@@ -148,7 +171,8 @@ async def add_chats():
         }), 500
 
 @api_bp.route('/user/chats/remove', methods=['POST'])
-async def remove_chats():
+@require_api_key
+def remove_chats():
     try:
         data = request.get_json()
         user_id = data.get('user_id')
@@ -171,7 +195,8 @@ async def remove_chats():
 
 
 @api_bp.route('/user/keywords/add', methods=['POST'])
-async def add_keywords():
+@require_api_key
+def add_keywords():
     try:
         data = request.get_json()
         user_id = data.get('user_id')
@@ -193,7 +218,8 @@ async def add_keywords():
         }), 500
 
 @api_bp.route('/user/keywords/remove', methods=['POST'])
-async def remove_keywords():
+@require_api_key
+def remove_keywords():
     try:
         data = request.get_json()
         user_id = data.get('user_id')
@@ -217,6 +243,7 @@ async def remove_keywords():
         }), 500
 
 @api_bp.route('/user/forwardly', methods=['POST'])
+@require_api_key
 def toggle_forwarding():
     try:
         data = request.get_json()

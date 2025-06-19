@@ -12,6 +12,7 @@ namespace TelegramForwardly.WebApi.Services
     public class UserbotApiService : IUserbotApiService
     {
         private readonly HttpClient httpClient;
+        private readonly string apiKey;
         private readonly ILogger<UserbotApiService> logger;
 
         public UserbotApiService(
@@ -19,9 +20,11 @@ namespace TelegramForwardly.WebApi.Services
             IOptions<TelegramConfig> telegramConfig,
             ILogger<UserbotApiService> logger)
         {
+            this.apiKey = telegramConfig.Value.ApiKey;
             this.httpClient = httpClient;
-            this.logger = logger;
             this.httpClient.BaseAddress = new Uri(telegramConfig.Value.UserbotApiBaseUrl);
+            this.httpClient.DefaultRequestHeaders.Add("X-Api-Key", this.apiKey);
+            this.logger = logger;
         }
 
 

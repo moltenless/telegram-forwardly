@@ -1,24 +1,20 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using System.Text.Json;
+using System.Collections.Concurrent;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 using TelegramForwardly.DataAccess.Context;
 using TelegramForwardly.DataAccess.Repositories;
 using TelegramForwardly.DataAccess.Repositories.Interfaces;
 using TelegramForwardly.WebApi.Models.Dtos;
+using TelegramForwardly.WebApi.Models.Requests;
 using TelegramForwardly.WebApi.Services;
 using TelegramForwardly.WebApi.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
-//    .AddJsonOptions(options =>
-//    {
-//        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
-//        options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.SnakeCaseLower;
-//    });
 
 builder.Services.AddDbContext<ForwardlyContext>(options =>
     options.UseSqlServer(
@@ -45,6 +41,10 @@ builder.Services.AddSingleton<ITelegramBotClient>(provider =>
 
     return new TelegramBotClient(botToken);
 });
+
+builder.Services.AddSingleton<ConcurrentQueue<SendMessageRequest>>();
+builder.Services.AddSingleton<Dictionary<long, DateTime>>();
+builder.Services.AddHostedService<MessageQueueService>();
 
 builder.Services.AddScoped<IBotService, BotService>();
 builder.Services.AddScoped<IUserService, UserService>();

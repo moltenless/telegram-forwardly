@@ -20,7 +20,8 @@ class TelegramApiService:
     async def get_all_users(self) -> List[BotUser]:
         try:
             url = f"{self.base_url}/users/all/authenticated"
-            response = self.session.get(url)
+            headers = {"X-Api-Key": Config.API_KEY}
+            response = self.session.get(url, headers=headers)
             response.raise_for_status()
 
             users_data = response.json()
@@ -42,7 +43,8 @@ class TelegramApiService:
     async def send_message_to_topic(self, message_data):
         try:
             url = f"{self.base_url}/message/send"
-            response = self.session.post(url, json=message_data)
+            headers = {"X-Api-Key": Config.API_KEY}
+            response = self.session.post(url, json=message_data, headers=headers)
             response.raise_for_status()
             if response.status_code != 200:
                 logger.error("Failed to send the message to forum topic from Telegram Bot API. Status code is not 200!")
@@ -67,12 +69,10 @@ class TelegramApiService:
             log_error(f"Failed to update session for user {user_id}", e)
             return False
 
-
-
-
     async def check_telegram_bot_health(self, url: str):
         async with aiohttp.ClientSession() as session:
-            async with session.get(url) as resp:
+            headers = {"X-Api-Key": Config.API_KEY}
+            async with session.get(url, headers=headers) as resp:
                 if resp.status != 200:
                     text = await resp.text()
                     raise RuntimeError(f"Health check failed with status {resp.status}: {text}")

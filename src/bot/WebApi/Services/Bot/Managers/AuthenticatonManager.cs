@@ -139,26 +139,26 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
             ILogger logger,
             CancellationToken cancellationToken)
         {
-            var conf = message.Text?.Trim().ToLowerInvariant();
+            var conf = message.Text?.Trim()!;
 
-            if (conf == "yes, I want this bot not to persist my data".ToLowerInvariant())
+            if (conf.Equals("yes, I want this bot not to persist my data", StringComparison.InvariantCultureIgnoreCase))
             {
                 FieldUpdateResult result = await userbotApiService.DeleteUserAsync(user.TelegramUserId);
                 if (!result.Success)
                 {
                     await BotHelper.SendTextMessageAsync(
                         message.Chat.Id,
-                        $"Failed to delete user data: {result.ErrorMessage}",
+                        $"Despite your data will be cleared, couldn't delete your userbot possibly because you haven't authenticated yet. " +
+                        $"If another error occurred forwarding will be stopped soon: {result.ErrorMessage}",
                         botClient, logger, cancellationToken, parseMode: ParseMode.None);
-                    return;
+                    //return; If userbot doesn't persist authenticated user - delete user from db anyway.
+                    //If another harmful cause of error occurs - client in userbot will be cleared at first scheduler restart
                 }
                 await userService.DeleteUserAsync(user.TelegramUserId);
-                user = await userService.GetOrCreateUserAsync(message.From!.Id, UserState.Idle, message.From!.Username, message.From!.FirstName);
                 await BotHelper.SendTextMessageAsync(
                     message.Chat.Id,
                     "Your data has been successfully deleted. You can set up the bot again with /setup.",
                     botClient, logger, cancellationToken);
-                await MenuManager.ShowMainMenuAsync(user, message.Chat.Id, botClient, logger, cancellationToken);
             }
             else
             {

@@ -1,16 +1,11 @@
-﻿using System;
-using System.IO;
-using System.Threading;
-using Telegram.Bot;
-using Telegram.Bot.Exceptions;
+﻿using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using TelegramForwardly.DataAccess.Repositories;
 using TelegramForwardly.WebApi.Models.Dtos;
-using TelegramForwardly.WebApi.Models.Requests;
 using TelegramForwardly.WebApi.Services.Bot;
 using TelegramForwardly.WebApi.Services.Bot.Managers;
 using TelegramForwardly.WebApi.Services.Interfaces;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace TelegramForwardly.WebApi.Services;
 
@@ -26,7 +21,7 @@ public class BotService(
     private readonly IUserbotApiService userbotApiService = userbotApiService;
     private readonly ILogger logger = logger;
 
-    public async Task HandleUpdateAsync(Telegram.Bot.Types.Update update, CancellationToken cancellationToken)
+    public async Task HandleUpdateAsync(Update update, CancellationToken cancellationToken)
     {
         try
         {
@@ -39,6 +34,19 @@ public class BotService(
 
             await handler;
         }
+        catch (ClientCreationDeniedException ex)
+        {
+            long userId = update.Type switch
+            {
+                UpdateType.Message => update.Message!.From!.Id,
+                UpdateType.CallbackQuery => update.CallbackQuery!.From!.Id,
+                _ => -1
+            };
+            logger.LogError(ex, "Client {Id} couldn't be created because all supported by bot clients are already registered", userId);
+            if (userId != -1)
+                await BotHelper.SendTextMessageAsync(userId, "You can't use this bot because it has reached the limit of supported users. " +
+                    "Please contact @moltenless to request access.", botClient, logger, cancellationToken);
+        }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error handling update: {UpdateId}", update.Id);
@@ -46,7 +54,7 @@ public class BotService(
         }
     }
 
-    private async Task HandleMessageAsync(Telegram.Bot.Types.Update update, CancellationToken cancellationToken)
+    private async Task HandleMessageAsync(Update update, CancellationToken cancellationToken)
     {
         Message message = update.Message!;
         if (message.Type == MessageType.NewChatMembers && message.NewChatMembers![0].Id == botClient.BotId)
@@ -60,13 +68,6 @@ public class BotService(
 
         var user = await userService.GetOrCreateUserAsync(
             message.From!.Id, UserState.Idle, message.From!.Username, message.From!.FirstName);
-
-        ///////////////////////////////////////////////////////////////
-        await userService.UpdateUserDateAsync(user.TelegramUserId);
-
-
-        ////////////////////////////////////////////////////////////////
-        ///////////////////////////////////////////////////////////////
 
         var messageText = message.Text ?? string.Empty;
 
@@ -91,11 +92,6 @@ public class BotService(
     {
         var user = await userService.GetOrCreateUserAsync(
             callbackQuery.From!.Id, UserState.Idle, callbackQuery.From!.Username, callbackQuery.From!.FirstName);
-
-        ////////////////////////////////////////////////////////////////////
-        //////////////////////////////////////////////////////////////////////
-        await userService.UpdateUserDateAsync(user.TelegramUserId);
-        //////////////////////////////////////////////////////////////////////
 
         await botClient.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: cancellationToken);
 
@@ -123,49 +119,6 @@ public class BotService(
             {
                 // Ignore errors when sending error messages
             }
-        }
-    }
-
-    public async Task SendMessageAsync(SendMessageRequest request)
-    {
-        string header = $"{BotHelper.RemoveSpecialChars(request.SourceText)}";
-        string footer = $"\n\nLink to message: https://t.me/c/{request.SourceChatId}/{request.SourceMessageId}\n" +
-                          $"Detected keywords: {BotHelper.RemoveSpecialChars(string.Join(", ", request.FoundKeywords))}\n" +
-                          $"From chat: {BotHelper.RemoveSpecialChars(request.SourceChatTitle[..Math.Min(request.SourceChatTitle.Length, 25)])}\n" +
-                          $"Message by: {BotHelper.RemoveSpecialChars(request.SenderFirstName is not null ? request.SenderFirstName : "")}" +
-                          $" {((request.SenderUsername is not null) ? ("@" + request.SenderUsername) : string.Empty)}\n" +
-                          $"Time: {request.DateTime}";
-
-        string finalText;
-        int lengthDelta = (header + footer).Length - 4096;
-        if (lengthDelta <= 0)
-            finalText = header + footer;
-        else
-            finalText = header[..Math.Min(header.Length, header.Length - lengthDelta - 3)] + "..." + footer;
-
-        string normalizedFinalText = BotHelper.EscapeMarkdownV2InTopic(finalText);
-        try
-        {
-            await botClient.SendMessage(request.ForumId, normalizedFinalText, ParseMode.MarkdownV2, messageThreadId: (int)request.TopicId);
-            logger.LogInformation("Bot's been requested and it sent the message to forum: {Forum} topic: {Topic}", request.ForumId, request.TopicId);
-        }
-        catch (ApiRequestException ex) when (ex.ErrorCode == 429)
-        {
-            logger.LogError(ex, "ВНУТРИ АПИ ЕКПСПЕПШН НО КОГДА 429 Error sending message to forum topic.\n\nReal message caused the problem:\n{NormalizedMessage}", normalizedFinalText);
-            throw;
-        }
-        catch (ApiRequestException ex)
-        {
-            logger.LogError(ex, "ВНУТРИ АПИ ЕКСЕПШН Error sending message to forum topic.\n\nReal message caused the problem:\n{NormalizedMessage}", normalizedFinalText);
-            throw;
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "ВНУТРИ ОБЩЕГО Error sending message to forum topic.\n\nReal message caused the problem:\n{NormalizedMessage}", normalizedFinalText);
-            //await BotHelper.SendTextMessageAsync(userId,
-            //            $"An error occurred while sending filtered message to your forum topic. Here is details: {ex.Message}",
-            //            botClient, logger, CancellationToken.None);
-            throw;
         }
     }
 }

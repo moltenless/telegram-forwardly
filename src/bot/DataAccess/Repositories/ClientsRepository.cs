@@ -5,6 +5,11 @@ using TelegramForwardly.DataAccess.Repositories.Interfaces;
 
 namespace TelegramForwardly.DataAccess.Repositories
 {
+    public class ClientCreationDeniedException : Exception
+    {
+
+    }
+
     public class ClientsRepository(ForwardlyContext context) : Repository(context), IClientsRepository
     {
         public async Task<Client> GetOrCreateClientAsync(
@@ -17,6 +22,9 @@ namespace TelegramForwardly.DataAccess.Repositories
 
             if (client == null)
             {
+                if (await context.Clients.CountAsync() >= 5)
+                    throw new ClientCreationDeniedException();
+
                 client = new Client
                 {
                     TelegramUserId = telegramUserId,

@@ -10,7 +10,6 @@ from telethon.tl.types import ChannelParticipantCreator, User, ChatForbidden, Ch
 from app.models import BotUser, UserClient, GroupingMode, Chat, Keyword
 from app.services.message_handler import MessageHandler
 from app.services.telegram_api_service import TelegramApiService
-from app.utils import log_error, log_info
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +53,7 @@ class ClientManager:
         for user_id, client in self.clients.items():
             try:
                 await client.client.disconnect()
+                logger.info(f"Disconnected {user_id} client")
             except Exception as e:
                 logger.error(f"Failed to disconnect client for user {user_id}: {e}")
         self.clients.clear()
@@ -68,8 +68,8 @@ class ClientManager:
                 if await self.clients[user.telegram_user_id].client.is_user_authorized():
                     logger.info(f"Connected and launched {user.telegram_user_id} client")
                 else:
-                    logger.error(
-                        f"!!!!!!!!!!!!! Client {user.telegram_user_id} has been launched but NEVERTHELES it's still UNauthorized")
+                    logger.error(f"!!!!!!!!!!!!! Client {user.telegram_user_id} "
+                                 f"has been launched but NEVERTHELES it's still UNauthorized")
         except Exception as e:
             logger.error(f"Failed to launch clients from users: {e}")
 
@@ -105,8 +105,6 @@ class ClientManager:
             @user_client.client.on(events.NewMessage)
             async def handle_new_message(event):
                 await self.message_handler.handle_message(event, user_client)
-
-            logger.info(f"Set up message handler for user {user_client.user.telegram_user_id}")
 
         except Exception as e:
             logger.error(f"Failed to setup message handler for user {user_client.user.telegram_user_id}", e)

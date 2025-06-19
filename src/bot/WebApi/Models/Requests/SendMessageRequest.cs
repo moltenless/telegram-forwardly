@@ -10,6 +10,7 @@
         public long SourceChatId { get; set; }
         public string SourceChatTitle { get; set; } = null!;
         public string[] FoundKeywords { get; set; } = [];
+        public long SenderId { get; set; }
         public string? SenderFirstName { get; set; }
         public string? SenderUsername { get; set; }
         public string DateTime { get; set; } = null!;

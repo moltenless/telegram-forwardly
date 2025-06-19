@@ -15,4 +15,4 @@ RUN mkdir -p /app/logs
 
 EXPOSE 5000
 
-CMD ["python", "main.py"]
+CMD ["hypercorn", "--config", "hypercorn.toml", "main:app"]
