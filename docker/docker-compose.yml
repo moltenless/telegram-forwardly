@@ -31,7 +31,7 @@ services:
             - ASPNETCORE_URLS=http://+:8080
             - ConnectionStrings__DefaultConnection=Server=db,1433;Database=telegram_forwardly;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;
             - TelegramBot__BotToken=${TELEGRAM_BOT_TOKEN}
-            - TelegramBot__UseWebhook=true
+            - TelegramBot__UseWebhook=false
             - TelegramBot__WebhookUrl=https://8359-80-253-55-45.ngrok-free.app
             - TelegramBot__UserbotApiBaseUrl=http://userbot:5000
             - TelegramBot__AuthApiBaseUrl=http://auth:8000
