@@ -71,8 +71,8 @@ class TelegramApiService:
 
     async def check_telegram_bot_health(self, url: str):
         async with aiohttp.ClientSession() as session:
-            headers = {"X-Api-Key": Config.API_KEY}
-            async with session.get(url, headers=headers) as resp:
+            #headers = {"X-Api-Key": Config.API_KEY}
+            async with session.get(url) as resp:
                 if resp.status != 200:
                     text = await resp.text()
                     raise RuntimeError(f"Health check failed with status {resp.status}: {text}")
