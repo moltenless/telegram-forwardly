@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.Extensions.Options;
 using Telegram.Bot.Types;
-using TelegramForwardly.WebApi.Models.Dtos;
 using TelegramForwardly.WebApi.Services.Interfaces;
 
 namespace TelegramForwardly.WebApi.Controllers
@@ -11,16 +9,16 @@ namespace TelegramForwardly.WebApi.Controllers
     [Route("api/[controller]")]
     public class TelegramController(
         IServiceProvider serviceProvider,
-        IOptions<TelegramConfig> config,
         ILogger<TelegramController> logger) : ControllerBase
     {
         private readonly IServiceProvider serviceProvider = serviceProvider;
-        private readonly string apiKey = config.Value.ApiKey;
         private readonly ILogger<TelegramController> logger = logger;
 
         [HttpPost("webhook")]
         public async Task<IActionResult> HandleWebhook([FromBody] Update update, CancellationToken cancellationToken)
         {
+            if (update == null)
+                return BadRequest("Received null update payload in webhook. But nice try :)");
             try
             {
                 using var scope = serviceProvider.CreateScope();
