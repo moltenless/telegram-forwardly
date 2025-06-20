@@ -155,7 +155,9 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
            ILogger logger,
            CancellationToken cancellationToken)
         {
-            string help = "If you need help you can contact developer @moltenless\n\n" +
+            string help = "If you need help you can contact developer @moltenless\n" +
+                "Our website: telegram-forwardly.com\n" +
+                "Check out Privacy Policy: telegram-forwardly.com/privacy-policy\n\n" +
                 "Available commands:\n" +
                 "/menu - Main menu\n" +
                 "/setup - Authentication - credentials setup\n" +
