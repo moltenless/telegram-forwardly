@@ -8,5 +8,6 @@
         public string UserbotApiBaseUrl { get; set; } = null!;
         public string AuthApiBaseUrl { get; set; } = null!;
         public string ApiKey { get; set; } = null!;
+        public string WebhookSecretToken { get; set; } = null!;
     }
 }
