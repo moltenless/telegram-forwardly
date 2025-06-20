@@ -31,8 +31,6 @@ services:
             - MSSQL_SA_PASSWORD=${MSSQL_SA_PASSWORD}
         volumes:
             - forwardly_db_data:/var/opt/mssql
-        ports:
-            - "1433:1433"
         restart: unless-stopped
         networks:
             - forwardly-network
@@ -49,7 +47,6 @@ services:
         container_name: forwardly-bot
         environment:
             - ASPNETCORE_HTTP_PORTS=8080
-            - ASPNETCORE_URLS=http://+:8080
             - ConnectionStrings__DefaultConnection=Server=db,1433;Database=telegram_forwardly;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;
             - TelegramBot__BotToken=${TELEGRAM_BOT_TOKEN}
             - TelegramBot__UseWebhook=true
@@ -60,8 +57,6 @@ services:
             - TelegramBot__WebhookSecretToken=${TELEGRAM_WEBHOOK_SECRET_TOKEN}
         volumes:
             - ../storage/logs:/app/logs
-        ports:
-            - "8080:8080"
         depends_on:
             - db
         restart: unless-stopped
@@ -90,8 +85,6 @@ services:
             - API_KEY=${API_KEY}
         volumes:
             - ../storage/logs:/app/logs
-        ports:
-            - "5000:5000"
         depends_on:
             - bot
         restart: unless-stopped
@@ -110,8 +103,6 @@ services:
     #     container_name: forwardly-auth
     #     environment:
     #         - TELEGRAM_BOT_API_URL=http://bot:8080/api
-    #     ports:
-    #         - "8000:8000"
     #     networks:
     #         - forwardly-network
     #     logging:

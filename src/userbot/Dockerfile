@@ -13,6 +13,4 @@ COPY src/userbot/ .
 
 RUN mkdir -p /app/logs
 
-EXPOSE 5000
-
 CMD ["hypercorn", "--config", "hypercorn.toml", "main:app"]
