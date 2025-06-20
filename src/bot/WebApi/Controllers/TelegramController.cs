@@ -17,7 +17,7 @@ namespace TelegramForwardly.WebApi.Controllers
         [HttpPost("webhook")]
         public async Task<IActionResult> HandleWebhook([FromBody] Update update, CancellationToken cancellationToken)
         {
-            if (update == null)
+            if (update == null || update.Type == 0)
                 return BadRequest("Received null update payload in webhook. But nice try :)");
             try
             {
