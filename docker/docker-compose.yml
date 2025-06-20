@@ -57,6 +57,7 @@ services:
             - TelegramBot__UserbotApiBaseUrl=http://userbot:5000
             - TelegramBot__AuthApiBaseUrl=http://auth:8000
             - TelegramBot__ApiKey=${API_KEY}
+            - TelegramBot__WebhookSecretToken=${TELEGRAM_WEBHOOK_SECRET_TOKEN}
         volumes:
             - ../storage/logs:/app/logs
         ports:

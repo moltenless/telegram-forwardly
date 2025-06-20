@@ -114,7 +114,8 @@ using (var scope = app.Services.CreateScope())
         {
             await botClient.SetWebhook(
                 url: $"{telegramConfig.WebhookUrl}/api/telegram/webhook",
-                allowedUpdates: [UpdateType.Message, UpdateType.CallbackQuery]
+                allowedUpdates: [UpdateType.Message, UpdateType.CallbackQuery],
+                secretToken: telegramConfig.WebhookSecretToken
             );
 
             app.Logger.LogInformation("Webhook configured successfully: {WebhookUrl}", telegramConfig.WebhookUrl);
