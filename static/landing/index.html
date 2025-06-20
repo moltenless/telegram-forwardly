@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Forwardly - Smart Message Filtering Bot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #fff;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #2196F3 100%);
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Animated background particles */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+        
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .particle:nth-child(1) { width: 80px; height: 80px; left: 10%; animation-delay: 0s; }
+        .particle:nth-child(2) { width: 120px; height: 120px; left: 20%; animation-delay: 2s; }
+        .particle:nth-child(3) { width: 60px; height: 60px; left: 60%; animation-delay: 4s; }
+        .particle:nth-child(4) { width: 100px; height: 100px; left: 80%; animation-delay: 1s; }
+        .particle:nth-child(5) { width: 70px; height: 70px; left: 40%; animation-delay: 3s; }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10%, 90% { opacity: 1; }
+            50% { transform: translateY(-100px) rotate(180deg); }
+        }
+        
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 60px 0 40px;
+            position: relative;
+        }
+        
+        .logo {
+            font-size: 4rem;
+            margin-bottom: 10px;
+            animation: pulse 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.05); }
+        }
+        
+        .header h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #fff, #e3f2fd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .header .tagline {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        /* CTA Buttons */
+        .cta-section {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 60px;
+            flex-wrap: wrap;
+        }
+        
+        .cta-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .cta-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .cta-button:hover::before {
+            left: 100%;
+        }
+        
+        .primary-cta {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            box-shadow: 0 10px 30px rgba(76, 175, 80, 0.4);
+            transform: scale(1.05);
+        }
+        
+        .primary-cta:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 40px rgba(76, 175, 80, 0.6);
+        }
+        
+        .secondary-cta {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .secondary-cta:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+        
+        /* Features Section */
+        .features {
+            padding: 80px 0;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            margin: 40px 0;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .features h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 60px;
+            color: #fff;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        
+        .feature-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            display: block;
+        }
+        
+        .feature-card h3 {
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+        
+        .feature-card p {
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+        
+        /* How it works */
+        .how-it-works {
+            padding: 80px 0;
+        }
+        
+        .how-it-works h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 60px;
+        }
+        
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+        }
+        
+        .step {
+            text-align: center;
+            position: relative;
+        }
+        
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(45deg, #2196F3, #1976D2);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 0 auto 20px;
+            box-shadow: 0 10px 30px rgba(33, 150, 243, 0.3);
+        }
+        
+        .step h3 {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+        }
+        
+        .step p {
+            opacity: 0.9;
+        }
+        
+        /* Architecture section */
+        .architecture {
+            padding: 80px 0;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            margin: 40px 0;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .architecture h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 40px;
+        }
+        
+        .arch-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+        }
+        
+        .arch-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            padding: 25px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .arch-card h3 {
+            color: #f6d2ff;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+        
+        .tech-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        
+        .tech-tag {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            backdrop-filter: blur(10px);
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 60px 0 40px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            margin-top: 60px;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .footer-link {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .footer-link:hover {
+            color: #fff;
+        }
+        
+        .footer p {
+            opacity: 0.7;
+            font-size: 0.9rem;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.5rem;
+            }
+            
+            .logo {
+                font-size: 3rem;
+            }
+            
+            .container {
+                padding: 0 15px;
+            }
+            
+            .cta-section {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .cta-button {
+                width: 100%;
+                max-width: 300px;
+                justify-content: center;
+            }
+            
+            .features h2, .how-it-works h2, .architecture h2 {
+                font-size: 2rem;
+            }
+        }
+        
+        /* Subtle animations */
+        .feature-card, .step, .arch-card {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.6s ease forwards;
+        }
+        
+        .feature-card:nth-child(1) { animation-delay: 0.1s; }
+        .feature-card:nth-child(2) { animation-delay: 0.2s; }
+        .feature-card:nth-child(3) { animation-delay: 0.3s; }
+        .feature-card:nth-child(4) { animation-delay: 0.4s; }
+        .feature-card:nth-child(5) { animation-delay: 0.5s; }
+        .feature-card:nth-child(6) { animation-delay: 0.6s; }
+        
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <div class="container">
+        <header class="header">
+            <div class="logo">🚀</div>
+            <h1>Telegram Forwardly</h1>
+            <p class="tagline">Smart message filtering bot that forwards important messages from active Telegram groups to your personal forum based on custom keywords</p>
+            
+            <div class="cta-section">
+                <a href="https://t.me/forwardly_bot" class="cta-button primary-cta">
+                    <span>📱</span> Start Using Bot
+                </a>
+                <a href="/privacy-policy" class="cta-button secondary-cta">
+                    <span>🔒</span> Privacy Policy
+                </a>
+            </div>
+        </header>
+
+        <section class="features">
+            <div class="container">
+                <h2>✨ Key Features</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <span class="feature-icon">🎯</span>
+                        <h3>Smart Filtering</h3>
+                        <p>Set custom keywords to automatically filter and forward only the most important messages from busy group chats</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">🏗️</span>
+                        <h3>Forum Organization</h3>
+                        <p>Messages are organized by topics in your forum group - either by keywords or source chats</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">⚡</span>
+                        <h3>Real-time Processing</h3>
+                        <p>Instant message forwarding with no delays. Your filtered content appears immediately</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">🎛️</span>
+                        <h3>Full Control</h3>
+                        <p>Complete control over which groups to monitor, keywords to filter, and how to organize your content</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">🔐</span>
+                        <h3>Secure & Private</h3>
+                        <p>End-to-end encryption for your credentials. Messages are processed in real-time, not stored</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">📊</span>
+                        <h3>Easy Setup</h3>
+                        <p>Simple bot commands to configure everything. No technical knowledge required</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="how-it-works">
+            <div class="container">
+                <h2>🔄 How It Works</h2>
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <h3>Connect Your Account</h3>
+                        <p>Provide your Telegram API credentials securely through our bot interface</p>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <h3>Select Groups & Keywords</h3>
+                        <p>Choose which groups to monitor and set your custom filtering keywords</p>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <h3>Create Forum Group</h3>
+                        <p>Set up your personal forum group where filtered messages will be organized</p>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <h3>Enjoy Filtered Content</h3>
+                        <p>Receive only important messages automatically organized by topics in your forum</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="architecture">
+            <div class="container">
+                <h2>⚙️ Technical Architecture</h2>
+                <div class="arch-grid">
+                    <div class="arch-card">
+                        <h3>🤖 Telegram Bot (Control Interface)</h3>
+                        <p>ASP.NET Core Web API handling user commands, settings, and bot interactions via webhook</p>
+                        <div class="tech-tags">
+                            <span class="tech-tag">C#</span>
+                            <span class="tech-tag">ASP.NET Core</span>
+                            <span class="tech-tag">Entity Framework</span>
+                            <span class="tech-tag">SQL Server</span>
+                        </div>
+                    </div>
+                    <div class="arch-card">
+                        <h3>🐍 User Bot (Message Processing)</h3>
+                        <p>Python Flask application using Telethon for real-time message monitoring and forwarding</p>
+                        <div class="tech-tags">
+                            <span class="tech-tag">Python</span>
+                            <span class="tech-tag">Flask</span>
+                            <span class="tech-tag">Telethon</span>
+                            <span class="tech-tag">AsyncIO</span>
+                        </div>
+                    </div>
+                    <div class="arch-card">
+                        <h3>🐳 Infrastructure</h3>
+                        <p>Containerized deployment with Docker, Nginx reverse proxy, and automated SSL certificates</p>
+                        <div class="tech-tags">
+                            <span class="tech-tag">Docker</span>
+                            <span class="tech-tag">Nginx</span>
+                            <span class="tech-tag">Let's Encrypt</span>
+                            <span class="tech-tag">VPS</span>
+                        </div>
+                    </div>
+                    <div class="arch-card">
+                        <h3>🔧 Security & Scalability</h3>
+                        <p>Encrypted credential storage, comprehensive logging, and scalable concurrent user handling</p>
+                        <div class="tech-tags">
+                            <span class="tech-tag">Encryption</span>
+                            <span class="tech-tag">Logging</span>
+                            <span class="tech-tag">Queue System</span>
+                            <span class="tech-tag">Load Balancing</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-links">
+                <a href="/privacy-policy" class="footer-link">Privacy Policy</a>
+                <a href="https://t.me/moltenless" class="footer-link">Developer Telegram</a>
+                <a href="mailto:turlakserhii@gmail.com" class="footer-link">Support Email</a>
+            </div>
+            <p>&copy; 2025 Telegram Forwardly. All rights reserved.</p>
+            <p>This service is not affiliated with Telegram Messenger Inc.</p>
+        </div>
+    </footer>
+</body>
+</html>
