@@ -128,7 +128,7 @@ namespace TelegramForwardly.WebApi.Services.Bot
                     await userService.SetUserStateAsync(user.TelegramUserId, UserState.AwaitingGroupingType);
                     await BotHelper.SendTextMessageAsync(
                         callbackQuery.Message!.Chat.Id,
-                        "Please select the grouping/sorting mode of filtered messages: \n- Group by chat titles - send '1'\n- Group by keywords - send '2'",
+                        "Please select the grouping/sorting mode of filtered messages: \n- Group by chat titles - send '1'\n- Group by keywords - send '2'\n- Place all messages in one 'General' topic - send '3'",
                         botClient, logger, cancellationToken);
                     break;
 
