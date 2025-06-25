@@ -21,16 +21,12 @@ class MessageHandler:
 
     async def handle_message(self, event: events.NewMessage.Event, user_client: UserClient):
         try:
-            # me = await user_client.client.get_me()
-            # await user_client.client.send_message(entity=me, message=f"somebody wrote: {event.message.text}")
-            # return None
-
             source_chat = await event.get_chat()
             sender = await event.get_sender()
 
             if sender.id == user_client.user.telegram_user_id:
                 return
-            if sender.id == 7815814849: #forwardly bot
+            if sender.id == 7815814849: #forwardly bot id
                 return
             if (source_chat.id == user_client.user.forum_supergroup_id or
                 '-100' + str(source_chat.id) == str(user_client.user.forum_supergroup_id)):
@@ -116,8 +112,12 @@ class MessageHandler:
     def _get_topic_name(self, chat_title: str, first_detected_kw: str, user_client: UserClient) -> str:
         if user_client.user.topic_grouping == GroupingMode.BY_CHAT:
             return chat_title
-        else:
+        elif user_client.user.topic_grouping == GroupingMode.BY_KEYWORD:
             return first_detected_kw.capitalize()
+        elif user_client.user.topic_grouping == GroupingMode.GENERAL:
+            return 'General'
+        else:
+            raise Exception('No topic grouping found for user')
 
     async def _get_or_create_topic(self, client: TelegramClient, forum_id: int, topic_name: str) -> Optional[int]:
         try:

@@ -21,6 +21,7 @@ class UserState(Enum):
 class GroupingMode(Enum):
     BY_KEYWORD = "ByKeyword"
     BY_CHAT = "ByChat"
+    GENERAL = "General"
 
 @dataclass
 class Keyword:

@@ -146,6 +146,8 @@ class ClientManager:
                 self.clients[user_id].user.topic_grouping = GroupingMode.BY_KEYWORD
             elif grouping == 'ByChat':
                 self.clients[user_id].user.topic_grouping = GroupingMode.BY_CHAT
+            elif grouping == 'General':
+                self.clients[user_id].user.topic_grouping = GroupingMode.GENERAL
             return {'Success': True}
         except Exception as e:
             logger.error(f'Failed to update topic grouping type: {e}')
