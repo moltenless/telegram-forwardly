@@ -50,7 +50,7 @@ namespace TelegramForwardly.WebApi.Services
             {
                 try
                 {
-                    await botClient.SendMessage(request.ForumId, text, ParseMode.MarkdownV2, messageThreadId: (int)request.TopicId, cancellationToken: cancellationToken);
+                    await botClient.SendMessage(request.ForumId, text, ParseMode.MarkdownV2, messageThreadId: (int)request.TopicId != 1 ? (int)request.TopicId : null, cancellationToken: cancellationToken);
                     return;
                 }
                 catch (ApiRequestException ex) when (ex.ErrorCode == 429)
