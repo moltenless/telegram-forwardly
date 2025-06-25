@@ -76,7 +76,7 @@ namespace TelegramForwardly.WebApi.Services
                 stressedSourceText = stressedSourceText.Replace(BotHelper.RemoveSpecialChars(kw), $"*{BotHelper.RemoveSpecialChars(kw.ToUpper())}*", StringComparison.InvariantCultureIgnoreCase);
             stressedSourceText = stressedSourceText.Replace("\n", "\n> ");
 
-            string header = $"Found:\n> {stressedSourceText}";
+            string header = $"> {stressedSourceText}";
             string footer = $"\n- *Detected keywords: +* {string.Join(", *+* ", request.FoundKeywords.Select(BotHelper.RemoveSpecialChars))}\n" +
                                 $"- *Message by*: {BotHelper.RemoveSpecialChars(request.SenderFirstName is not null ? request.SenderFirstName : "")}" +
                                 $" {((request.SenderUsername is not null) ? ("@" + request.SenderUsername) : $"tg://user?id={request.SenderId}")} \n" +
