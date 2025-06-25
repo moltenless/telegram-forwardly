@@ -49,7 +49,12 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
         {
             GroupingMode mode;
             string response;
-            if (message.Text == "2")
+            if (message.Text == "3")
+            {
+                mode = GroupingMode.General;
+                response = "You have selected placing all filtered messages in one general topic";
+            }
+            else if (message.Text == "2")
             {
                 mode = GroupingMode.ByKeyword;
                 response = "You have selected grouping by keywords.";
@@ -63,7 +68,7 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
             {
                 await BotHelper.SendTextMessageAsync(
                     message.Chat.Id,
-                    "Invalid input. Please send '1' for chat titles grouping or '2' for keywords grouping.",
+                    "Invalid input. Please send '1' for chat titles grouping, '2' for keywords grouping, '3' for one general topic.",
                     botClient, logger, cancellationToken);
                 return;
             }
