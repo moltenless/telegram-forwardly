@@ -20,7 +20,7 @@ namespace TelegramForwardly.DataAccess.Entities
         [Required]
         public long TelegramChatId { get; set; }
 
-        [Column("title", TypeName = "nvarchar(100)")]
+        [Column("title", TypeName = "nvarchar(200)")]
         [Required]
         public string Title { get; set; } = null!;
     }
