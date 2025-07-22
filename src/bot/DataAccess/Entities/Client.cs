@@ -67,6 +67,10 @@ namespace TelegramForwardly.DataAccess.Entities
         public bool? AllChatsFilteringEnabled { get; set; }
 
 
+        [Column("threshold_chars_count", TypeName = "int")] // Linguistic mistake - it's rather 'limit' than 'threshold'
+        public int? ThresholdCharsCount { get; set; }
+
+
         public ICollection<Keyword> Keywords { get; set; } = new HashSet<Keyword>();
         public ICollection<Chat> Chats { get; set; } = new HashSet<Chat>();
     }

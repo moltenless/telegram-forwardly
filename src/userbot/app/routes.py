@@ -84,6 +84,27 @@ def update_grouping():
         return jsonify({"Success": False,
                         "ErrorMessage": f"Failed to update grouping type: {e}"}), 500
 
+@api_bp.route('/user/threshold', methods=['POST'])
+@require_api_key
+def update_threshold():
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        limit = data.get('limit')
+
+        result = event_loop_manager.run_coroutine(
+            current_app.client_manager.update_threshold(user_id, limit)
+        )
+
+        if result.get('Success') is True:
+            return jsonify(result), 200
+        else:
+            return jsonify(result), 500
+
+    except Exception as e:
+        return jsonify({"Success": False,
+                        "ErrorMessage": f"Failed to update threshold value: {e}"}), 500
+
 @api_bp.route('/user/delete', methods=['POST'])
 @require_api_key
 def delete_user():

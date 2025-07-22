@@ -66,6 +66,7 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
             [
                 [InlineKeyboardButton.WithCallbackData("👥 Set group for forwarding", "set_forum")],
                 [InlineKeyboardButton.WithCallbackData("🗂️ Set grouping mode", "set_grouping")],
+                [InlineKeyboardButton.WithCallbackData("🔡 Set threshold characters count", "set_threshold")],
                 [InlineKeyboardButton.WithCallbackData("🏠 Back to Menu", "back_to_menu")]
             ]);
             if (editSourceMessage)
