@@ -34,7 +34,7 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
 
             await userService.UpdateUserForumIdAsync(user.TelegramUserId, forumId);
             await userService.SetUserStateAsync(user.TelegramUserId, UserState.Idle);
-            await BotHelper.SendTextMessageAsync(message.Chat.Id, "The group added. Set grouping mode:", botClient, logger, cancellationToken);
+            await BotHelper.SendTextMessageAsync(message.Chat.Id, "The group is added. Set grouping mode:", botClient, logger, cancellationToken);
             await MenuManager.EnterSettingsAsync(false, message, botClient, logger, cancellationToken);
         }
 
@@ -93,7 +93,6 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
             await BotHelper.SendTextMessageAsync(
                 message.Chat.Id, response,
                 botClient, logger, cancellationToken);
-
             await MenuManager.ShowMainMenuAsync(
                 user, message.Chat.Id,
                 botClient, logger, cancellationToken);
@@ -165,6 +164,41 @@ namespace TelegramForwardly.WebApi.Services.Bot.Managers
                 await MenuManager.ShowMainMenuAsync(
                     user, message.Chat.Id,
                     botClient, logger, cancellationToken);
+        }
+
+
+        public static async Task HandleThresholdInputAsync(
+            BotUser user,
+            Message message,
+            IUserService userService,
+            IUserbotApiService userbotApiService,
+            ITelegramBotClient botClient,
+            ILogger logger,
+            CancellationToken cancellationToken)
+        {
+            if (!int.TryParse(message.Text, out int limit) || limit < 2)
+            {
+                await BotHelper.SendTextMessageAsync(message.Chat.Id, "Invalid number or less than 3. Try again",
+                    botClient, logger, cancellationToken, parseMode: ParseMode.None);
+                return;
+            }
+
+            FieldUpdateResult result = await userbotApiService.UpdateUserThresholdAsync(user.TelegramUserId, limit);
+            if (!result.Success)
+            {
+                await BotHelper.SendTextMessageAsync(
+                    message.Chat.Id,
+                    $"Failed to set threshold (limit) value: {result.ErrorMessage}",
+                    botClient, logger, cancellationToken, parseMode: ParseMode.None);
+                return;
+            }
+
+            await userService.SetUserThresholdAsync(user.TelegramUserId, limit);
+            await userService.SetUserStateAsync(user.TelegramUserId, UserState.Idle);
+            await BotHelper.SendTextMessageAsync(message.Chat.Id, "The limit is updated",
+                botClient, logger, cancellationToken);
+            await MenuManager.EnterSettingsAsync(false, message, botClient, logger, cancellationToken);
+
         }
     }
 }

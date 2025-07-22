@@ -37,5 +37,6 @@ namespace TelegramForwardly.WebApi.Services.Interfaces
         Task UpdateUserDateAsync(long telegramUserId);
 
         Task ToggleForwardlyEnabledAsync(long telegramUserId, bool value);
+        Task SetUserThresholdAsync(long telegramUserId, int limit);
     }
 }

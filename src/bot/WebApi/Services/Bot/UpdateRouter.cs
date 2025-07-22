@@ -132,6 +132,14 @@ namespace TelegramForwardly.WebApi.Services.Bot
                         botClient, logger, cancellationToken);
                     break;
 
+                case "set_threshold":
+                    await userService.SetUserStateAsync(user.TelegramUserId, UserState.AwaitingThresholdCharsCount);
+                    await BotHelper.SendTextMessageAsync(
+                        callbackQuery.Message!.Chat.Id,
+                        "Please enter the maximum number of characters.\nMessages that exceed this limit will be ignored and not forwarded, even if they contain any of the specified keywords. Default value is 300:",
+                        botClient, logger, cancellationToken);
+                    break;
+
                 case "chats":
                     await ChatManager.RunChatMenuAsync(
                         true, user, callbackQuery.Message!, userService, userbotApiService,
@@ -161,6 +169,8 @@ namespace TelegramForwardly.WebApi.Services.Bot
                         true, callbackQuery.Message!, botClient,
                         logger, cancellationToken);
                     break;
+
+
 
                 // Chats menu buttons
                 case "chat_view_page_back":
@@ -353,6 +363,12 @@ namespace TelegramForwardly.WebApi.Services.Bot
 
                 case UserState.AwaitingGroupingType:
                     await SettingsManager.HandleGroupingTypeInputAsync(
+                        user, message, userService, userbotApiService,
+                        botClient, logger, cancellationToken);
+                    break;
+
+                case UserState.AwaitingThresholdCharsCount:
+                    await SettingsManager.HandleThresholdInputAsync(
                         user, message, userService, userbotApiService,
                         botClient, logger, cancellationToken);
                     break;

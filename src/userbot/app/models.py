@@ -17,6 +17,7 @@ class UserState(Enum):
     AWAITING_DELETE_CONFIRMATION = "AwaitingDeleteConfirmation"
     AWAITING_REMOVE_CHATS = "AwaitingRemoveChats"
     AWAITING_REMOVE_KEYWORDS = "AwaitingRemoveKeywords"
+    AWAITING_THRESHOLD_CHARS_COUNT = "AwaitingThresholdCharsCount"
 
 class GroupingMode(Enum):
     BY_KEYWORD = "ByKeyword"
@@ -52,6 +53,7 @@ class BotUser:
     topic_grouping: Optional[GroupingMode] = None
     forwardly_enabled: Optional[bool] = None
     all_chats_filtering_enabled: Optional[bool] = None
+    threshold_chars_count: Optional[int] = None
 
     keywords: List[Keyword] = field(default_factory=list)
     chats: List[Chat] = field(default_factory=list)

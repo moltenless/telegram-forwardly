@@ -36,6 +36,7 @@ namespace TelegramForwardly.DataAccess.Repositories
                     ForwardlyEnabled = true,
                     TopicGrouping = "ByChat",
                     AllChatsFilteringEnabled = false,
+                    ThresholdCharsCount = 300
                 };
 
                 context.Clients.Add(client);
@@ -146,6 +147,13 @@ namespace TelegramForwardly.DataAccess.Repositories
         {
             if (client.TopicGrouping == groupingType) return;
             client.TopicGrouping = groupingType;
+            await context.SaveChangesAsync();
+        }
+
+        public async Task SetClientThresholdAsync(Client client, int limit)
+        {
+            if (client.ThresholdCharsCount == limit) return;
+            client.ThresholdCharsCount = limit;
             await context.SaveChangesAsync();
         }
 

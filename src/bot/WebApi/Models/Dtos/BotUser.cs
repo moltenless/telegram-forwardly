@@ -18,6 +18,7 @@ namespace TelegramForwardly.WebApi.Models.Dtos
         public GroupingMode? TopicGrouping { get; set; }
         public bool? ForwardlyEnabled { get; set; }
         public bool? AllChatsFilteringEnabled { get; set; }
+        public int? ThresholdCharsCount { get; set; }
 
         public ICollection<Keyword> Keywords { get; set; } = new HashSet<Keyword>();
         public ICollection<Chat> Chats { get; set; } = new HashSet<Chat>();
@@ -54,6 +55,7 @@ namespace TelegramForwardly.WebApi.Models.Dtos
                 TopicGrouping = Enum.TryParse(client.TopicGrouping, out GroupingMode groupingMode) ? groupingMode : null,
                 ForwardlyEnabled = client.ForwardlyEnabled,
                 AllChatsFilteringEnabled = client.AllChatsFilteringEnabled,
+                ThresholdCharsCount = client.ThresholdCharsCount,
                 Keywords = keywords,
                 Chats = chats
             };

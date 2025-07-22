@@ -151,7 +151,15 @@ class ClientManager:
             return {'Success': True}
         except Exception as e:
             logger.error(f'Failed to update topic grouping type: {e}')
-            return {'Success': False, 'ErrorMessage': f'Failed to update topic grouping type {e}'}
+            return {'Success': False, 'ErrorMessage': f'Failed to update topic grouping type: {e}'}
+
+    async def update_threshold(self, user_id, limit):
+        try:
+            self.clients[user_id].user.threshold_chars_count = limit
+            return {'Success': True}
+        except Exception as e:
+            logger.error(f'Failed to update threshold value: {e}')
+            return {'Success': False, 'ErrorMessage': f'Failed to update threshold value: {e}'}
 
     async def delete_user(self, user_id):
         try:

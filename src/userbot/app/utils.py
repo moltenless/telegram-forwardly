@@ -70,6 +70,7 @@ def parse_user_from_api(data: Dict[str, Any]) -> BotUser:
         topic_grouping=GroupingMode(data.get('TopicGrouping')) if data.get('TopicGrouping') else None,
         forwardly_enabled=data.get('ForwardlyEnabled'),
         all_chats_filtering_enabled=data.get('AllChatsFilteringEnabled'),
+        threshold_chars_count=data.get('ThresholdCharsCount'),
         keywords=keywords,
         chats=chats
     )

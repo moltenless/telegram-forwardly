@@ -40,5 +40,6 @@ namespace TelegramForwardly.DataAccess.Repositories.Interfaces
 
         Task UpdateClientDateAsync(Client client);
         Task SetClientForwardlyEnabledAsync(Client client, bool value);
+        Task SetClientThresholdAsync(Client client, int limit);
     }
 }
