@@ -23,6 +23,6 @@ namespace TelegramForwardly.WebApi.Services.Interfaces
         Task<bool> DisableForwardlyAsync(long telegramUserId);
 
         Task<FieldUpdateResult> UpdateForwardlyEnabledAsync(long telegramUserId, bool value);
-        Task<FieldUpdateResult> UpdateUserThresholdAsync(long telegramUserId, long limit);
+        Task<FieldUpdateResult> UpdateUserThresholdAsync(long telegramUserId, int limit);
     }
 }
