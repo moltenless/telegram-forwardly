@@ -40,7 +40,8 @@ class MessageHandler:
                 return
             if not user_client.user.keywords or len(user_client.user.keywords) == 0:
                 return
-            if len(event.message.text) > user_client.user.threshold_chars_count:
+            if (user_client.user.threshold_chars_count and
+                    len(event.message.text) > user_client.user.threshold_chars_count):
                 return
             if not self._is_chat_monitored(source_chat.id, user_client):
                 return
