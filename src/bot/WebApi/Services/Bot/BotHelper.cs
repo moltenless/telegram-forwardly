@@ -120,7 +120,6 @@ namespace TelegramForwardly.WebApi.Services.Bot
                 "4. Click _Create application_ and then copy your *App api-id*.\n\n" +
                 "_! Please note that you should not share your API Id and API Hash with anyone! " +
                 "We don't use them for anything other than forwarding messages to your forum. " +
-                "Check out our open source code on [GitHub](https://github.com/moltenless/telegram-forwardly). " +
                 "You can always delete them in bot settings menu or revoke access to your app in Telegram settings._\n\n" +
                 "*First, please send me the App api-id:* it looks like '12345678'" +
                 (apiId is not null ? $"\n\nLast time you entered `{apiId}`" : string.Empty);

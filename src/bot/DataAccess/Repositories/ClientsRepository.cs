@@ -22,7 +22,7 @@ namespace TelegramForwardly.DataAccess.Repositories
 
             if (client == null)
             {
-                if (await context.Clients.CountAsync() >= 5)
+                if (await context.Clients.CountAsync() >= 7)
                     throw new ClientCreationDeniedException();
 
                 client = new Client
