@@ -52,9 +52,9 @@ namespace TelegramForwardly.WebApi.Controllers
 
                     return Ok();
                 }
-                if (messageQueue.Count >= 100) // this condition hopefully never gets satisfied
+                if (messageQueue.Count >= 140) // this condition hopefully never gets satisfied
                 {
-                    logger.LogWarning("\n\nCRITICAL ERROR. Too many total message requests for all users in general queue. The number exceeds 100. The request will be truncated\n\n");
+                    logger.LogWarning("\n\nCRITICAL ERROR. Too many total message requests for all users in general queue. The number exceeds 140. The request will be truncated\n\n");
                     return Ok();
                 }
 
